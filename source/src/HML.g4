@@ -35,7 +35,7 @@ primitiveType
     ;
 
 signalDeclaration
-    :   'Signal' ('[' size=INT ']')? ID (',' ID)* ';'
+    :   'Signal' ('[' size=INT ']')* ID (',' ID)* ';'
     ;
 
 modifier
