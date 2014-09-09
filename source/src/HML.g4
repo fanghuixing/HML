@@ -98,9 +98,9 @@ exprList
 
 atom
     :  'skip'
-    | ID ':=' expr
-    | '!' ID
-    | 'suspend' '(' time=expr ')'
+    |  ID '=' expr
+    |  '!' ID
+    |  'suspend' '(' time=expr ')'
     ;
 
 expr
@@ -131,7 +131,7 @@ equation
     ;
 
 relation
-    : 'dot' ID '=' expr;
+    : 'dot' ID '==' expr;
 
 
 guard
