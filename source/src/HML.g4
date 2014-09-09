@@ -62,7 +62,7 @@ variableInitializer
 
 arrayInitializer
     :   '{' (variableInitializer (',' variableInitializer)* (',')? )? '}'
-    |   'new' 'Array' '(' INT ')'
+    |   'new' 'Array' ('[' INT ']')+
     ;
 
 program : 'Main ' '{' signalDeclaration* variableDeclaration* blockStatement* '}';
