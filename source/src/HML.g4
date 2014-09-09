@@ -117,6 +117,7 @@ expr
     | expr 'or' expr
     | 'floor' '(' expr ')'
     | 'ceil' '(' expr ')'
+    | parExpression
     ;
 
 parExpression
