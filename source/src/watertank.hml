@@ -1,0 +1,28 @@
+// Signals
+Signal on, off;
+
+//Global Variables
+float waterLever=8, accin=1, decout=1, deta=0.5;
+int MaxWaterLever=10, LowestWaterLever=5;
+
+//Templates
+Template open(float h, float a, int H, float e){
+    dot h = a until (h >= H-e)
+}
+
+Template closed(float h, float b, int L, float e){
+    dot h = -b until (h <= L+e)
+}
+
+//The model(program) Starting from here...
+Main {
+   // Loop 
+    while(true){
+        !on;
+        // let water in
+        open(waterLever,accin,MaxWaterLever,deta);
+        !off;
+        // let water out
+        closed(waterLever,decout,LowestWaterLever,deta)
+    }
+}
