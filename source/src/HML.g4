@@ -138,7 +138,7 @@ guard
     ;
 
 signal
-    : ID ('[' expr ']')?;
+    : ID ('[' expr ']')*;
 
 
 
