@@ -1,7 +1,12 @@
 grammar HML;
 
 hybridModel
-    : signalDeclaration* variableDeclaration* template* program EOF;
+    : signalDeclaration*
+      variableDeclaration*
+      template*
+      program
+      EOF
+    ;
 
 
 template
