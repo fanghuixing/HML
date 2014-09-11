@@ -76,13 +76,13 @@ blockStatement
     :  atom                                                  #AtomPro   // Atomic
     |  blockStatement '|'  blockStatement                    #NonCh     // non-deterministrate choice
     |  blockStatement '||' blockStatement                    #ParaCom   // parallel composition
-    |  blockStatement ';'  blockStatement                    #SeqCom    // sequential composition
+    |  blockStatement ';'?  blockStatement                   #SeqCom    // sequential composition
     |  '(' blockStatement '<' expr '>' blockStatement ')'    #ConCh     // conditional choice
     |  equation 'until' guard                                #Ode       // differential equation
     |  'when' '{' guardedchoice '}'                          #WhenPro   // when program
     |  'while' parExpression parStatement                    #LoopPro   // loop
     |  'if' parExpression parStatement
-       'else' parStatement                                   #IfPro     // if statement
+       ( 'else' parStatement )?                              #IfPro     // if statement
     |  ID '(' exprList? ')'                                  #CallTem   // call template
     |  parStatement                                          #ParPro    // program with paraentheses outside
     ;
@@ -131,7 +131,7 @@ equation
     ;
 
 relation
-    : 'dot' ID '==' expr;
+    : 'dot' ID '=' expr;
 
 
 guard
@@ -163,6 +163,7 @@ COMOP
     | '=='
     | '<'
     | '<='
+    | '!='
     ;
 
 ID  :    (LETTER | '_')  (LETTER|DIGIT|'_')*
