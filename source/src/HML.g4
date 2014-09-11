@@ -99,7 +99,7 @@ exprList
 atom
     :  'skip'
     |  ID '=' expr
-    |  '!' ID
+    |  '!' signal                   // !s (single or multi-sending), !s[0], !s[1][1]
     |  'suspend' '(' time=expr ')'
     ;
 
@@ -136,8 +136,8 @@ relation
 
 
 guard
-    : 'EMPTY'
-    | signal
+    : 'EMP'
+    | signal                 //waiting for s (single or multi-receiving), s[0], s[1][1]...
     | expr
     | 'timeout' '(' expr ')'
     | guard '<and>' guard
@@ -187,5 +187,6 @@ LINE_COMMENT
     : '//' ~[\r\n]* '\r'? '\n' -> channel(HIDDEN)
     ;
 
+//\u000C : change page
 WS  :   [ \r\t\u000C\n]+ -> channel(HIDDEN)
     ;
