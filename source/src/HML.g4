@@ -115,6 +115,7 @@ expr
     | expr ('>=' | '>' | '==' | '<' | '<=') expr
     | expr 'and' expr
     | expr 'or' expr
+    | expr 'xor' expr
     | 'floor' '(' expr ')'
     | 'ceil' '(' expr ')'
     | parExpression
