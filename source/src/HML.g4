@@ -135,7 +135,7 @@ relation
 
 
 guard
-    : 'eps'
+    : 'EMPTY'
     | signal
     | expr
     | 'timeout' '(' expr ')'
