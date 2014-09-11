@@ -79,7 +79,7 @@ blockStatement
     |  blockStatement ';'  blockStatement                    #SeqCom    // sequential composition
     |  '(' blockStatement '<' expr '>' blockStatement ')'    #ConCh     // conditional choice
     |  equation 'until' guard                                #Ode       // differential equation
-    |  'when' '(' guardedchoice ')'                          #WhenPro   // when program
+    |  'when' '{' guardedchoice '}'                          #WhenPro   // when program
     |  'while' parExpression parStatement                    #LoopPro   // loop
     |  'if' parExpression parStatement
        'else' parStatement                                   #IfPro     // if statement
@@ -151,8 +151,9 @@ signal
 
 
 guardedchoice
-    :  guard '&'  program
-    | guardedchoice '[]' guardedchoice
+    :  guard '->'  blockStatement
+    |  guardedchoice '[]' guardedchoice
+    |  '(' guardedchoice ')'
     ;
 
 
