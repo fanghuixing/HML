@@ -8,10 +8,6 @@ int MaxwaterLevel=10, LowestwaterLevel=5;
 //Constraints
 waterLevel in [5,  10];
 
-
-
-
-
 //Templates
 Template open(float h, float a, int H, float e){
     dot h = a until (h >= H-e)

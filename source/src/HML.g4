@@ -35,9 +35,9 @@ type
     ;
 
 primitiveType
-    :   'boolean'
-    |   'int'
-    |   'float'
+    :   'boolean'   # BoolType
+    |   'int'       # IntType
+    |   'float'     # FloatType
     ;
 
 signalDeclaration
@@ -45,7 +45,7 @@ signalDeclaration
     ;
 
 modifier
-    :   'final'             // used for the vars that cannot be modified
+    :   'final'             # FinalModifier
     ;
 
 variableDeclaration
@@ -110,21 +110,21 @@ atom
     ;
 
 expr
-    : ID
-    | INT
-    | FLOAT
-    |'true'
-    | 'false'
-    | ('-' | '~') expr          // negtive and negation
-    | expr ('*'|'/'|'mod') expr   // % is mod
-    | expr ('+'|'-') expr
-    | expr ('>=' | '>' | '==' | '<' | '<=') expr
-    | expr 'and' expr
-    | expr 'or' expr
-    | expr 'xor' expr
-    | 'floor' '(' expr ')'
-    | 'ceil' '(' expr ')'
-    | parExpression
+    : ID                                            # IDExpr
+    | INT                                           # INTExpr
+    | FLOAT                                         # FLOATExpr
+    |'true'                                         # ConstantTrue
+    | 'false'                                       # ConstantFalse
+    | ('-' | '~') expr                              # NegationExpr
+    | expr ('*'|'/'|'mod') expr                     # MExpr
+    | expr ('+'|'-') expr                           # AExpr
+    | expr ('>=' | '>' | '==' | '<' | '<=') expr    # CompExpr
+    | expr 'and' expr                               # LogicalAndExpr
+    | expr 'or' expr                                # LogicalOrExpr
+    | expr 'xor' expr                               # LogicalXorExpr
+    | 'floor' '(' expr ')'                          # FloorExpr
+    | 'ceil' '(' expr ')'                           # CeilExpr
+    | parExpression                                 # ParExpr
     ;
 
 parExpression
@@ -132,9 +132,9 @@ parExpression
     ;
 
 equation
-    : relation
-    | relation 'init' expr
-    | equation '||' equation
+    : relation                       # EqWithNoInit
+    | relation 'init' expr           # EqWithInit
+    | equation '||' equation         # ParaEq
     ;
 
 relation
