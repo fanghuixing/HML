@@ -2,8 +2,15 @@
 Signal on, off;
 
 //Global Variables
-float waterLever=8, accin=1, decout=1, deta=0.5;
-int MaxWaterLever=10, LowestWaterLever=5;
+float waterLevel=8, accin=1, decout=1, deta=0.5;
+int MaxwaterLevel=10, LowestwaterLevel=5;
+
+//Constraints
+waterLevel in [5,  10];
+
+
+
+
 
 //Templates
 Template open(float h, float a, int H, float e){
@@ -20,9 +27,9 @@ Main {
     while(true){
         !on;
         // let water in
-        open(waterLever,accin,MaxWaterLever,deta);
+        open(waterLevel,accin,MaxwaterLevel,deta);
         !off;
         // let water out
-        closed(waterLever,decout,LowestWaterLever,deta)
+        closed(waterLevel,decout,LowestwaterLevel,deta)
     }
 }

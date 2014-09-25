@@ -3,6 +3,7 @@ grammar HML;
 hybridModel
     : signalDeclaration*
       variableDeclaration*
+      variableConstraint*
       template*
       program
       EOF
@@ -51,6 +52,11 @@ variableDeclaration
     :  modifier? type variableDeclarators ';'
     ;
 
+variableConstraint
+    : variableDeclaratorId 'in' '[' leftEnd=expr ',' rightEnd=expr ']' ';'
+    ;
+
+
 variableDeclarators
     :   variableDeclarator (',' variableDeclarator)*
     ;
@@ -70,7 +76,7 @@ arrayInitializer
     |   'new' 'Array' ('[' INT ']')+
     ;
 
-program : 'Main ' '{' signalDeclaration* variableDeclaration* blockStatement* '}';
+program : 'Main ' '{' blockStatement* '}';
 
 blockStatement
     :  atom                                                  #AtomPro   // Atomic
