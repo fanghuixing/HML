@@ -2,8 +2,10 @@ package IMP;
 
 import AntlrGen.HMLParser;
 import AntlrGen.HMLParser.VariableInitializerContext;
+
+
 /**
- * Created by Huixing Fang on 2014/9/25.
+ * <p> The class for recording type, initial value and final flag for a variable </p>
  */
 public class Variable {
 

@@ -110,35 +110,41 @@ atom
     ;
 
 expr
-    : ID                                            # IDExpr
-    | INT                                           # INTExpr
-    | FLOAT                                         # FLOATExpr
-    |'true'                                         # ConstantTrue
-    | 'false'                                       # ConstantFalse
-    | ('-' | '~') expr                              # NegationExpr
-    | expr ('*'|'/'|'mod') expr                     # MExpr
-    | expr ('+'|'-') expr                           # AExpr
-    | expr ('>=' | '>' | '==' | '<' | '<=') expr    # CompExpr
-    | expr 'and' expr                               # LogicalAndExpr
-    | expr 'or' expr                                # LogicalOrExpr
-    | expr 'xor' expr                               # LogicalXorExpr
-    | 'floor' '(' expr ')'                          # FloorExpr
-    | 'ceil' '(' expr ')'                           # CeilExpr
-    | parExpression                                 # ParExpr
+    : ID                                                        # IDExpr
+    | INT                                                       # INTExpr
+    | FLOAT                                                     # FLOATExpr
+    |'true'                                                     # ConstantTrue
+    | 'false'                                                   # ConstantFalse
+    | prefix=('-' | '~') expr                                   # NegationExpr
+    | left=expr op=('*'|'/'|'mod') right=expr                   # MExpr
+    | left=expr op=('+'|'-') right=expr                         # AExpr
+    | left=expr op=('>=' | '>' | '==' | '<' | '<=') right=expr  # CompExpr
+    | left=expr op='and' right=expr                             # LogicalAndExpr
+    | left=expr op='or' right=expr                              # LogicalOrExpr
+    | left=expr op='xor' right=expr                             # LogicalXorExpr
+    | 'floor' '(' expr ')'                                      # FloorExpr
+    | 'ceil' '(' expr ')'                                       # CeilExpr
+    | parExpression                                             # ParExpr
     ;
 
 parExpression
     :   '(' expr ')'
     ;
 
+
+
 equation
-    : relation                       # EqWithNoInit
-    | relation 'init' expr           # EqWithInit
-    | equation '||' equation         # ParaEq
+    : relation                                                  # EqWithNoInit
+    | relation 'init' expr                                      # EqWithInit
+    | equation '||' equation                                    # ParaEq
     ;
 
+
+
 relation
-    : 'dot' ID '=' expr;
+    : 'dot' ID '=' expr
+    ;
+
 
 
 guard
@@ -150,6 +156,8 @@ guard
     | guard '<or>' guard
     | '(' guard ')'
     ;
+
+
 
 signal
     : ID ('[' expr ']')*;

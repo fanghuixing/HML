@@ -2,8 +2,10 @@
 Signal on, off;
 
 //Global Variables
-float waterLevel=8, accin=1, decout=1, deta=0.5;
+final float deta=0.5;
+float waterLevel=8, accin=1, decout=1;
 int MaxwaterLevel=10, LowestwaterLevel=5;
+
 
 //Constraints
 waterLevel in [5,  10];

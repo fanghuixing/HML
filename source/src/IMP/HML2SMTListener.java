@@ -1,6 +1,7 @@
 package IMP;
 
 
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.*;
 import AntlrGen.HMLBaseListener;
 import AntlrGen.HMLParser;
@@ -17,7 +18,7 @@ public class HML2SMTListener extends HMLBaseListener {
 
 
     private HashMap<String, Variable> vars = new HashMap<String, Variable>();
-
+    ParseTreeProperty<String> exprPtp = new ParseTreeProperty<String>();
 
     ParseTreeProperty<String> smt = new ParseTreeProperty<String>();
 
@@ -66,11 +67,8 @@ public class HML2SMTListener extends HMLBaseListener {
             Map.Entry entry = (Map.Entry) it.next();
             key = (String) entry.getKey();
             value = (Variable) entry.getValue();
-            if (value.isFinal) continue; // 常量不用声明，直接在转成的公式中替换
-            else
+            if (!value.isFinal)  // 常量不用声明，直接在转成的公式中替换
                 inits.append(String.format("(= %s %s) ", key,  value.init.getText()));
-
-
         }
         inits.append(")");
         return inits.toString();
@@ -106,7 +104,6 @@ public class HML2SMTListener extends HMLBaseListener {
     /**
      * Scanning of Variables
      */
-
     public void  exitVariableDeclaration(HMLParser.VariableDeclarationContext ctx){
         boolean isFinal = false;
         String type = null;
@@ -133,5 +130,94 @@ public class HML2SMTListener extends HMLBaseListener {
         }
     }
 
+    public void exitIDExpr(HMLParser.IDExprContext ctx) {
+        String ID = ctx.getText();
+        Variable var = vars.get(ID);
+        if (var.isFinal)
+            exprPtp.put(ctx, exprPtp.get(var.init.expr()));
+    }
 
+    public void exitINTExpr(HMLParser.INTExprContext ctx){
+        exprPtp.put(ctx, ctx.getText());
+    }
+
+    public void exitFLOATExpr(HMLParser.FLOATExprContext ctx){
+        exprPtp.put(ctx, ctx.getText());
+    }
+
+    public void exitConstantTrue(HMLParser.ConstantTrueContext ctx){
+        exprPtp.put(ctx, ctx.getText());
+    }
+
+    public void exitConstantFalse(HMLParser.ConstantFalseContext ctx){
+        exprPtp.put(ctx, ctx.getText());
+    }
+
+    public void exitNegationExpr(HMLParser.NegationExprContext ctx){
+        if (ctx.prefix.getText().equals("-")) {
+            exprPtp.put(
+                    ctx, String.format("(- 0 %s)", exprPtp.get(ctx.expr()))
+            );
+        }
+        else
+            exprPtp.put(
+                    ctx, String.format("(not %s)", exprPtp.get(ctx.expr()))
+            );
+    }
+
+    public void exitMExpr(HMLParser.MExprContext ctx) {
+        setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);
+    }
+
+    public void exitAExpr(HMLParser.AExprContext ctx) {
+        setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);
+    }
+
+    public void exitCompExpr(HMLParser.CompExprContext ctx) {
+        setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);
+    }
+
+    public void exitLogicalAndExpr(HMLParser.LogicalAndExprContext ctx) {
+        setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);
+    }
+
+    public void exitLogicalOrExpr(HMLParser.LogicalOrExprContext ctx) {
+        setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);
+    }
+
+    public void exitLogicalXorExpr(HMLParser.LogicalXorExprContext ctx) {
+        setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);
+    }
+
+    private void setExprPtpForTriple(HMLParser.ExprContext ctx,
+        HMLParser.ExprContext leftEC, Token opt, HMLParser.ExprContext rightEC) {
+        String left = exprPtp.get(leftEC);
+        String right = exprPtp.get(rightEC);
+        String op = opt.getText();
+        exprPtp.put(ctx, String.format("(%s %s %s)", op, left, right));
+        left = null;
+        right = null;
+        op = null;
+    }
+
+    public void exitFloorExpr(HMLParser.FloorExprContext ctx) {
+        exprPtp.put(
+                ctx,
+                String.format("(floor ( %s ) )", exprPtp.get(ctx.expr()))
+        );
+    }
+
+    public void exitCeilExpr(HMLParser.CeilExprContext ctx) {
+        exprPtp.put(
+                ctx,
+                String.format("(ceil ( %s ) )", exprPtp.get(ctx.expr()))
+        );
+    }
+
+    public void exitParExpr(HMLParser.ParExprContext ctx) {
+        exprPtp.put(
+                ctx,
+                String.format("( %s )", exprPtp.get(ctx.parExpression().expr()))
+        );
+    }
 }
