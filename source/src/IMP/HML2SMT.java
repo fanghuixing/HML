@@ -33,5 +33,7 @@ public class HML2SMT {
         int depth = 10;
         System.out.println(converter.getVarsInSMT2Formula(depth));
 
+        System.out.println(converter.getInitializations());
+
     }
 }

@@ -18,6 +18,7 @@ public class HML2SMTListener extends HMLBaseListener {
 
     private HashMap<String, Variable> vars = new HashMap<String, Variable>();
 
+
     ParseTreeProperty<String> smt = new ParseTreeProperty<String>();
 
     /**
@@ -50,6 +51,29 @@ public class HML2SMTListener extends HMLBaseListener {
 
         }
         return svars.toString();
+    }
+
+
+    public String getInitializations( ) {
+        StringBuilder inits = new StringBuilder();
+        inits.append("(and ");
+
+        Iterator it = vars.entrySet().iterator();
+
+        String key;
+        Variable value;
+        while(it.hasNext()) {
+            Map.Entry entry = (Map.Entry) it.next();
+            key = (String) entry.getKey();
+            value = (Variable) entry.getValue();
+            if (value.isFinal) continue; // 常量不用声明，直接在转成的公式中替换
+            else
+                inits.append(String.format("(= %s %s) ", key,  value.init.getText()));
+
+
+        }
+        inits.append(")");
+        return inits.toString();
     }
 
     String getSMT(ParseTree ctx) { return smt.get(ctx); }
