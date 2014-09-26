@@ -14,14 +14,16 @@ import java.util.*;
  *
  */
 public class HML2SMTListener extends HMLBaseListener {
-
+    Logger log = Logger.getInstance();
 
 
     private HashMap<String, Variable> vars = new HashMap<String, Variable>();
-    ParseTreeProperty<String> exprPtp = new ParseTreeProperty<String>();
+    private ParseTreeProperty<String> exprPtp = new ParseTreeProperty<String>();
 
-    ParseTreeProperty<String> smt = new ParseTreeProperty<String>();
-
+    private ParseTreeProperty<String> flow = new ParseTreeProperty<String>();
+    private HashMap<HMLParser.OdeContext, Flow> flows  = new HashMap<HMLParser.OdeContext, Flow>();
+    private HashMap<String, List> templs = new HashMap<String, List>();
+    private int indexOfFlow = 0;
     /**
      *
      * @return 以SMT2 公式的形式表示的变量声明字符串（不包含常量）
@@ -54,7 +56,10 @@ public class HML2SMTListener extends HMLBaseListener {
         return svars.toString();
     }
 
-
+    /**
+     * 获取变量初值
+     * @return
+     */
     public String getInitializations( ) {
         StringBuilder inits = new StringBuilder();
         inits.append("(and ");
@@ -68,38 +73,26 @@ public class HML2SMTListener extends HMLBaseListener {
             key = (String) entry.getKey();
             value = (Variable) entry.getValue();
             if (!value.isFinal)  // 常量不用声明，直接在转成的公式中替换
-                inits.append(String.format("(= %s %s) ", key,  value.init.getText()));
+                inits.append(String.format("(= %s_0_0 %s) ", key,  value.init.getText()));
         }
         inits.append(")");
         return inits.toString();
     }
 
-    String getSMT(ParseTree ctx) { return smt.get(ctx); }
-    void setSMT(ParseTree ctx, String s) { smt.put(ctx, s); }
+    private String getFlow(ParseTree ctx) { return flow.get(ctx); }
+    private void setFlow(ParseTree ctx, String s) { flow.put(ctx, s); }
 
-    public void exitEqWithNoInit(HMLParser.EqWithNoInitContext ctx){
-        setSMT(ctx, getSMT(ctx.relation()));
+    public String getFlowsListInString(){
+        StringBuilder flowsString = new StringBuilder();
+        Collection<Flow> fs = flows.values();
+        for (Flow f : fs){
+            flowsString.append(String.format("(define-ode flow_%s (%s))", f.id, f.ode));
+            flowsString.append("\n");
+        }
+        return flowsString.toString();
     }
 
 
-    public void exitRelation(HMLParser.RelationContext ctx) {
-        String x = String.format("(= d/dt[%s] %s)", ctx.ID().getText(), ctx.expr().getText());
-        setSMT(ctx, x);
-    }
-
-    public void exitEqWithInit(HMLParser.EqWithInitContext ctx){
-        String x = String.format("(= %s %s) ", ctx.relation().ID(), ctx.expr());
-        setSMT(ctx, x + getSMT(ctx.relation()));
-    }
-
-    public void exitParaEq(HMLParser.ParaEqContext ctx){
-        setSMT(ctx, getSMT(ctx.equation(0)) + getSMT(ctx.equation(1)));
-    }
-
-    public void exitOde(HMLParser.OdeContext ctx){
-        String x = String.format("(define-ode flow ( %s ))", getSMT(ctx.equation()));
-        setSMT(ctx, x);
-    }
 
     /**
      * Scanning of Variables
@@ -133,6 +126,10 @@ public class HML2SMTListener extends HMLBaseListener {
     public void exitIDExpr(HMLParser.IDExprContext ctx) {
         String ID = ctx.getText();
         Variable var = vars.get(ID);
+        if (var == null) {
+            exprPtp.put(ctx, ID); // 当这个变量是Template参数变量时候
+            return;
+        }
         if (var.isFinal)
             exprPtp.put(ctx, exprPtp.get(var.init.expr()));
     }
@@ -220,4 +217,51 @@ public class HML2SMTListener extends HMLBaseListener {
                 String.format("( %s )", exprPtp.get(ctx.parExpression().expr()))
         );
     }
+
+    public void enterTemplate(HMLParser.TemplateContext ctx) {
+        String ID = ctx.ID().getText();
+        if (templs.get(ID) != null) {
+            log.log("Duplicated Template " + ID + ctx.formalParameters().getText() +  " had been defined already!");
+            return;
+        }
+        ArrayList<HMLParser.TypeContext> ptypes = new ArrayList<HMLParser.TypeContext>();
+        HMLParser.FormalParameterDeclsContext fpdc = ctx.formalParameters().formalParameterDecls();
+        while (fpdc!=null) {
+            ptypes.add(fpdc.type());
+            fpdc = fpdc.formalParameterDeclsRest().formalParameterDecls();
+        }
+        templs.put(ID, ptypes);
+    }
+
+
+
+
+
+/*
+    public void exitEqWithNoInit(HMLParser.EqWithNoInitContext ctx){
+        setFlow(ctx, getFlow(ctx.relation()));
+    }
+
+
+    public void exitRelation(HMLParser.RelationContext ctx) {
+        String x = String.format("(= d/dt[%s] %s)", ctx.ID().getText(), exprPtp.get(ctx.expr()));
+        setFlow(ctx, x);
+    }
+
+    public void exitEqWithInit(HMLParser.EqWithInitContext ctx){
+        setFlow(ctx, getFlow(ctx.relation()));
+    }
+
+    public void exitParaEq(HMLParser.ParaEqContext ctx){
+        setFlow(ctx, getFlow(ctx.equation(0)) + getFlow(ctx.equation(1)));
+    }
+
+    public void exitOde(HMLParser.OdeContext ctx){
+        String x =  getFlow(ctx.equation());
+        Flow f = new Flow(++indexOfFlow, x);
+        flows.put(ctx, f);
+    }
+
+*/
+
 }

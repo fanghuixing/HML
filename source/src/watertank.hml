@@ -15,12 +15,14 @@ Template open(float h, float a, int H, float e){
     dot h = a until (h >= H-e)
 }
 
+
 Template closed(float h, float b, int L, float e){
     dot h = -b until (h <= L+e)
 }
 
 //The model(program) Starting from here...
 Main {
+    x = 0;
    // Loop 
     while(true){
         !on;

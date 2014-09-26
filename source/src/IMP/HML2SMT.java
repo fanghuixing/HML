@@ -31,9 +31,12 @@ public class HML2SMT {
         walker.walk(converter, tree);
 
         int depth = 10;
+
         System.out.println(converter.getVarsInSMT2Formula(depth));
 
         System.out.println(converter.getInitializations());
+
+        System.out.println(converter.getFlowsListInString());
 
     }
 }
