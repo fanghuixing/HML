@@ -9,6 +9,8 @@ int MaxwaterLevel=10, LowestwaterLevel=5;
 
 //Constraints
 waterLevel in [5,  10];
+accin in [-1, 1];
+time in [0, 1];
 
 //Templates
 Template open(float h, float a, int H, float e){

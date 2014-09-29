@@ -1,6 +1,6 @@
 group HML;
 
-SMT2(vars,uvars,tvars,inits,mvars) ::= <<
+SMT2(vars,uvars,tvars,inits,mvars,constraints) ::= <<
 (set-logic QF_NRA_ODE)
 <vars: singleVar(); separator="\n">
 <uvars: singleVar(); separator="\n">
@@ -8,14 +8,17 @@ SMT2(vars,uvars,tvars,inits,mvars) ::= <<
 <mvars: singleVar(); separator="\n">
 <!
 <flows: flow(); separator="\n">
-<constrains: assert(); separator="\n">
 !>
-(assert (and <inits> assert()); separator=" ")
+<constraints: assertConstraint(); separator="\n">
+(assert (and <inits>  formulas); separator=" ")
 (check-sat)
 (exit)
 >>
 
 singleVar(f)::="<line(name=f.name, stype=f.type)>"
 
+line(name, stype) ::= "(declare-fun <name> () <stype>)"
 
-line(name, stype) ::= "(declare-fun <name> () <stype>) "
+assertConstraint(f) ::= "<constraint(left=f.left, right=f.right)>"
+
+constraint(left, right) ::= "(assert (\<= <left>  <right>))"

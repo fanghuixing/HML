@@ -1,8 +1,5 @@
 package IMP;
-
-
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.*;
 import AntlrGen.HMLBaseListener;
 import AntlrGen.HMLParser;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
@@ -18,33 +15,18 @@ public class HML2SMTListener extends HMLBaseListener {
 
     //用于转换SMT2公式的变量列表
     private List<VariableForSMT2> varlist = new ArrayList<VariableForSMT2>();
+    private List<Constraint> constrList = new ArrayList<Constraint>();
     //变量和常量map, key为变量名
     private HashMap<String, Variable> vars = new HashMap<String, Variable>();
     private ParseTreeProperty<String> exprPtp = new ParseTreeProperty<String>();
-    private ParseTreeProperty<String> flow = new ParseTreeProperty<String>();
-    private HashMap<HMLParser.OdeContext, Flow> flows  = new HashMap<HMLParser.OdeContext, Flow>();
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
-    private int indexOfFlow = 0;
-    private String getFlow(ParseTree ctx) { return flow.get(ctx); }
-    private void setFlow(ParseTree ctx, String s) { flow.put(ctx, s); }
-
-    public String getFlowsListInString(){
-        StringBuilder flowsString = new StringBuilder();
-        Collection<Flow> fs = flows.values();
-        for (Flow f : fs){
-            flowsString.append(String.format("(define-ode flow_%s (%s))", f.id, f.ode));
-            flowsString.append("\n");
-        }
-        return flowsString.toString();
-    }
-
     public List<VariableForSMT2> getVarlist() {
         return varlist;
     }
 
     /**
      * 获取变量初值
-     * @return
+     * @return 变量初始值
      */
     public String getInitializations( ) {
         StringBuilder inits = new StringBuilder();
@@ -165,9 +147,6 @@ public class HML2SMTListener extends HMLBaseListener {
         String right = exprPtp.get(rightEC);
         String op = opt.getText();
         exprPtp.put(ctx, String.format("(%s %s %s)", op, left, right));
-        left = null;
-        right = null;
-        op = null;
     }
 
     public void exitFloorExpr(HMLParser.FloorExprContext ctx) {
@@ -211,4 +190,14 @@ public class HML2SMTListener extends HMLBaseListener {
         log.log("Store Template: " +key.toString());
     }
 
+    public void exitVariableConstraint(HMLParser.VariableConstraintContext ctx) {
+        String name = ctx.ID().getText();
+        String leftEnd = ctx.leftEnd.getText();
+        String rightEnd = ctx.rightEnd.getText();
+        constrList.add(new Constraint(name, leftEnd, rightEnd));
+    }
+
+    public List<Constraint> getConstraintsList(){
+        return  this.constrList;
+    }
 }

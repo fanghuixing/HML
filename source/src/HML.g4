@@ -53,7 +53,7 @@ variableDeclaration
     ;
 
 variableConstraint
-    : variableDeclaratorId 'in' '[' leftEnd=expr ',' rightEnd=expr ']' ';'
+    : ID 'in' '[' leftEnd=expr ',' rightEnd=expr ']' ';'
     ;
 
 
