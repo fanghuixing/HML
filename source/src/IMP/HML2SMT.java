@@ -2,14 +2,11 @@ package IMP;
 
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
-
 import AntlrGen.*;
-
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
@@ -18,6 +15,7 @@ import org.stringtemplate.v4.STGroupFile;
  * Created by Huixing Fang on 2014/9/25.
  */
 public class HML2SMT {
+    final static int depth = 10;
 
     public static void main(String[] args) throws Exception {
         String inputFile = null;
@@ -32,15 +30,9 @@ public class HML2SMT {
         HMLParser parser = new HMLParser(tokens);
         parser.setBuildParseTree(true);
         ParseTree tree = parser.hybridModel();
-
-
         ParseTreeWalker walker = new ParseTreeWalker();
         HML2SMTListener converter = new HML2SMTListener();
         walker.walk(converter, tree);
-
-        int depth = 10;
-
-
 
 
         List<VariableForSMT2> varlist = converter.getVarlist();

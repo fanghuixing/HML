@@ -26,7 +26,13 @@ public class Constraint {
             this.right =right;
         }
 
+        public String getLeft() {
+            return left;
+        }
 
+        public String getRight() {
+            return right;
+        }
     }
 
     public List getNormalConstraintList(int depth){
