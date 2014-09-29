@@ -1,0 +1,21 @@
+group HML;
+
+SMT2(vars,uvars,tvars,inits,mvars) ::= <<
+(set-logic QF_NRA_ODE)
+<vars: singleVar(); separator="\n">
+<uvars: singleVar(); separator="\n">
+<tvars: singleVar(); separator="\n">
+<mvars: singleVar(); separator="\n">
+<!
+<flows: flow(); separator="\n">
+<constrains: assert(); separator="\n">
+!>
+(assert (and <inits> assert()); separator=" ")
+(check-sat)
+(exit)
+>>
+
+singleVar(f)::="<line(name=f.name, stype=f.type)>"
+
+
+line(name, stype) ::= "(declare-fun <name> () <stype>) "

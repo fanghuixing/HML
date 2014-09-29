@@ -16,44 +16,30 @@ import java.util.*;
 public class HML2SMTListener extends HMLBaseListener {
     Logger log = Logger.getInstance();
 
-
+    //用于转换SMT2公式的变量列表
+    private List<VariableForSMT2> varlist = new ArrayList<VariableForSMT2>();
+    //变量和常量map, key为变量名
     private HashMap<String, Variable> vars = new HashMap<String, Variable>();
     private ParseTreeProperty<String> exprPtp = new ParseTreeProperty<String>();
-
     private ParseTreeProperty<String> flow = new ParseTreeProperty<String>();
     private HashMap<HMLParser.OdeContext, Flow> flows  = new HashMap<HMLParser.OdeContext, Flow>();
-    private HashMap<String, List> templs = new HashMap<String, List>();
+    private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     private int indexOfFlow = 0;
-    /**
-     *
-     * @return 以SMT2 公式的形式表示的变量声明字符串（不包含常量）
-     */
-    public String getVarsInSMT2Formula(int depth){
-        if(vars == null){
-            return "";
+    private String getFlow(ParseTree ctx) { return flow.get(ctx); }
+    private void setFlow(ParseTree ctx, String s) { flow.put(ctx, s); }
+
+    public String getFlowsListInString(){
+        StringBuilder flowsString = new StringBuilder();
+        Collection<Flow> fs = flows.values();
+        for (Flow f : fs){
+            flowsString.append(String.format("(define-ode flow_%s (%s))", f.id, f.ode));
+            flowsString.append("\n");
         }
-        StringBuilder svars = new StringBuilder();
-        Iterator it = vars.entrySet().iterator();
+        return flowsString.toString();
+    }
 
-        String key;
-        Variable value;
-        while(it.hasNext()){
-            Map.Entry entry = (Map.Entry) it.next();
-            key = (String) entry.getKey();
-            value = (Variable) entry.getValue();
-            if (value.isFinal) continue; // 常量不用声明，直接在转成的公式中替换
-
-            svars.append(String.format("(declare-fun %s () %s)", key,  value.type));
-            svars.append('\n');
-            for (int i=0; i < depth; i++){
-                svars.append(String.format("(declare-fun %s_%s_0 () %s)", key, i, value.type));
-                svars.append('\n');
-                svars.append(String.format("(declare-fun %s_%s_t () %s)", key, i, value.type));
-                svars.append('\n');
-            }
-
-        }
-        return svars.toString();
+    public List<VariableForSMT2> getVarlist() {
+        return varlist;
     }
 
     /**
@@ -78,21 +64,6 @@ public class HML2SMTListener extends HMLBaseListener {
         inits.append(")");
         return inits.toString();
     }
-
-    private String getFlow(ParseTree ctx) { return flow.get(ctx); }
-    private void setFlow(ParseTree ctx, String s) { flow.put(ctx, s); }
-
-    public String getFlowsListInString(){
-        StringBuilder flowsString = new StringBuilder();
-        Collection<Flow> fs = flows.values();
-        for (Flow f : fs){
-            flowsString.append(String.format("(define-ode flow_%s (%s))", f.id, f.ode));
-            flowsString.append("\n");
-        }
-        return flowsString.toString();
-    }
-
-
 
     /**
      * Scanning of Variables
@@ -120,6 +91,8 @@ public class HML2SMTListener extends HMLBaseListener {
             varName = v.variableDeclaratorId().ID().getText();
             newVar = new Variable(type, v.variableInitializer(), isFinal);
             vars.put(varName, newVar);
+            if (!isFinal)
+                varlist.add(new VariableForSMT2(varName, type));
         }
     }
 
@@ -218,50 +191,24 @@ public class HML2SMTListener extends HMLBaseListener {
         );
     }
 
-    public void enterTemplate(HMLParser.TemplateContext ctx) {
-        String ID = ctx.ID().getText();
-        if (templs.get(ID) != null) {
-            log.log("Duplicated Template " + ID + ctx.formalParameters().getText() +  " had been defined already!");
+    public void exitTemplate(HMLParser.TemplateContext ctx) {
+        log.log("Exit Template ...");
+        StringBuilder key = new StringBuilder();
+        List<String> formalVarNames = new ArrayList<String>();
+        key.append(ctx.ID().getText());
+        HMLParser.FormalParameterDeclsContext fpc = ctx.formalParameters().formalParameterDecls();
+        while (fpc != null) {
+            key.append(fpc.type().getText());
+            formalVarNames.add(fpc.formalParameterDeclsRest().variableDeclaratorId().ID().getText());
+            fpc = fpc.formalParameterDeclsRest().formalParameterDecls();
+        }
+        if (tmpMap.get(key.toString()) != null) {
+            log.log("Duplicated Template " + key + " had been defined already!");
             return;
         }
-        ArrayList<HMLParser.TypeContext> ptypes = new ArrayList<HMLParser.TypeContext>();
-        HMLParser.FormalParameterDeclsContext fpdc = ctx.formalParameters().formalParameterDecls();
-        while (fpdc!=null) {
-            ptypes.add(fpdc.type());
-            fpdc = fpdc.formalParameterDeclsRest().formalParameterDecls();
-        }
-        templs.put(ID, ptypes);
+        //以模板名加参数类型为key保存Template, tmpMap为存储体
+        tmpMap.put(key.toString(), new Template(formalVarNames, ctx));
+        log.log("Store Template: " +key.toString());
     }
-
-
-
-
-
-/*
-    public void exitEqWithNoInit(HMLParser.EqWithNoInitContext ctx){
-        setFlow(ctx, getFlow(ctx.relation()));
-    }
-
-
-    public void exitRelation(HMLParser.RelationContext ctx) {
-        String x = String.format("(= d/dt[%s] %s)", ctx.ID().getText(), exprPtp.get(ctx.expr()));
-        setFlow(ctx, x);
-    }
-
-    public void exitEqWithInit(HMLParser.EqWithInitContext ctx){
-        setFlow(ctx, getFlow(ctx.relation()));
-    }
-
-    public void exitParaEq(HMLParser.ParaEqContext ctx){
-        setFlow(ctx, getFlow(ctx.equation(0)) + getFlow(ctx.equation(1)));
-    }
-
-    public void exitOde(HMLParser.OdeContext ctx){
-        String x =  getFlow(ctx.equation());
-        Flow f = new Flow(++indexOfFlow, x);
-        flows.put(ctx, f);
-    }
-
-*/
 
 }
