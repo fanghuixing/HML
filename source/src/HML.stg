@@ -22,3 +22,4 @@ line(name, stype) ::= "(declare-fun <name> () <stype>)"
 assertConstraint(f) ::= "<constraint(left=f.left, right=f.right)>"
 
 constraint(left, right) ::= "(assert (\<= <left>  <right>))"
+

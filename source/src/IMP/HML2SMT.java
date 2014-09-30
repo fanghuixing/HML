@@ -1,5 +1,6 @@
 package IMP;
 
+import IMP.Scope.ScopeConstructor;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import java.io.File;
@@ -33,6 +34,9 @@ public class HML2SMT {
         ParseTreeWalker walker = new ParseTreeWalker();
         HML2SMTListener converter = new HML2SMTListener();
         walker.walk(converter, tree);
+
+        ScopeConstructor scl = new ScopeConstructor();
+        walker.walk(scl, tree);
 
 
         List<VariableForSMT2> varlist = converter.getVarlist();
