@@ -3,6 +3,8 @@ package IMP;
 import IMP.Basic.Constraint;
 import IMP.Basic.VariableForSMT2;
 import IMP.Scope.ScopeConstructor;
+import IMP.Translate.Dynamics;
+import IMP.Translate.HMLProgram2SMT;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import java.io.File;
@@ -19,6 +21,7 @@ import org.stringtemplate.v4.STGroupFile;
  */
 public class HML2SMT {
     final static int depth = 10;
+    static ParseTreeProperty<String> exprPtp;
 
     public static void main(String[] args) throws Exception {
         String inputFile = null;
@@ -36,10 +39,16 @@ public class HML2SMT {
         ParseTreeWalker walker = new ParseTreeWalker();
         HML2SMTListener converter = new HML2SMTListener();
         walker.walk(converter, tree);
-
+        exprPtp = converter.getExprPtp();
         ScopeConstructor scl = new ScopeConstructor();
         walker.walk(scl, tree);
 
+        HMLProgram2SMT trans = new HMLProgram2SMT(scl.getScopes(),scl.getGlobals(), converter.getTmpMap(), depth);
+
+        trans.visit(tree);
+        for (Dynamics dy : trans.getDynamicsList()) {
+            System.out.println(dy);
+        }
 
         List<VariableForSMT2> varlist = converter.getVarlist();
         STGroup group = new STGroupFile("HML.stg");
@@ -78,6 +87,10 @@ public class HML2SMT {
         return list;
     }
 
+
+    public static ParseTreeProperty<String> getExprPtp() {
+        return exprPtp;
+    }
     /*
     //获取符号xpath的子树，且子树的类型由Class c指定
     public static  void getMaths(ParseTree tree, String xpath, HMLParser parser, List<ParseTree> trees, Class c){

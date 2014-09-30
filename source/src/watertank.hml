@@ -24,8 +24,8 @@ Template closed(float h, float b, int L, float e){
 
 //The model(program) Starting from here...
 Main {
-    x = 0;
-   // Loop 
+    waterLevel=8
+    // Loop
     while(true){
         !on;
         // let water in

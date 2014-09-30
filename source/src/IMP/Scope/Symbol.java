@@ -5,7 +5,7 @@ package IMP.Scope;
  */
 public class Symbol {
     public static enum Type {
-        NULL, REAL, INT, BOOLEAN
+        NULL, Real, Int, Bool
     }
 
     String name;      // All symbols at least have a name
@@ -15,6 +15,7 @@ public class Symbol {
     public Symbol(String name) { this.name = name; }
     public Symbol(String name, Type type) { this(name); this.type = type; }
     public String getName() { return name; }
+    public Type getType() {return type; }
 
     public String toString() {
         if ( type!=Type.NULL ) return '<'+getName()+":"+type+'>';

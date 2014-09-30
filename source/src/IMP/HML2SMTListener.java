@@ -25,6 +25,10 @@ public class HML2SMTListener extends HMLBaseListener {
         return varlist;
     }
 
+    public HashMap<String, Template> getTmpMap() {
+        return tmpMap;
+    }
+
     /**
      * 获取变量初值
      * @return 变量初始值
@@ -46,6 +50,10 @@ public class HML2SMTListener extends HMLBaseListener {
         }
         inits.append(")");
         return inits.toString();
+    }
+
+    public ParseTreeProperty<String> getExprPtp() {
+        return exprPtp;
     }
 
     /**

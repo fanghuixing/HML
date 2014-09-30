@@ -76,7 +76,7 @@ arrayInitializer
     |   'new' 'Array' ('[' INT ']')+
     ;
 
-program : 'Main ' '{' blockStatement* '}';
+program : 'Main ' '{' blockStatement '}';
 
 blockStatement
     :  atom                                                  #AtomPro   // Atomic
@@ -102,11 +102,13 @@ parStatement
 exprList
     : expr (',' expr)* ;   // arg list
 
+
+// !s (single or multi-sending), !s[0], !s[1][1]
 atom
-    :  'skip'
-    |  ID '=' expr
-    |  '!' signal                   // !s (single or multi-sending), !s[0], !s[1][1]
-    |  'suspend' '(' time=expr ')'
+    :  'skip'                                                   # Skip
+    |  ID '=' expr                                              # Assignment
+    |  '!' signal                                               # SendSignal
+    |  'suspend' '(' time=expr ')'                              # Suspend
     ;
 
 expr

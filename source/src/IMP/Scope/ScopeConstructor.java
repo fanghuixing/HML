@@ -18,8 +18,16 @@ public class ScopeConstructor extends HMLBaseListener {
     Scope currentScope; // 当前所处的scope
     Logger log = Logger.getInstance();
 
+    public ParseTreeProperty<Scope> getScopes() {
+        return scopes;
+    }
 
-    void saveScope(ParserRuleContext ctx, Scope s) { scopes.put(ctx, s); }
+    public GlobalScope getGlobals() {
+        return globals;
+    }
+
+    void saveScope(ParserRuleContext ctx, Scope s) { scopes.put(ctx, s);
+}
 
     public void enterHybridModel(HMLParser.HybridModelContext ctx) {
         globals = new GlobalScope(null);
@@ -87,9 +95,9 @@ public class ScopeConstructor extends HMLBaseListener {
     }
 
     public static Symbol.Type getType(String tokenType) {
-        if (tokenType.equals("float"))   return Symbol.Type.REAL;
-        if (tokenType.equals("int"))    return Symbol.Type.INT;
-        if (tokenType.equals("boolean"))  return Symbol.Type.BOOLEAN;
+        if (tokenType.equals("float"))   return Symbol.Type.Real;
+        if (tokenType.equals("int"))    return Symbol.Type.Int;
+        if (tokenType.equals("boolean"))  return Symbol.Type.Bool;
 
         return Symbol.Type.NULL;
     }

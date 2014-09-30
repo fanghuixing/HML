@@ -15,4 +15,8 @@ public class Template {
         this.formalVarNames = formalVarNames;
         this.templateContext = templateContext;
     }
+
+    public HMLParser.TemplateContext getTemplateContext() {
+        return templateContext;
+    }
 }
