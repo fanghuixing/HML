@@ -1,11 +1,11 @@
-package IMP;
+package IMP.Basic;
 
 /**
  * Created by fofo on 2014/9/29.
  */
 public class VariableForSMT2 {
-    String name;
-    String type;
+    public String name;
+    public String type;
     public VariableForSMT2(){}
     public VariableForSMT2(String name, String type){
          this.name = name;

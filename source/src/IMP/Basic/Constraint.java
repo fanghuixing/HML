@@ -1,4 +1,4 @@
-package IMP;
+package IMP.Basic;
 
 import java.util.ArrayList;
 import java.util.List;

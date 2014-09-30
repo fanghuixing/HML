@@ -1,4 +1,4 @@
-package IMP;
+package IMP.Basic;
 
 import AntlrGen.HMLParser;
 

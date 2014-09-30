@@ -1,5 +1,7 @@
 package IMP;
 
+import IMP.Basic.Constraint;
+import IMP.Basic.VariableForSMT2;
 import IMP.Scope.ScopeConstructor;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
