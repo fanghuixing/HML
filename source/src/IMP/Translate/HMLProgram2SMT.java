@@ -11,6 +11,7 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 
 /**
  * Created by fofo on 2014/9/30.
@@ -23,6 +24,9 @@ public class HMLProgram2SMT extends HMLBaseVisitor<Void> {
     private int depth;
     private List<Dynamics> dynamicsList = new ArrayList<Dynamics>();
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
+    private VariableLink currentVariableLink;
+    private Stack<VariableLink> variableStack = new Stack<VariableLink>();
+
 
     Dynamics currentDynamics = new Dynamics();
 
@@ -87,29 +91,70 @@ public class HMLProgram2SMT extends HMLBaseVisitor<Void> {
 
     public Void visitOde(HMLParser.OdeContext ctx) {
         System.out.println("Visiting Ode ... ...");
-        currentDynamics.addContinuous(ctx);
+        visit(ctx.equation());
+        currentDynamics.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
         currentDynamics.setDepth(currentDepth++);
         dynamicsList.add(currentDynamics);
         createNewDynamics();
         return null;
     }
 
+    //不带初始值的方程
+    public Void visitEqWithNoInit(HMLParser.EqWithNoInitContext ctx) {
+        System.out.println("Visiting Ode without init ... ...");
+        return null;
+    }
+
+    //带初始值的方程
+    public Void visitEqWithInit(HMLParser.EqWithInitContext ctx) {
+        System.out.println("Visiting Ode with init ... ...");
+        currentDynamics.addDiscrete(ctx);
+        return null;
+    }
+
+    public Void visitParaEq(HMLParser.ParaEqContext ctx) {
+        System.out.println("Visiting Para Ode  ... ...");
+        for (HMLParser.EquationContext e : ctx.equation())  visit(e);
+        return null;
+    }
+
+
     public Void visitCallTem(HMLParser.CallTemContext ctx) {
         System.out.println("Visiting Call Template...");
         StringBuilder key = new StringBuilder();
+        List<String> cvars = new ArrayList<String>();
         key.append(ctx.ID().getText());
         if (ctx.exprList()!=null) {
             List<HMLParser.ExprContext> exprs = ctx.exprList().expr();
             for (HMLParser.ExprContext e : exprs) {
+                //模板调用时候传入的参数类型
                 Symbol s = currentScope.resolve(e.getText());
+                cvars.add(e.getText());
                 key.append(getType(s.getType()));
             }
             Template template = tmpMap.get(key.toString());
             System.out.println(key.toString());
+
+            List<String> fvars = template.getFormalVarNames();
+
+            variableStack.push(currentVariableLink);
+            VariableLink vlk = new VariableLink();
+            int i = 0;
+            for (String fv : fvars) {
+                vlk.setRealVar(fv, getRealVarName(cvars.get(i)));
+                i++;
+            }
+            currentVariableLink = vlk;
             visit(template.getTemplateContext());
+            currentVariableLink = variableStack.pop();
         }
 
         return null;
+    }
+
+    public String getRealVarName(String virtualName) {
+        if (currentVariableLink==null) return virtualName;
+        return currentVariableLink.getRealVar(virtualName);
     }
 
     public Void visitTemplate(HMLParser.TemplateContext ctx) {

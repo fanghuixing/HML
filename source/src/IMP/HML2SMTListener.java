@@ -1,5 +1,6 @@
 package IMP;
 import IMP.Basic.*;
+import IMP.Translate.AbstractExpr;
 import org.antlr.v4.runtime.Token;
 import AntlrGen.HMLBaseListener;
 import AntlrGen.HMLParser;
@@ -19,7 +20,8 @@ public class HML2SMTListener extends HMLBaseListener {
     private List<Constraint> constrList = new ArrayList<Constraint>();
     //变量和常量map, key为变量名
     private HashMap<String, Variable> vars = new HashMap<String, Variable>();
-    private ParseTreeProperty<String> exprPtp = new ParseTreeProperty<String>();
+    HashMap<String, AbstractExpr>  InitID2ExpMap = new HashMap<String, AbstractExpr>();
+    private ParseTreeProperty<AbstractExpr> exprPtp = new ParseTreeProperty<AbstractExpr>();
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     public List<VariableForSMT2> getVarlist() {
         return varlist;
@@ -27,6 +29,10 @@ public class HML2SMTListener extends HMLBaseListener {
 
     public HashMap<String, Template> getTmpMap() {
         return tmpMap;
+    }
+
+    public HashMap<String, AbstractExpr> getInitID2ExpMap() {
+        return InitID2ExpMap;
     }
 
     /**
@@ -45,14 +51,17 @@ public class HML2SMTListener extends HMLBaseListener {
             Map.Entry entry = (Map.Entry) it.next();
             key = (String) entry.getKey();
             value = (Variable) entry.getValue();
-            if (!value.isFinal)  // 常量不用声明，直接在转成的公式中替换
-                inits.append(String.format("(= %s_0_0 %s) ", key,  value.init.getText()));
+            if (!value.isFinal) {
+                // 常量不用声明，直接在转成的公式中替换
+                inits.append(String.format("(= %s_0_0 %s) ", key, value.init.getText()));
+                InitID2ExpMap.put(key, new AbstractExpr(value.init.getText()));
+            }
         }
         inits.append(")");
         return inits.toString();
     }
 
-    public ParseTreeProperty<String> getExprPtp() {
+    public ParseTreeProperty<AbstractExpr> getExprPtp() {
         return exprPtp;
     }
 
@@ -91,39 +100,43 @@ public class HML2SMTListener extends HMLBaseListener {
         String ID = ctx.getText();
         Variable var = vars.get(ID);
         if (var == null) {
-            exprPtp.put(ctx, ID); // 当这个变量是Template参数变量时候
+            exprPtp.put(ctx, new AbstractExpr(ID)); // 当这个变量是Template参数变量时候
             return;
         }
         if (var.isFinal)
             exprPtp.put(ctx, exprPtp.get(var.init.expr()));
+        else
+            exprPtp.put(ctx, new AbstractExpr(ID));
     }
 
     public void exitINTExpr(HMLParser.INTExprContext ctx){
-        exprPtp.put(ctx, ctx.getText());
+        exprPtp.put(ctx, new AbstractExpr(ctx.getText()));
     }
 
     public void exitFLOATExpr(HMLParser.FLOATExprContext ctx){
-        exprPtp.put(ctx, ctx.getText());
+        exprPtp.put(ctx, new AbstractExpr(ctx.getText()));
     }
 
     public void exitConstantTrue(HMLParser.ConstantTrueContext ctx){
-        exprPtp.put(ctx, ctx.getText());
+        exprPtp.put(ctx,  new AbstractExpr(ctx.getText()));
     }
 
     public void exitConstantFalse(HMLParser.ConstantFalseContext ctx){
-        exprPtp.put(ctx, ctx.getText());
+        exprPtp.put(ctx, new AbstractExpr(ctx.getText()));
     }
 
     public void exitNegationExpr(HMLParser.NegationExprContext ctx){
         if (ctx.prefix.getText().equals("-")) {
-            exprPtp.put(
-                    ctx, String.format("(- 0 %s)", exprPtp.get(ctx.expr()))
-            );
+            String ID = "-";
+            AbstractExpr left =  new AbstractExpr("0");
+            AbstractExpr right = exprPtp.get(ctx.expr());
+            exprPtp.put(ctx,new AbstractExpr(ID, left, right));
         }
-        else
-            exprPtp.put(
-                    ctx, String.format("(not %s)", exprPtp.get(ctx.expr()))
-            );
+        else{
+            String ID = "not";
+            AbstractExpr left = exprPtp.get(ctx.expr());
+            exprPtp.put(ctx,new AbstractExpr(ID, left, null));
+        }
     }
 
     public void exitMExpr(HMLParser.MExprContext ctx) {
@@ -131,6 +144,7 @@ public class HML2SMTListener extends HMLBaseListener {
     }
 
     public void exitAExpr(HMLParser.AExprContext ctx) {
+
         setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);
     }
 
@@ -152,31 +166,22 @@ public class HML2SMTListener extends HMLBaseListener {
 
     private void setExprPtpForTriple(HMLParser.ExprContext ctx,
         HMLParser.ExprContext leftEC, Token opt, HMLParser.ExprContext rightEC) {
-        String left = exprPtp.get(leftEC);
-        String right = exprPtp.get(rightEC);
+        AbstractExpr left = exprPtp.get(leftEC);
+        AbstractExpr right = exprPtp.get(rightEC);
         String op = opt.getText();
-        exprPtp.put(ctx, String.format("(%s %s %s)", op, left, right));
+        exprPtp.put(ctx,  new AbstractExpr(op, left, right));
     }
 
     public void exitFloorExpr(HMLParser.FloorExprContext ctx) {
-        exprPtp.put(
-                ctx,
-                String.format("(floor ( %s ) )", exprPtp.get(ctx.expr()))
-        );
+        exprPtp.put(ctx,new AbstractExpr("floor", exprPtp.get(ctx.expr()), null));
     }
 
     public void exitCeilExpr(HMLParser.CeilExprContext ctx) {
-        exprPtp.put(
-                ctx,
-                String.format("(ceil ( %s ) )", exprPtp.get(ctx.expr()))
-        );
+        exprPtp.put(ctx,new AbstractExpr("ceil", exprPtp.get(ctx.expr()), null));
     }
 
     public void exitParExpr(HMLParser.ParExprContext ctx) {
-        exprPtp.put(
-                ctx,
-                String.format("( %s )", exprPtp.get(ctx.parExpression().expr()))
-        );
+        exprPtp.put(ctx, exprPtp.get(ctx.parExpression().expr()));
     }
 
     public void exitTemplate(HMLParser.TemplateContext ctx) {

@@ -24,7 +24,10 @@ Template closed(float h, float b, int L, float e){
 
 //The model(program) Starting from here...
 Main {
-    waterLevel=8
+    waterLevel=8;
+    waterLevel=waterLevel-deta;
+    accin = accin - decout * waterLevel;
+
     // Loop
     while(true){
         !on;

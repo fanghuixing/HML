@@ -3,6 +3,7 @@ package IMP;
 import IMP.Basic.Constraint;
 import IMP.Basic.VariableForSMT2;
 import IMP.Scope.ScopeConstructor;
+import IMP.Translate.AbstractExpr;
 import IMP.Translate.Dynamics;
 import IMP.Translate.HMLProgram2SMT;
 import org.antlr.v4.runtime.*;
@@ -21,7 +22,8 @@ import org.stringtemplate.v4.STGroupFile;
  */
 public class HML2SMT {
     final static int depth = 10;
-    static ParseTreeProperty<String> exprPtp;
+    static ParseTreeProperty<AbstractExpr> exprPtp;
+    static  HashMap<String, AbstractExpr>  InitID2ExpMap;
 
     public static void main(String[] args) throws Exception {
         String inputFile = null;
@@ -30,6 +32,10 @@ public class HML2SMT {
         if ( inputFile!=null ) {
             is = new FileInputStream(inputFile);
         }
+
+        //测试文件
+        is = new FileInputStream("H:\\Antlr\\HML\\source\\src\\watertank.hml");
+
         ANTLRInputStream input = new ANTLRInputStream(is);
         HMLLexer lexer = new HMLLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -40,15 +46,11 @@ public class HML2SMT {
         HML2SMTListener converter = new HML2SMTListener();
         walker.walk(converter, tree);
         exprPtp = converter.getExprPtp();
+
         ScopeConstructor scl = new ScopeConstructor();
         walker.walk(scl, tree);
 
-        HMLProgram2SMT trans = new HMLProgram2SMT(scl.getScopes(),scl.getGlobals(), converter.getTmpMap(), depth);
 
-        trans.visit(tree);
-        for (Dynamics dy : trans.getDynamicsList()) {
-            System.out.println(dy);
-        }
 
         List<VariableForSMT2> varlist = converter.getVarlist();
         STGroup group = new STGroupFile("HML.stg");
@@ -62,18 +64,26 @@ public class HML2SMT {
         st.add("mvars", getVarListforSMT2("mode", "Int", depth));
         st.add("inits", converter.getInitializations());
 
+
+
         List<Constraint> cons = converter.getConstraintsList();
         for (Constraint c : cons) {
             st.add("constraints", c.getNormalConstraintList(depth));
         }
 
+        InitID2ExpMap = converter.getInitID2ExpMap();
+        HMLProgram2SMT trans = new HMLProgram2SMT(scl.getScopes(),scl.getGlobals(), converter.getTmpMap(), depth);
+
+        trans.visit(tree);
+        for (Dynamics dy : trans.getDynamicsList()) {
+            System.out.println(dy);
+        }
 
         //String result = st.render();
         File out = new File("H:\\Antlr\\HML\\source\\src\\HML.smt2");
         if (out.createNewFile())  System.out.println("File successfully created");
         else                      System.out.println("File already exits.");
         st.write(out, new HSTErrorListener());
-
     }
 
 
@@ -88,9 +98,19 @@ public class HML2SMT {
     }
 
 
-    public static ParseTreeProperty<String> getExprPtp() {
+    public static ParseTreeProperty<AbstractExpr> getExprPtp() {
         return exprPtp;
     }
+
+    public static HashMap<String, AbstractExpr> getInitID2ExpMap() {
+        return InitID2ExpMap;
+    }
+
+
+
+
+
+
     /*
     //获取符号xpath的子树，且子树的类型由Class c指定
     public static  void getMaths(ParseTree tree, String xpath, HMLParser parser, List<ParseTree> trees, Class c){
