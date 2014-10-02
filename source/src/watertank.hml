@@ -24,7 +24,8 @@ Template closed(float h, float b, int L, float e){
 
 //The model(program) Starting from here...
 Main {
-    waterLevel=8;
+    waterLevel=waterLevel + 1;
+    waterLevel=8 + waterLevel;
     waterLevel=waterLevel-deta;
     accin = accin - decout * waterLevel;
 
@@ -34,6 +35,7 @@ Main {
         // let water in
         open(waterLevel,accin,MaxwaterLevel,deta);
         !off;
+        waterLevel= waterLevel + 1;
         // let water out
         closed(waterLevel,decout,LowestwaterLevel,deta)
     }

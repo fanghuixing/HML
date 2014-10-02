@@ -13,7 +13,9 @@ public class VariableLink {
 
 
     public String getRealVar(String virtualVar) {
-        return Virtual2RealVar.get(virtualVar);
+        String real = Virtual2RealVar.get(virtualVar);
+        if (real==null) return virtualVar;
+        return real;
     }
 
     public void setRealVar(String virtualVar, String realVar) {

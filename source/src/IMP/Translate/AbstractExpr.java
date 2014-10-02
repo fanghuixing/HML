@@ -13,18 +13,35 @@ public class AbstractExpr {
     public String ID;
     public AbstractExpr Left;
     public AbstractExpr Right;
-
+    public Sort sort = Sort.NVAR;
     private List<String> IDlist = null;
     private String renderStr = null;
 
     public  AbstractExpr(String ID) {
-        this(ID, null, null);
+        //非变量叶子节点
+        this(ID, Sort.NVAR, null, null);
     }
 
-    public AbstractExpr(String ID, AbstractExpr left, AbstractExpr right) {
+
+    public  AbstractExpr(String ID, Sort sort) {
+        //带sort的叶子节点
+        this(ID, sort, null, null);
+    }
+
+    public  AbstractExpr(String ID, AbstractExpr left, AbstractExpr right) {
+        //非变量
+        this(ID, Sort.NVAR, left, right);
+    }
+
+    public static enum Sort {
+        VAR, NVAR
+    }
+
+    public AbstractExpr(String ID, Sort sort, AbstractExpr left, AbstractExpr right) {
         this.ID = ID;
-        Left = left;
-        Right = right;
+        this.sort = sort;
+        this.Left = left;
+        this.Right = right;
     }
 
     @Override
@@ -48,6 +65,55 @@ public class AbstractExpr {
         return renderStr;
     }
 
+    public String toString(int depth) {
+        StringBuilder sb  = new StringBuilder();
+        sb.append("(");
+
+        if (sort==Sort.VAR) //对变量需要加下标
+            sb.append(ID).append("_").append(depth).append("_t");
+        else
+            sb.append(ID);
+
+        if (Left != null) {
+            sb.append(" ");
+            sb.append(Left.toString(depth));
+            if (Right != null) {
+                sb.append(" ");
+                sb.append(Right.toString(depth));
+            }
+            sb.append(")");
+        }
+        else
+            sb.deleteCharAt(0);
+        return sb.toString();
+    }
+
+    public String toString(VariableLink cwvk) {
+        StringBuilder sb  = new StringBuilder();
+        sb.append("(");
+
+        sb.append(cwvk.getRealVar(ID));
+        if (Left != null) {
+            sb.append(" ");
+            sb.append(Left.toString(cwvk));
+            if (Right != null) {
+                sb.append(" ");
+                sb.append(Right.toString(cwvk));
+            }
+            sb.append(")");
+        }
+        else
+            sb.deleteCharAt(0);
+
+
+        if (ID.equals("d/dt")) {
+            sb.deleteCharAt(0);
+            sb.deleteCharAt(sb.length()-1);
+            sb.replace(4,5,"[");
+            sb.append("]");
+        }
+        return sb.toString();
+    }
     public List<String> getIDList() {
         if (IDlist!=null) return IDlist;
         IDlist = new ArrayList<String>();
@@ -68,6 +134,7 @@ public class AbstractExpr {
     public void replace(String ID, AbstractExpr abstractExpr) {
         if (this.ID.equals(ID)) {
             this.ID = abstractExpr.ID;
+            this.sort = abstractExpr.sort;
             this.Left = abstractExpr.Left;
             this.Right = abstractExpr.Right;
             this.IDlist = abstractExpr.IDlist;
@@ -83,5 +150,24 @@ public class AbstractExpr {
 
     }
 
+    public List<String> getVarsList(VariableLink variableLink){
+        List<String> vars = new ArrayList<String>();
+        if (this.sort==Sort.VAR){
+            vars.add(variableLink.getRealVar(ID));
+        }
+        else {
+            if (Left != null)
+                appendList(vars, Left.getVarsList(variableLink));
+            if (Right != null)
+                appendList(vars, Right.getVarsList(variableLink));
+        }
+        return vars;
+    }
+
+    public void appendList(List<String> target, List<String> from) {
+        for (String s : from) {
+            target.add(s);
+        }
+    }
 
 }

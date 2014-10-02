@@ -92,6 +92,7 @@ public class HMLProgram2SMT extends HMLBaseVisitor<Void> {
     public Void visitOde(HMLParser.OdeContext ctx) {
         System.out.println("Visiting Ode ... ...");
         visit(ctx.equation());
+        
         currentDynamics.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
         currentDynamics.setDepth(currentDepth++);
         dynamicsList.add(currentDynamics);

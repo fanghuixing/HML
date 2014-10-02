@@ -62,7 +62,7 @@ public class HML2SMT {
 
         st.add("tvars", getVarListforSMT2("time", "Real", depth));
         st.add("mvars", getVarListforSMT2("mode", "Int", depth));
-        st.add("inits", converter.getInitializations());
+        converter.getInitializations();
 
 
 
@@ -77,6 +77,13 @@ public class HML2SMT {
         trans.visit(tree);
         for (Dynamics dy : trans.getDynamicsList()) {
             System.out.println(dy);
+            st.add("formulas", dy.toString());
+            System.out.println();
+        }
+
+        for (Map.Entry<Integer,String> ode : Dynamics.getOdeMap().entrySet()) {
+            System.out.println(ode.getValue());
+            st.add("flows", ode.getValue());
         }
 
         //String result = st.render();

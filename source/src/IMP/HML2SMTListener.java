@@ -100,13 +100,13 @@ public class HML2SMTListener extends HMLBaseListener {
         String ID = ctx.getText();
         Variable var = vars.get(ID);
         if (var == null) {
-            exprPtp.put(ctx, new AbstractExpr(ID)); // 当这个变量是Template参数变量时候
+            exprPtp.put(ctx, new AbstractExpr(ID, AbstractExpr.Sort.VAR)); // 当这个变量是Template参数变量时候
             return;
         }
         if (var.isFinal)
             exprPtp.put(ctx, exprPtp.get(var.init.expr()));
         else
-            exprPtp.put(ctx, new AbstractExpr(ID));
+            exprPtp.put(ctx, new AbstractExpr(ID, AbstractExpr.Sort.VAR));
     }
 
     public void exitINTExpr(HMLParser.INTExprContext ctx){
