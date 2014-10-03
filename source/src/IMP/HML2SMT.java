@@ -2,6 +2,8 @@ package IMP;
 
 import IMP.Basic.Constraint;
 import IMP.Basic.VariableForSMT2;
+import IMP.Infos.HML2SMTListener;
+import IMP.Infos.HSTErrorListener;
 import IMP.Scope.ScopeConstructor;
 import IMP.Translate.AbstractExpr;
 import IMP.Translate.Dynamics;
@@ -60,8 +62,8 @@ public class HML2SMT {
             st.add("uvars", getVarListforSMT2(v.name, v.type, depth));
         }
 
-        st.add("tvars", getVarListforSMT2("time", "Real", depth));
-        st.add("mvars", getVarListforSMT2("mode", "Int", depth));
+        st.add("tvars", getTimeOrModeVarListforSMT2("time", "Real", depth));
+        st.add("mvars", getTimeOrModeVarListforSMT2("mode", "Int", depth));
         converter.getInitializations();
 
 
@@ -100,6 +102,14 @@ public class HML2SMT {
         for (int i=0; i<= depth; i++) {
             list.add(new VariableForSMT2(prefix + "_" + i + "_0", type));
             list.add(new VariableForSMT2(prefix + "_" + i + "_t", type));
+        }
+        return list;
+    }
+
+    public static List getTimeOrModeVarListforSMT2(String prefix, String type, int depth){
+        List<VariableForSMT2> list = new ArrayList<VariableForSMT2>();
+        for (int i=0; i<= depth; i++) {
+            list.add(new VariableForSMT2(prefix + "_" + i, type));
         }
         return list;
     }

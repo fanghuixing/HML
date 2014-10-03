@@ -1,4 +1,4 @@
-package IMP;
+package IMP.Infos;
 import IMP.Basic.*;
 import IMP.Translate.AbstractExpr;
 import org.antlr.v4.runtime.Token;

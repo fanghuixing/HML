@@ -1,4 +1,4 @@
-package IMP;
+package IMP.Infos;
 
 import org.stringtemplate.v4.STErrorListener;
 import org.stringtemplate.v4.misc.STMessage;
