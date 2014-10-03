@@ -148,15 +148,15 @@ relation
     ;
 
 
-
+//waiting for s (single or multi-receiving), s[0], s[1][1]...
 guard
-    : 'EMP'
-    | signal                 //waiting for s (single or multi-receiving), s[0], s[1][1]...
-    | expr
-    | 'timeout' '(' expr ')'
-    | guard '<and>' guard
-    | guard '<or>' guard
-    | '(' guard ')'
+    : 'EMP'                             # EmptyGuard
+    | signal                            # SignalGuard
+    | expr                              # BoolGuard
+    | 'timeout' '(' expr ')'            # TimoutGuard
+    | guard '<and>' guard               # ConjunctGuard
+    | guard '<or>' guard                # DisjunctGuard
+    | '(' guard ')'                     # ParGuard
     ;
 
 

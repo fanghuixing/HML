@@ -3,6 +3,7 @@ package IMP.Translate;
 import AntlrGen.HMLBaseVisitor;
 import AntlrGen.HMLParser;
 import IMP.Basic.Template;
+import IMP.Basic.Variable;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
@@ -73,7 +74,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
     public Void visitAssignment(HMLParser.AssignmentContext ctx) {
         System.out.println("Visiting Assignment... ... ...");
-        currentDynamics.addDiscrete(ctx);
+        currentDynamics.addDiscrete(new ContextWithVarLink(ctx,currentVariableLink));
         return null;
     }
 
@@ -84,7 +85,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
      */
     public Void visitLoopPro(HMLParser.LoopProContext ctx) {
         System.out.println("Visiting Loop Program... ... ...");
-        currentDynamics.addDiscrete(ctx.parExpression().expr());
+        currentDynamics.addDiscrete(new ContextWithVarLink(ctx.parExpression().expr(),currentVariableLink));
         visit(ctx.parStatement().blockStatement());
         return null;
     }
@@ -92,13 +93,18 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     public Void visitOde(HMLParser.OdeContext ctx) {
         System.out.println("Visiting Ode ... ...");
         visit(ctx.equation());
-        
         currentDynamics.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
         currentDynamics.setDepth(currentDepth++);
         dynamicsList.add(currentDynamics);
         createNewDynamics();
+
+        //add guard into the discrete part
+        currentDynamics.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
         return null;
     }
+
+
+
 
     //不带初始值的方程
     public Void visitEqWithNoInit(HMLParser.EqWithNoInitContext ctx) {
@@ -109,7 +115,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     //带初始值的方程
     public Void visitEqWithInit(HMLParser.EqWithInitContext ctx) {
         System.out.println("Visiting Ode with init ... ...");
-        currentDynamics.addDiscrete(ctx);
+        currentDynamics.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink)); //将初值对应为连续变量的值
         return null;
     }
 
@@ -171,7 +177,6 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         if (type.equals(Symbol.Type.Real))   return "float";
         if (type.equals(Symbol.Type.Int))    return "int";
         if (type.equals(Symbol.Type.Bool))  return "boolean";
-
         return "NULL";
     }
 }

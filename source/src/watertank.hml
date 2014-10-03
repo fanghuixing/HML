@@ -14,6 +14,7 @@ time in [0, 1];
 
 //Templates
 Template open(float h, float a, int H, float e){
+    h = h + 1.0001;
     dot h = a until (h >= H-e)
 }
 
@@ -35,7 +36,7 @@ Main {
         // let water in
         open(waterLevel,accin,MaxwaterLevel,deta);
         !off;
-        waterLevel= waterLevel + 1;
+        waterLevel= waterLevel + 1 + waterLevel;
         // let water out
         closed(waterLevel,decout,LowestwaterLevel,deta)
     }

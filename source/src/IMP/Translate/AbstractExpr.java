@@ -34,7 +34,7 @@ public class AbstractExpr {
     }
 
     public static enum Sort {
-        VAR, NVAR
+        VAR, NVAR, GUARD
     }
 
     public AbstractExpr(String ID, Sort sort, AbstractExpr left, AbstractExpr right) {
@@ -114,6 +114,23 @@ public class AbstractExpr {
         }
         return sb.toString();
     }
+
+    public void resolve(VariableLink variableLink){
+        if (this.sort==Sort.VAR && variableLink!=null) {
+            ID = variableLink.getRealVar(this.ID);
+        }
+        else {
+            if (this.Left != null) {
+                Left.resolve(variableLink);
+            }
+            if (this.Right != null) {
+                Right.resolve(variableLink);
+            }
+        }
+
+    }
+
+
     public List<String> getIDList() {
         if (IDlist!=null) return IDlist;
         IDlist = new ArrayList<String>();

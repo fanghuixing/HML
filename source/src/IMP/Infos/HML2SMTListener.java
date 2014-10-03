@@ -22,6 +22,8 @@ public class HML2SMTListener extends HMLBaseListener {
     private HashMap<String, Variable> vars = new HashMap<String, Variable>();
     HashMap<String, AbstractExpr>  InitID2ExpMap = new HashMap<String, AbstractExpr>();
     private ParseTreeProperty<AbstractExpr> exprPtp = new ParseTreeProperty<AbstractExpr>();
+    private ParseTreeProperty<AbstractExpr> guardPtp = new ParseTreeProperty<AbstractExpr>();
+
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     public List<VariableForSMT2> getVarlist() {
         return varlist;
@@ -213,5 +215,39 @@ public class HML2SMTListener extends HMLBaseListener {
 
     public List<Constraint> getConstraintsList(){
         return  this.constrList;
+    }
+
+    public void exitEmptyGuard(HMLParser.EmptyGuardContext ctx) {
+        guardPtp.put(ctx, new AbstractExpr("true", AbstractExpr.Sort.GUARD, null, null));
+    }
+
+    public void exitSignalGuard(HMLParser.SignalGuardContext ctx) {
+        guardPtp.put(ctx, new AbstractExpr(ctx.signal().ID().getText(), AbstractExpr.Sort.GUARD, null, null));
+    }
+
+    public void exitBoolGuard(HMLParser.BoolGuardContext ctx) {
+        guardPtp.put(ctx, exprPtp.get(ctx.expr()));
+    }
+
+    public void exitTimeoutGuard(HMLParser.TimoutGuardContext ctx) {
+        guardPtp.put(ctx, new AbstractExpr("timeout", AbstractExpr.Sort.GUARD, exprPtp.get(ctx.expr()), null));
+    }
+
+    public void exitConjunctGuard(HMLParser.ConjunctGuardContext ctx) {
+        guardPtp.put(ctx, new AbstractExpr("and", AbstractExpr.Sort.GUARD,
+                guardPtp.get(ctx.guard(0)), guardPtp.get(ctx.guard(1))));
+    }
+
+    public void exitDisjunctGuard(HMLParser.DisjunctGuardContext ctx) {
+        guardPtp.put(ctx, new AbstractExpr("or", AbstractExpr.Sort.GUARD,
+                guardPtp.get(ctx.guard(0)), guardPtp.get(ctx.guard(1))));
+    }
+
+    public void exitParGuard(HMLParser.ParGuardContext ctx) {
+        guardPtp.put(ctx, guardPtp.get(ctx.guard()));
+    }
+
+    public ParseTreeProperty<AbstractExpr> getGuardPtp() {
+        return guardPtp;
     }
 }

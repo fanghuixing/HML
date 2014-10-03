@@ -25,6 +25,7 @@ import org.stringtemplate.v4.STGroupFile;
 public class HML2SMT {
     final static int depth = 10;
     static ParseTreeProperty<AbstractExpr> exprPtp;
+    static ParseTreeProperty<AbstractExpr> guardPtp;
     static  HashMap<String, AbstractExpr>  InitID2ExpMap;
 
     public static void main(String[] args) throws Exception {
@@ -45,16 +46,16 @@ public class HML2SMT {
         parser.setBuildParseTree(true);
         ParseTree tree = parser.hybridModel();
         ParseTreeWalker walker = new ParseTreeWalker();
-        HML2SMTListener converter = new HML2SMTListener();
-        walker.walk(converter, tree);
-        exprPtp = converter.getExprPtp();
-
+        HML2SMTListener hml2SMTListener = new HML2SMTListener();
+        walker.walk(hml2SMTListener, tree);
+        exprPtp = hml2SMTListener.getExprPtp();
+        guardPtp = hml2SMTListener.getGuardPtp();
         ScopeConstructor scl = new ScopeConstructor();
         walker.walk(scl, tree);
 
 
 
-        List<VariableForSMT2> varlist = converter.getVarlist();
+        List<VariableForSMT2> varlist = hml2SMTListener.getVarlist();
         STGroup group = new STGroupFile("HML.stg");
         ST st = group.getInstanceOf("SMT2");
         st.add("vars", varlist);
@@ -64,19 +65,19 @@ public class HML2SMT {
 
         st.add("tvars", getTimeOrModeVarListforSMT2("time", "Real", depth));
         st.add("mvars", getTimeOrModeVarListforSMT2("mode", "Int", depth));
-        converter.getInitializations();
+        hml2SMTListener.getInitializations();
 
 
 
-        List<Constraint> cons = converter.getConstraintsList();
+        List<Constraint> cons = hml2SMTListener.getConstraintsList();
         for (Constraint c : cons) {
             st.add("constraints", c.getNormalConstraintList(depth));
         }
 
 
 
-        InitID2ExpMap = converter.getInitID2ExpMap();
-        HMLProgram2SMTVisitor trans = new HMLProgram2SMTVisitor(scl.getScopes(),scl.getGlobals(), converter.getTmpMap(), depth);
+        InitID2ExpMap = hml2SMTListener.getInitID2ExpMap();
+        HMLProgram2SMTVisitor trans = new HMLProgram2SMTVisitor(scl.getScopes(),scl.getGlobals(), hml2SMTListener.getTmpMap(), depth);
 
         trans.visit(tree);
         for (Dynamics dy : trans.getDynamicsList()) {
@@ -131,12 +132,11 @@ public class HML2SMT {
         return InitID2ExpMap;
     }
 
+    public static ParseTreeProperty<AbstractExpr> getGuardPtp() {
+        return guardPtp;
+    }
 
-
-
-
-
-    /*
+/*
     //获取符号xpath的子树，且子树的类型由Class c指定
     public static  void getMaths(ParseTree tree, String xpath, HMLParser parser, List<ParseTree> trees, Class c){
         Collection<ParseTree> col = XPath.findAll(tree, xpath, parser);
