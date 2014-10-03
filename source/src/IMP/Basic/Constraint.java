@@ -38,10 +38,16 @@ public class Constraint {
     public List getNormalConstraintList(int depth){
         List<NormalConstraint> l = new ArrayList<NormalConstraint>();
         for (int i=0; i<=depth; i++) {
-            l.add(new NormalConstraint(this.leftEnd, this.name+"_"+i+"_0"));
-            l.add(new NormalConstraint(this.name+"_"+i+"_0", this.rightEnd));
-            l.add(new NormalConstraint(this.leftEnd, this.name+"_"+i+"_t"));
-            l.add(new NormalConstraint(this.name+"_"+i+"_t", this.rightEnd));
+            if (this.name.equals("time") || this.name.equals("mode")) {
+                l.add(new NormalConstraint(this.leftEnd, this.name+"_"+i));
+                l.add(new NormalConstraint(this.name+"_"+i, this.rightEnd));
+            }
+            else {
+                l.add(new NormalConstraint(this.leftEnd, this.name + "_" + i + "_0"));
+                l.add(new NormalConstraint(this.name + "_" + i + "_0", this.rightEnd));
+                l.add(new NormalConstraint(this.leftEnd, this.name + "_" + i + "_t"));
+                l.add(new NormalConstraint(this.name + "_" + i + "_t", this.rightEnd));
+            }
         }
         return l;
     }

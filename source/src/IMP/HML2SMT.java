@@ -7,7 +7,7 @@ import IMP.Infos.HSTErrorListener;
 import IMP.Scope.ScopeConstructor;
 import IMP.Translate.AbstractExpr;
 import IMP.Translate.Dynamics;
-import IMP.Translate.HMLProgram2SMT;
+import IMP.Translate.HMLProgram2SMTVisitor;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import java.io.File;
@@ -73,8 +73,10 @@ public class HML2SMT {
             st.add("constraints", c.getNormalConstraintList(depth));
         }
 
+
+
         InitID2ExpMap = converter.getInitID2ExpMap();
-        HMLProgram2SMT trans = new HMLProgram2SMT(scl.getScopes(),scl.getGlobals(), converter.getTmpMap(), depth);
+        HMLProgram2SMTVisitor trans = new HMLProgram2SMTVisitor(scl.getScopes(),scl.getGlobals(), converter.getTmpMap(), depth);
 
         trans.visit(tree);
         for (Dynamics dy : trans.getDynamicsList()) {
@@ -87,6 +89,12 @@ public class HML2SMT {
             System.out.println(ode.getValue());
             st.add("flows", ode.getValue());
         }
+
+
+        int modeNum = Dynamics.getOdeMap().size();
+        st.add("constraints", new Constraint("mode", "1", modeNum+"").getNormalConstraintList(depth));
+
+
 
         //String result = st.render();
         File out = new File("H:\\Antlr\\HML\\source\\src\\HML.smt2");

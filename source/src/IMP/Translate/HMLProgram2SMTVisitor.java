@@ -16,7 +16,7 @@ import java.util.Stack;
 /**
  * Created by fofo on 2014/9/30.
  */
-public class HMLProgram2SMT extends HMLBaseVisitor<Void> {
+public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     ParseTreeProperty<Scope> scopes;
     GlobalScope globals;
     Scope currentScope; // resolve symbols starting in this scope
@@ -31,7 +31,7 @@ public class HMLProgram2SMT extends HMLBaseVisitor<Void> {
     Dynamics currentDynamics = new Dynamics();
 
 
-    public HMLProgram2SMT(ParseTreeProperty<Scope> scopes, GlobalScope globals, HashMap<String, Template> tmpMap, int depth) {
+    public HMLProgram2SMTVisitor(ParseTreeProperty<Scope> scopes, GlobalScope globals, HashMap<String, Template> tmpMap, int depth) {
         this.scopes = scopes;
         this.globals = globals;
         this.depth = depth;
@@ -79,7 +79,7 @@ public class HMLProgram2SMT extends HMLBaseVisitor<Void> {
 
     /**
      * 需要加条件不成立的分支
-     * @param ctx
+     * @param ctx 循环
      * @return null
      */
     public Void visitLoopPro(HMLParser.LoopProContext ctx) {
