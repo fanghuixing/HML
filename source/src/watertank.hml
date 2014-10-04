@@ -15,7 +15,7 @@ time in [0, 1];
 //Templates
 Template open(float h, float a, int H, float e){
     h = h + 1.0001;
-    dot h = a until (h >= H-e)
+    dot h = a || dot h = a  until (h >= H-e)
 }
 
 
