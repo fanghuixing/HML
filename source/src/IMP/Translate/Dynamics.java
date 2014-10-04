@@ -161,6 +161,7 @@ public class Dynamics {
 
     private void analyzeRelation(HMLParser.RelationContext relation, StringBuilder flows, ContextWithVarLink r){
         AbstractExpr flow = resolveRelation(relation); //得到方程的抽象表示
+
         String result = flow.toString(r.getVrl());     //还原真实变量
 
         TempOdesMap.put(flow, result);

@@ -84,7 +84,9 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     public Void visitLoopPro(HMLParser.LoopProContext ctx) {
         System.out.println("Visiting Loop Program... ... ...");
         currentDynamics.addDiscrete(new ContextWithVarLink(ctx.parExpression().expr(),currentVariableLink));
-        visit(ctx.parStatement().blockStatement());
+        while (!isDepthReached()) {
+            visit(ctx.parStatement().blockStatement());
+        }
         return null;
     }
 
@@ -94,10 +96,12 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         currentDynamics.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
         currentDynamics.setDepth(currentDepth++);
         dynamicsList.add(currentDynamics);
-        createNewDynamics();
 
-        //add guard into the discrete part
-        currentDynamics.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
+        if (!isDepthReached()) {
+            createNewDynamics();
+            //add guard into the discrete part
+            currentDynamics.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
+        }
         return null;
     }
 
@@ -172,6 +176,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     }
 
     private void createNewDynamics(){
+        if (isDepthReached()) return;
         currentDynamics = new Dynamics();
     }
 
@@ -185,4 +190,19 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     public void setCurrentVariableLink(VariableLink currentVariableLink) {
         this.currentVariableLink = currentVariableLink;
     }
+
+    //判定是否已经到达最大深度
+    private boolean isDepthReached(){
+        return currentDepth>depth;
+    }
+
+    public Void visit(org.antlr.v4.runtime.tree.ParseTree tree){
+        if (isDepthReached()) return null;
+        else return superVisit(tree);
+    }
+
+    public Void superVisit(org.antlr.v4.runtime.tree.ParseTree tree){
+        return super.visit(tree);
+    }
+
 }

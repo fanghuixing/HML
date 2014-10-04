@@ -3,20 +3,18 @@ Signal on, off;
 
 //Global Variables
 final float deta=0.5;
-float waterLevel=8, accin=1, decout=1;
+float waterLevel=8;
+final float accin=1, decout=1;
 final int MaxwaterLevel=10, LowestwaterLevel=5;
 
 
 //Constraints
 waterLevel in [5,  10];
-accin in [-1, 1];
-time in [0, 1];
+time in [0, 2];
 
 //Templates
 Template open(float h, float a, int H, float e){
-    h = h + 1.0001;
-    dot h = a init 0 until (h >= H-e);
-    closed(h, a, H, e)
+    dot h = a until (h >= H-e)
 }
 
 
@@ -26,21 +24,13 @@ Template closed(float h, float b, int L, float e){
 
 //The model(program) Starting from here...
 Main {
-    waterLevel=waterLevel + 1;
-    waterLevel=8 + waterLevel;
-    waterLevel=waterLevel-deta;
-    accin = accin - decout * waterLevel;
-
     // Loop
     while(true){
         !on;
         // let water in
         open(waterLevel,accin,MaxwaterLevel,deta);
-        open(waterLevel,accin,MaxwaterLevel,deta);
         !off;
-        waterLevel= waterLevel + 1 + deta;
         // let water out
-        closed(waterLevel,decout,LowestwaterLevel,deta)
         closed(waterLevel,decout,LowestwaterLevel,deta)
     }
 }

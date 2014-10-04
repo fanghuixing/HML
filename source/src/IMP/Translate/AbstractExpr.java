@@ -95,8 +95,15 @@ public class AbstractExpr {
     public String toString(VariableLink cwvk) {
         StringBuilder sb  = new StringBuilder();
         sb.append("(");
+        String realID = cwvk.getRealVar(ID);
 
-        sb.append(cwvk.getRealVar(ID));
+        if (realID.startsWith("@")) {
+            //如果是常量，则设置替换后的类型为CONSTANT
+            realID = realID.substring(1);
+            sb.append(realID);
+            sort = Sort.CONSTANT;
+        }
+        else sb.append(realID); //其他情况
         if (Left != null) {
             sb.append(" ");
             sb.append(Left.toString(cwvk));
