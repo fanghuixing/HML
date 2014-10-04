@@ -153,7 +153,7 @@ guard
     : 'EMP'                             # EmptyGuard
     | signal                            # SignalGuard
     | expr                              # BoolGuard
-    | 'timeout' '(' expr ')'            # TimoutGuard
+    | 'timeout' '(' expr ')'            # TimeOutGuard
     | guard '<and>' guard               # ConjunctGuard
     | guard '<or>' guard                # DisjunctGuard
     | '(' guard ')'                     # ParGuard

@@ -1,6 +1,8 @@
 package IMP.Infos;
 import IMP.Basic.*;
 import IMP.Translate.AbstractExpr;
+import IMP.Translate.VarWithValueAndSort;
+import IMP.Translate.VariableLink;
 import org.antlr.v4.runtime.Token;
 import AntlrGen.HMLBaseListener;
 import AntlrGen.HMLParser;
@@ -23,8 +25,14 @@ public class HML2SMTListener extends HMLBaseListener {
     HashMap<String, AbstractExpr>  InitID2ExpMap = new HashMap<String, AbstractExpr>();
     private ParseTreeProperty<AbstractExpr> exprPtp = new ParseTreeProperty<AbstractExpr>();
     private ParseTreeProperty<AbstractExpr> guardPtp = new ParseTreeProperty<AbstractExpr>();
-
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
+    private VariableLink finalVariableLinks = new VariableLink(true, null);
+
+
+    public VariableLink getFinalVariableLinks() {
+        return finalVariableLinks;
+    }
+
     public List<VariableForSMT2> getVarlist() {
         return varlist;
     }
@@ -32,6 +40,7 @@ public class HML2SMTListener extends HMLBaseListener {
     public HashMap<String, Template> getTmpMap() {
         return tmpMap;
     }
+
 
     public HashMap<String, AbstractExpr> getInitID2ExpMap() {
         return InitID2ExpMap;
@@ -105,8 +114,10 @@ public class HML2SMTListener extends HMLBaseListener {
             exprPtp.put(ctx, new AbstractExpr(ID, AbstractExpr.Sort.VAR)); // 当这个变量是Template参数变量时候
             return;
         }
-        if (var.isFinal)
+        if (var.isFinal) {
             exprPtp.put(ctx, exprPtp.get(var.init.expr()));
+            finalVariableLinks.setRealVar(ctx.ID().getText(), exprPtp.get(ctx).toString());
+        }
         else
             exprPtp.put(ctx, new AbstractExpr(ID, AbstractExpr.Sort.VAR));
     }
@@ -226,10 +237,11 @@ public class HML2SMTListener extends HMLBaseListener {
     }
 
     public void exitBoolGuard(HMLParser.BoolGuardContext ctx) {
+
         guardPtp.put(ctx, exprPtp.get(ctx.expr()));
     }
 
-    public void exitTimeoutGuard(HMLParser.TimoutGuardContext ctx) {
+    public void exitTimeOutGuard(HMLParser.TimeOutGuardContext ctx) {
         guardPtp.put(ctx, new AbstractExpr("timeout", AbstractExpr.Sort.GUARD, exprPtp.get(ctx.expr()), null));
     }
 

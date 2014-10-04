@@ -34,7 +34,7 @@ public class AbstractExpr {
     }
 
     public static enum Sort {
-        VAR, NVAR, GUARD
+        VAR, NVAR, GUARD, CONSTANT
     }
 
     public AbstractExpr(String ID, Sort sort, AbstractExpr left, AbstractExpr right) {
@@ -71,6 +71,10 @@ public class AbstractExpr {
 
         if (sort==Sort.VAR) //对变量需要加下标
             sb.append(ID).append("_").append(depth).append("_t");
+        else if (sort==Sort.GUARD) {
+            if (ID.equals("timeout")) sb.append(ID).append("_").append(depth);
+            else sb.append(ID);
+        }
         else
             sb.append(ID);
 
@@ -117,7 +121,9 @@ public class AbstractExpr {
 
     public void resolve(VariableLink variableLink){
         if (this.sort==Sort.VAR && variableLink!=null) {
+
             ID = variableLink.getRealVar(this.ID);
+
         }
         else {
             if (this.Left != null) {

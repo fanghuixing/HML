@@ -58,7 +58,11 @@ public class Dynamics {
         renderDisFormulas();
         //show all the formulas for discrete actions
         for (Map.Entry<String, AbstractExpr> abe : ID2ExpMap.entrySet()) {
-            sb.append(String.format("(= %s %s)", addDepthFlagToVar(abe.getKey()), abe.getValue().toString(depth-1)));
+            String ID = abe.getKey();
+            if (ID.startsWith("@"))
+                sb.append(String.format("(%s)", abe.getValue().toString(depth-1)));
+            else
+                sb.append(String.format("(= %s %s)", addDepthFlagToVar(abe.getKey()), abe.getValue().toString(depth-1)));
         }
         sb.append("\n");
         sb.append(renderConFormulas());
@@ -93,6 +97,7 @@ public class Dynamics {
             }
             if (r instanceof  HMLParser.GuardContext) {
                 System.out.println("--------------analysis guard-----------");
+
                 analyzeGuard((HMLParser.GuardContext) r, c.getVrl());
             }
 
@@ -164,7 +169,6 @@ public class Dynamics {
             abstractExpr.resolve(variableLink);
         }
         refreshExpression(abstractExpr);
-
         // 因为Guard是没有副作用的，所以可以放入ID2ExpMap中
         // 在导出公式的时候需要处理这个特殊的ID
         ID2ExpMap.put("@"+ guardIndex, abstractExpr);

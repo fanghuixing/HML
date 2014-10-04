@@ -4,7 +4,7 @@ Signal on, off;
 //Global Variables
 final float deta=0.5;
 float waterLevel=8, accin=1, decout=1;
-int MaxwaterLevel=10, LowestwaterLevel=5;
+final int MaxwaterLevel=10, LowestwaterLevel=5;
 
 
 //Constraints

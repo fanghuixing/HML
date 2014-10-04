@@ -1,6 +1,7 @@
 package IMP.Translate;
 
 import AntlrGen.HMLParser.IDExprContext;
+import IMP.Basic.Variable;
 
 import java.net.IDN;
 import java.util.HashMap;
@@ -10,13 +11,34 @@ import java.util.HashMap;
  */
 public class VariableLink {
     HashMap<String, String> Virtual2RealVar = new HashMap<String, String>();
+    private VariableLink enclosingLink;
+    private boolean isFinal = false;
+    public VariableLink(VariableLink enclosingLink) {
+        this.enclosingLink = enclosingLink;
+    }
+
+    public VariableLink(boolean isFinal, VariableLink enclosingLink) {
+        this.isFinal = isFinal;
+        this.enclosingLink = enclosingLink;
+    }
+
 
 
     public String getRealVar(String virtualVar) {
         String real = Virtual2RealVar.get(virtualVar);
         if (real==null) return virtualVar;
-        return real;
+        else {
+            if (enclosingLink != null)
+                return enclosingLink.getRealVar(real);
+            else return real;
+        }
     }
+
+
+
+
+
+
 
     public void setRealVar(String virtualVar, String realVar) {
         Virtual2RealVar.put(virtualVar, realVar);

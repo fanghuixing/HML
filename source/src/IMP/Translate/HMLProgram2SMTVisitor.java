@@ -9,10 +9,7 @@ import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * Created by fofo on 2014/9/30.
@@ -145,7 +142,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
             List<String> fvars = template.getFormalVarNames();
 
             variableStack.push(currentVariableLink);
-            VariableLink vlk = new VariableLink();
+            VariableLink vlk = new VariableLink(currentVariableLink);
             int i = 0;
             for (String fv : fvars) {
                 vlk.setRealVar(fv, getRealVarName(cvars.get(i)));
@@ -178,5 +175,9 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         if (type.equals(Symbol.Type.Int))    return "int";
         if (type.equals(Symbol.Type.Bool))  return "boolean";
         return "NULL";
+    }
+
+    public void setCurrentVariableLink(VariableLink currentVariableLink) {
+        this.currentVariableLink = currentVariableLink;
     }
 }
