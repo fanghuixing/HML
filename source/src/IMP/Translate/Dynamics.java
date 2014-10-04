@@ -6,6 +6,7 @@ import java.util.*;
 
 import AntlrGen.HMLParser;
 import IMP.Basic.Template;
+import IMP.Basic.VariableForSMT2;
 import IMP.HML2SMT;
 import com.sun.javafx.scene.control.skin.EmbeddedTextContextMenuContent;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -27,6 +28,7 @@ public class Dynamics {
     HashMap<AbstractExpr, String>  TempOdesMap = new HashMap<AbstractExpr, String>();
     private int guardIndex =0;
     private static HashMap<String, Integer> odeformula = new HashMap<String, Integer>();
+    private int mode;
 
     public void setDepth(int depth) {
         this.depth = depth;
@@ -111,6 +113,8 @@ public class Dynamics {
             odeMap.put(odeIndex, String.format("(define-ode flow_%s (%s))", odeIndex, result)); //存储方程定义
             removeDuplicate(vars);
             OdeInSMT2 odeInSMT2 = new OdeInSMT2(vars, depth, odeIndex); //准备SMT2格式的连续行为表示
+            mode = odeIndex;
+
             flows.append(odeInSMT2.toString());
             odeIndex++;
         }
@@ -119,6 +123,7 @@ public class Dynamics {
             int index = odeformula.get(result.toString());
             removeDuplicate(vars);
             OdeInSMT2 odeInSMT2 = new OdeInSMT2(vars, depth, index); //准备SMT2格式的连续行为表示
+            mode = index;
             flows.append(odeInSMT2.toString());
         }
 
@@ -219,6 +224,14 @@ public class Dynamics {
             }
         }
         else  ID2ExpMap = new HashMap<String, AbstractExpr>();
+
+        if (depth!=0) {
+            List<VariableForSMT2> vars = HML2SMT.getVarlist();
+            for (VariableForSMT2 v : vars) {
+                ID2ExpMap.put(v.getName(), new AbstractExpr(v.getName(), AbstractExpr.Sort.VAR, null, null));
+            }
+        }
+
         renderDisFormulas();
         //show all the formulas for discrete actions
         for (Map.Entry<String, AbstractExpr> abe : ID2ExpMap.entrySet()) {
@@ -230,6 +243,8 @@ public class Dynamics {
         }
         sb.append("\n");
         sb.append(renderConFormulas());
+        sb.replace(0,0,String.format("(= mode_%s %s)", depth, mode));
+        sb.append(String.format("(= mode_%s %s)", depth, mode));
         resultFormula = sb.toString();
         return resultFormula;
     }

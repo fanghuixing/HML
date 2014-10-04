@@ -23,10 +23,11 @@ import org.stringtemplate.v4.STGroupFile;
  * Created by Huixing Fang on 2014/9/25.
  */
 public class HML2SMT {
-    final static int depth = 10;
+    final static int depth = 1;
     static ParseTreeProperty<AbstractExpr> exprPtp;
     static ParseTreeProperty<AbstractExpr> guardPtp;
     static  HashMap<String, AbstractExpr>  InitID2ExpMap;
+    static List<VariableForSMT2> varlist;
 
     public static void main(String[] args) throws Exception {
         String inputFile = null;
@@ -55,7 +56,7 @@ public class HML2SMT {
 
 
 
-        List<VariableForSMT2> varlist = hml2SMTListener.getVarlist();
+        varlist = hml2SMTListener.getVarlist();
         STGroup group = new STGroupFile("HML.stg");
         ST st = group.getInstanceOf("SMT2");
         st.add("vars", varlist);
@@ -137,7 +138,11 @@ public class HML2SMT {
         return guardPtp;
     }
 
-/*
+    public static List<VariableForSMT2> getVarlist() {
+        return varlist;
+    }
+
+    /*
     //获取符号xpath的子树，且子树的类型由Class c指定
     public static  void getMaths(ParseTree tree, String xpath, HMLParser parser, List<ParseTree> trees, Class c){
         Collection<ParseTree> col = XPath.findAll(tree, xpath, parser);
