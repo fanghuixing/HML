@@ -36,7 +36,7 @@ Main {
         // let water in
         open(waterLevel,accin,MaxwaterLevel,deta);
         !off;
-        waterLevel= waterLevel + 1 + waterLevel;
+        waterLevel= waterLevel + 1 + deta;
         // let water out
         closed(waterLevel,decout,LowestwaterLevel,deta)
     }

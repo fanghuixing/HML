@@ -1,7 +1,6 @@
 package IMP.Infos;
 import IMP.Basic.*;
 import IMP.Translate.AbstractExpr;
-import IMP.Translate.VarWithValueAndSort;
 import IMP.Translate.VariableLink;
 import org.antlr.v4.runtime.Token;
 import AntlrGen.HMLBaseListener;
@@ -26,7 +25,7 @@ public class HML2SMTListener extends HMLBaseListener {
     private ParseTreeProperty<AbstractExpr> exprPtp = new ParseTreeProperty<AbstractExpr>();
     private ParseTreeProperty<AbstractExpr> guardPtp = new ParseTreeProperty<AbstractExpr>();
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
-    private VariableLink finalVariableLinks = new VariableLink(true, null);
+    private VariableLink finalVariableLinks = new VariableLink(null);
 
 
     public VariableLink getFinalVariableLinks() {
@@ -116,7 +115,8 @@ public class HML2SMTListener extends HMLBaseListener {
         }
         if (var.isFinal) {
             exprPtp.put(ctx, exprPtp.get(var.init.expr()));
-            finalVariableLinks.setRealVar(ctx.ID().getText(), exprPtp.get(ctx).toString());
+            finalVariableLinks.setRealVar(ctx.ID().getText(), "@"+exprPtp.get(ctx).toString());
+            //以@开头表示这个值是常量
         }
         else
             exprPtp.put(ctx, new AbstractExpr(ID, AbstractExpr.Sort.VAR));

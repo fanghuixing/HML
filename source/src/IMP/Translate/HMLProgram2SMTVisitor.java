@@ -4,6 +4,7 @@ import AntlrGen.HMLBaseVisitor;
 import AntlrGen.HMLParser;
 import IMP.Basic.Template;
 import IMP.Basic.Variable;
+import IMP.HML2SMT;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
@@ -151,6 +152,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
             currentVariableLink = vlk;
             visit(template.getTemplateContext());
             currentVariableLink = variableStack.pop();
+
         }
 
         return null;

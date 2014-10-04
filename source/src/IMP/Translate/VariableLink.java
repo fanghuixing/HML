@@ -5,6 +5,7 @@ import IMP.Basic.Variable;
 
 import java.net.IDN;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by fofo on 2014/10/1.
@@ -12,15 +13,10 @@ import java.util.HashMap;
 public class VariableLink {
     HashMap<String, String> Virtual2RealVar = new HashMap<String, String>();
     private VariableLink enclosingLink;
-    private boolean isFinal = false;
     public VariableLink(VariableLink enclosingLink) {
         this.enclosingLink = enclosingLink;
     }
 
-    public VariableLink(boolean isFinal, VariableLink enclosingLink) {
-        this.isFinal = isFinal;
-        this.enclosingLink = enclosingLink;
-    }
 
 
 
@@ -40,6 +36,12 @@ public class VariableLink {
 
 
 
+
+
+
+
+
+
     public void setRealVar(String virtualVar, String realVar) {
         Virtual2RealVar.put(virtualVar, realVar);
     }
@@ -47,4 +49,16 @@ public class VariableLink {
     public void clear(){
         Virtual2RealVar.clear();
     }
+
+    public void printAll() {
+        for (Map.Entry e : Virtual2RealVar.entrySet()) {
+            System.out.println(String.format("%s : %s ", e.getKey(), e.getValue()));
+        }
+        if (enclosingLink!=null){
+            System.out.println("The Enclosing Variable Link ....");
+            enclosingLink.printAll();
+        }
+
+    }
+
 }

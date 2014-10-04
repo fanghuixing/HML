@@ -43,6 +43,7 @@ public class Dynamics {
 
     @Override
     public String toString() {
+
         if (resultFormula!=null) return resultFormula;
         StringBuilder sb = new StringBuilder();
 
@@ -96,10 +97,10 @@ public class Dynamics {
                 refeshAndSave(ID, eprc, c.getVrl());
             }
             if (r instanceof  HMLParser.GuardContext) {
-                System.out.println("--------------analysis guard-----------");
-
+                //System.out.println("--------------analysis guard-----------");
                 analyzeGuard((HMLParser.GuardContext) r, c.getVrl());
             }
+
 
         }
     }
@@ -164,8 +165,11 @@ public class Dynamics {
 
     public void analyzeGuard(HMLParser.GuardContext guard, VariableLink variableLink) {
         ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
+
         AbstractExpr abstractExpr = guardPtp.get(guard);
+
         if (variableLink!=null) {
+            //variableLink.printAll();
             abstractExpr.resolve(variableLink);
         }
         refreshExpression(abstractExpr);

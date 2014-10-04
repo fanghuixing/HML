@@ -121,9 +121,13 @@ public class AbstractExpr {
 
     public void resolve(VariableLink variableLink){
         if (this.sort==Sort.VAR && variableLink!=null) {
-
+            //System.out.println("Resolve --------- " + ID);
             ID = variableLink.getRealVar(this.ID);
-
+            if (ID.startsWith("@")) {
+                ID = ID.substring(1);
+                sort = Sort.CONSTANT;
+            }
+            //System.out.println("to --------- " + ID);
         }
         else {
             if (this.Left != null) {
