@@ -10,7 +10,7 @@ final int MaxwaterLevel=10, LowestwaterLevel=5;
 
 //Constraints
 waterLevel in [5,  10];
-time in [0, 2];
+time in [0, 100];
 
 //Templates
 Template open(float h, float a, int H, float e){
