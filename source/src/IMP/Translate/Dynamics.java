@@ -26,7 +26,7 @@ public class Dynamics {
     HashMap<String, AbstractExpr>  ID2ExpMap;
     HashMap<AbstractExpr, String>  TempOdesMap = new HashMap<AbstractExpr, String>();
     private int guardIndex =0;
-
+    private static HashMap<String, Integer> odeformula = new HashMap<String, Integer>();
 
     public void setDepth(int depth) {
         this.depth = depth;
@@ -105,12 +105,23 @@ public class Dynamics {
             result.append(e.getValue());
             addList(vars, e.getKey().getVarsList(r.getVrl())); // 获取方程中涉及的变量
         }
+        if (!odeformula.containsKey(result.toString())) {
+            //如果是新的flow
+            odeformula.put(result.toString(), odeIndex);
+            odeMap.put(odeIndex, String.format("(define-ode flow_%s (%s))", odeIndex, result)); //存储方程定义
+            removeDuplicate(vars);
+            OdeInSMT2 odeInSMT2 = new OdeInSMT2(vars, depth, odeIndex); //准备SMT2格式的连续行为表示
+            flows.append(odeInSMT2.toString());
+            odeIndex++;
+        }
+        else {
+            //如果flow定义已存在
+            int index = odeformula.get(result.toString());
+            removeDuplicate(vars);
+            OdeInSMT2 odeInSMT2 = new OdeInSMT2(vars, depth, index); //准备SMT2格式的连续行为表示
+            flows.append(odeInSMT2.toString());
+        }
 
-        odeMap.put(odeIndex, String.format("(define-ode flow_%s (%s))", odeIndex, result)); //存储方程定义
-        removeDuplicate(vars);
-        OdeInSMT2 odeInSMT2 = new OdeInSMT2(vars, depth, odeIndex); //准备SMT2格式的连续行为表示
-        flows.append(odeInSMT2.toString());
-        odeIndex++;
         return flows.toString();
     }
 

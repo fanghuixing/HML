@@ -134,7 +134,9 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
             for (HMLParser.ExprContext e : exprs) {
                 //模板调用时候传入的参数类型
                 Symbol s = currentScope.resolve(e.getText());
+
                 cvars.add(e.getText());
+
                 key.append(getType(s.getType()));
             }
             Template template = tmpMap.get(key.toString());
@@ -164,6 +166,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     }
 
     public Void visitTemplate(HMLParser.TemplateContext ctx) {
+        currentScope = scopes.get(ctx);
         visit(ctx.parStatement().blockStatement());
         return null;
     }
