@@ -124,6 +124,7 @@ public class AbstractExpr {
             //System.out.println("Resolve --------- " + ID);
             ID = variableLink.getRealVar(this.ID);
             if (ID.startsWith("@")) {
+                //如果是常量，则设置替换后的类型为CONSTANT
                 ID = ID.substring(1);
                 sort = Sort.CONSTANT;
             }
