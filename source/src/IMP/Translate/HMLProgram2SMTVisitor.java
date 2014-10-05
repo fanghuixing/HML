@@ -84,6 +84,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     public Void visitLoopPro(HMLParser.LoopProContext ctx) {
         System.out.println("Visiting Loop Program... ... ...");
         currentDynamics.addDiscrete(new ContextWithVarLink(ctx.parExpression().expr(),currentVariableLink));
+
         while (!isDepthReached()) {
             visit(ctx.parStatement().blockStatement());
         }

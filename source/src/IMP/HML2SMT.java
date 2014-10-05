@@ -20,6 +20,7 @@ import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 
 /**
+ * ${PROJECT_NAME} - ${PACKAGE_NAME}
  * Created by Huixing Fang on 2014/9/25.
  */
 public class HML2SMT {
@@ -138,6 +139,10 @@ public class HML2SMT {
         return guardPtp;
     }
 
+    /**
+     * 该值由HML2SMTListener生成
+     * @return 变量列表
+     */
     public static List<VariableForSMT2> getVarlist() {
         return varlist;
     }

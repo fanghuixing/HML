@@ -115,7 +115,7 @@ expr
     : ID                                                        # IDExpr
     | INT                                                       # INTExpr
     | FLOAT                                                     # FLOATExpr
-    |'true'                                                     # ConstantTrue
+    | 'true'                                                     # ConstantTrue
     | 'false'                                                   # ConstantFalse
     | prefix=('-' | '~') expr                                   # NegationExpr
     | left=expr op=('*'|'/'|'mod') right=expr                   # MExpr
