@@ -45,9 +45,10 @@ public class ConcreteExpr {
         }
     }
 
-    public ConcreteExpr clone(ConcreteExpr concreteExpr){
+    private ConcreteExpr clone(ConcreteExpr concreteExpr){
         if (concreteExpr!=null)
-        return new ConcreteExpr(concreteExpr.ID,concreteExpr.sort, clone(concreteExpr.Left), clone(concreteExpr.Right));
+            return new ConcreteExpr(concreteExpr.ID,concreteExpr.sort,
+                    clone(concreteExpr.Left), clone(concreteExpr.Right));
         else return null;
     }
 
@@ -103,9 +104,9 @@ public class ConcreteExpr {
         StringBuilder sb  = new StringBuilder();
         sb.append("(");
 
-        System.out.println("---From " + ID);
+        System.out.println("---Render String From : " + ID);
         String realID = cwvk.getRealVar(ID);
-        System.out.println("---To " + realID);
+        System.out.println("---To : " + realID);
         if (realID.startsWith("@")) {
             //如果是常量，则设置替换后的类型为CONSTANT
             System.out.println("This is a constant");
@@ -179,6 +180,8 @@ public class ConcreteExpr {
 
     public void replace(String ID, ConcreteExpr concreteExpr) {
         if (this.ID.equals(ID)) {
+            //clone a copy of concreteExpr
+            //do not copy directly
             ConcreteExpr c = clone(concreteExpr);
             this.ID = c.ID;
             this.sort = c.sort;

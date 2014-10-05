@@ -8,14 +8,13 @@ import IMP.Infos.AbstractExpr;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 /**
  * Created by fofo on 2014/9/30.
+ * 这个Dynamic实现中用了ConcreteExpr，而没有去修改AbstractExpr
+ * 这样就不会破坏已经存储的程序结构
  */
 public class DiscreteWithContinuous implements Dynamic{
     private static int odeIndex = 1;
@@ -56,13 +55,13 @@ public class DiscreteWithContinuous implements Dynamic{
                 HMLParser.ExprContext eprc = ass.expr();
                 refeshAndSave(ID, eprc, c.getVrl());
             }
-            if (r instanceof HMLParser.EqWithInitContext) {
+            else if (r instanceof HMLParser.EqWithInitContext) {
                 HMLParser.EqWithInitContext eqwi = (HMLParser.EqWithInitContext) r;
                 String ID = eqwi.relation().ID().getText();
                 HMLParser.ExprContext eprc = eqwi.expr();
                 refeshAndSave(ID, eprc, c.getVrl());
             }
-            if (r instanceof  HMLParser.GuardContext) {
+            else if (r instanceof  HMLParser.GuardContext) {
                 //System.out.println("--------------analysis guard-----------");
                 analyzeGuard((HMLParser.GuardContext) r, c.getVrl());
             }
@@ -106,7 +105,21 @@ public class DiscreteWithContinuous implements Dynamic{
         }
         StringBuilder result = new StringBuilder();
         List<String> vars = new ArrayList<String>();
+        List<Map.Entry<ConcreteExpr,String>> tempOdesList = new ArrayList<Map.Entry<ConcreteExpr, String>>();
         for (Map.Entry<ConcreteExpr, String>  e : TempOdesMap.entrySet()) {
+            tempOdesList.add(e);
+        }
+        //支持排序，使得方程的表示形式唯一
+        Collections.sort(tempOdesList,new Comparator<Map.Entry<ConcreteExpr, String>>(){
+            public int compare(Map.Entry<ConcreteExpr, String> arg0, Map.Entry<ConcreteExpr, String> arg1) {
+                return arg0.getValue().compareTo(arg1.getValue());
+            }
+        });
+        //这里得到result就会与顺序无关的了
+        //比如(= d/dt[waterLevel] 0.5)(= d/dt[waterLevel] 1)和
+        //(= d/dt[waterLevel] 1)(= d/dt[waterLevel] 0.5)就会统一成
+        //(= d/dt[waterLevel] 0.5)(= d/dt[waterLevel] 1)
+        for (Map.Entry<ConcreteExpr, String>  e : tempOdesList) {
             result.append(e.getValue());
             addList(vars, e.getKey().getVarsList(r.getVrl())); // 获取方程中涉及的变量
         }
@@ -194,9 +207,7 @@ public class DiscreteWithContinuous implements Dynamic{
 
     private void analyzeGuard(HMLParser.GuardContext guard, VariableLink variableLink) {
         ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
-
         ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
-
         if (variableLink!=null) {
             //variableLink.printAll();
             concreteExpr.resolve(variableLink);
@@ -205,6 +216,7 @@ public class DiscreteWithContinuous implements Dynamic{
         // 因为Guard是没有副作用的，所以可以放入ID2ExpMap中
         // 在导出公式的时候需要处理这个特殊的ID
         ID2ExpMap.put(guardName(""+guardIndex), concreteExpr);
+        //guard name 只会出现在hashmap的key中，不会在expr中出现，所以expr中不用判段guard名称前缀
         guardIndex++;
     }
 
@@ -263,5 +275,12 @@ public class DiscreteWithContinuous implements Dynamic{
 
     public HashMap<Integer, String> getOdeDefinitionMap(){
         return odeMap;
+    }
+    public DiscreteWithContinuous copy(){
+        DiscreteWithContinuous obj = new DiscreteWithContinuous();
+        obj.discrete = this.discrete;
+        obj.continuous = this.continuous;
+        obj.depth = this.depth;
+        return obj;
     }
 }

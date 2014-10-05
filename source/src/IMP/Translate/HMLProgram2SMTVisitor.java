@@ -85,9 +85,15 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         System.out.println("Visiting Loop Program... ... ...");
         currentDynamics.addDiscrete(new ContextWithVarLink(ctx.parExpression().expr(),currentVariableLink));
 
-        while (!isDepthReached()) {
-            visit(ctx.parStatement().blockStatement());
+
+        HMLParser.ExprContext boolCondition = ctx.parExpression().expr();
+        if (boolCondition instanceof HMLParser.ConstantTrueContext) {
+            while (!isDepthReached()) {
+                visit(ctx.parStatement().blockStatement());
+            }
         }
+
+
         return null;
     }
 
@@ -205,5 +211,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     public Void superVisit(org.antlr.v4.runtime.tree.ParseTree tree){
         return super.visit(tree);
     }
+
+
 
 }

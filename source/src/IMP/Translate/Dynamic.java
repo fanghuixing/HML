@@ -6,7 +6,7 @@ import java.util.HashMap;
  * HML-IMP.Translate
  * Created by fofo on 2014/10/5.
  */
-public interface Dynamic {
+public interface Dynamic{
 
     public void setDepth(int depth) ;
 
@@ -15,5 +15,6 @@ public interface Dynamic {
     public void addContinuous(ContextWithVarLink bsc);
 
     public HashMap<Integer, String> getOdeDefinitionMap();
+
 
 }
