@@ -83,11 +83,16 @@ public class HML2SMT {
         HMLProgram2SMTVisitor trans = new HMLProgram2SMTVisitor(scl.getScopes(),scl.getGlobals(), hml2SMTListener.getTmpMap(), depth);
         trans.setCurrentVariableLink(hml2SMTListener.getFinalVariableLinks());
         trans.visit(tree);
-
-        for (Dynamic dy : trans.getDynamicsList()) {
-            System.out.println(dy);
-            st.add("formulas", dy.toString());
-            System.out.println();
+        //add paths
+        List<List<Dynamic>> paths = trans.getUnrollPath();
+        for (List<Dynamic> p : paths) {
+            System.out.println("------------------Begin one path------------------");
+            for (Dynamic dy : p) {
+                System.out.println(dy);
+                st.add("formulas", dy.toString());
+                System.out.println();
+            }
+            System.out.println("------------------End path------------------");
         }
 
         for (Map.Entry<Integer,String> ode : DiscreteWithContinuous.getOdeMap().entrySet()) {

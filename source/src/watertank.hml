@@ -30,7 +30,7 @@ Template closed(float h, float b, int L, float e){
 Main {
 
     // Loop
-    while(true){
+    while(waterLevel>0){
         // waterLevel = waterLevel+1;
         !on;
         // let water in
