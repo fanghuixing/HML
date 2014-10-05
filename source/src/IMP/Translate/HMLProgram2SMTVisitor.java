@@ -3,8 +3,6 @@ package IMP.Translate;
 import AntlrGen.HMLBaseVisitor;
 import AntlrGen.HMLParser;
 import IMP.Basic.Template;
-import IMP.Basic.Variable;
-import IMP.HML2SMT;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
@@ -22,14 +20,14 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     private int currentDepth;
     private int depth;
     //private List<Dynamics> dynamicsList = new ArrayList<Dynamics>();
-    private List<DynamicWithConcreteExpr> dynamicsList = new ArrayList<DynamicWithConcreteExpr>();
+    private List<Dynamic> dynamicsList = new ArrayList<Dynamic>();
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     private VariableLink currentVariableLink;
     private Stack<VariableLink> variableStack = new Stack<VariableLink>();
 
 
     //Dynamics currentDynamics = new Dynamics();
-    DynamicWithConcreteExpr currentDynamics = new DynamicWithConcreteExpr();
+    DiscreteWithContinuous currentDynamics = new DiscreteWithContinuous();
 
 
     public HMLProgram2SMTVisitor(ParseTreeProperty<Scope> scopes, GlobalScope globals, HashMap<String, Template> tmpMap, int depth) {
@@ -41,7 +39,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
 
 
-    public List<DynamicWithConcreteExpr> getDynamicsList() {
+    public List<Dynamic> getDynamicsList() {
         return dynamicsList;
     }
 
@@ -180,7 +178,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
     private void createNewDynamics(){
         if (isDepthReached()) return;
-        currentDynamics = new DynamicWithConcreteExpr();
+        currentDynamics = new DiscreteWithContinuous();
     }
 
     public static String getType(Symbol.Type type) {

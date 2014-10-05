@@ -8,6 +8,7 @@ import java.util.List;
 /**
  * HML-IMP.Translate
  * Created by fofo on 2014/10/5.
+ * The deepcopy is implemented in this expr class
  */
 public class ConcreteExpr {
     public String ID;
@@ -210,7 +211,7 @@ public class ConcreteExpr {
         return vars;
     }
 
-    public void appendList(List<String> target, List<String> from) {
+    private void appendList(List<String> target, List<String> from) {
         for (String s : from) {
             target.add(s);
         }

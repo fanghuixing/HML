@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * Created by fofo on 2014/9/30.
  */
-public class DynamicWithConcreteExpr {
+public class DiscreteWithContinuous implements Dynamic{
     private static int odeIndex = 1;
     private static final String guardPrefix = "@guard:";
     private static HashMap<Integer,String> odeMap = new HashMap<Integer, String>();
@@ -42,7 +42,7 @@ public class DynamicWithConcreteExpr {
         continuous = bsc;
     }
 
-    public String addDepthFlagToVar(String v) {
+    private String addDepthFlagToVar(String v) {
         return String.format("%s_%s_0", v, depth);
     }
 
@@ -187,11 +187,11 @@ public class DynamicWithConcreteExpr {
         return r;
     }
 
-    public static HashMap<Integer, String> getOdeMap() {
+    public static  HashMap<Integer, String> getOdeMap() {
         return odeMap;
     }
 
-    public void analyzeGuard(HMLParser.GuardContext guard, VariableLink variableLink) {
+    private void analyzeGuard(HMLParser.GuardContext guard, VariableLink variableLink) {
         ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
 
         ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
@@ -220,6 +220,7 @@ public class DynamicWithConcreteExpr {
 
         if (resultFormula!=null) return resultFormula;
         StringBuilder sb = new StringBuilder();
+
         ID2ExpMap = new HashMap<String, ConcreteExpr>();
         if (depth == 0) {
             System.out.println("Use the variables initializations information");
@@ -252,10 +253,14 @@ public class DynamicWithConcreteExpr {
         }
         sb.append("\n");
         sb.append(renderConFormulas());
-        sb.replace(0,0,String.format("(= mode_%s %s)", depth, mode));
+        sb.replace(0,0,String.format("\n(= mode_%s %s)", depth, mode));
         sb.append(String.format("(= mode_%s %s)", depth, mode));
-        sb.append("\n \n");
+        sb.append("\n");
         resultFormula = sb.toString();
         return resultFormula;
+    }
+
+    public HashMap<Integer, String> getOdeDefinitionMap(){
+        return odeMap;
     }
 }

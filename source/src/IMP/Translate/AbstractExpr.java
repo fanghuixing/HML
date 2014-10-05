@@ -8,6 +8,8 @@ import java.util.List;
 
 /**
  * Created by fofo on 2014/10/1.
+ * 在对程序进行展开过程中，不能对该类的对象进行修改，
+ * 否则会破坏原始程序结构
  */
 public class AbstractExpr {
     public String ID;
@@ -18,13 +20,7 @@ public class AbstractExpr {
 
     public Sort sort = Sort.NVAR;
 
-    private List<String> IDlist = null;
-
     private String renderStr = null;
-
-
-
-
 
     public  AbstractExpr(String ID) {
         //非变量叶子节点

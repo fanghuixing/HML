@@ -1,7 +1,5 @@
 package IMP.Translate;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-
 import java.util.ArrayList;
 
 
@@ -20,7 +18,7 @@ public class VisitTree {
     /**
      * 存储语法环境
      */
-    private DynamicWithConcreteExpr dynamics = null;
+    private DiscreteWithContinuous dynamics = null;
 
     /**
      * 当达到最大深度或者该节点没有子树可以展开时，terminal为true
@@ -44,7 +42,7 @@ public class VisitTree {
      * @param dynamics 当前行为
      * @param father    父亲节点
      */
-    public VisitTree(DynamicWithConcreteExpr dynamics, VisitTree father) {
+    public VisitTree(DiscreteWithContinuous dynamics, VisitTree father) {
         this(dynamics, false, father);
     }
 
@@ -54,7 +52,7 @@ public class VisitTree {
      * @param terminal 是否是终端节点
      * @param father 父亲节点
      */
-    public VisitTree(DynamicWithConcreteExpr dynamics, boolean terminal, VisitTree father) {
+    public VisitTree(DiscreteWithContinuous dynamics, boolean terminal, VisitTree father) {
         this.dynamics = dynamics;
         this.terminal = terminal;
         this.father = father;
@@ -137,11 +135,11 @@ public class VisitTree {
         return null;
     }
 
-    public DynamicWithConcreteExpr getDynamics() {
+    public DiscreteWithContinuous getDynamics() {
         return dynamics;
     }
 
-    public void setDynamics(DynamicWithConcreteExpr dynamics) {
+    public void setDynamics(DiscreteWithContinuous dynamics) {
         this.dynamics = dynamics;
     }
 }
