@@ -14,6 +14,7 @@ time in [0, 100];
 
 //Templates
 Template open(float h, float a, int H, float e){
+    h = h + 2;
     dot h = a until (h >= H-e)
 }
 
@@ -24,13 +25,17 @@ Template closed(float h, float b, int L, float e){
 
 //The model(program) Starting from here...
 Main {
+
     // Loop
     while(true){
+         waterLevel = waterLevel+1;
         !on;
         // let water in
         open(waterLevel,accin,MaxwaterLevel,deta);
         !off;
         // let water out
+         waterLevel = waterLevel+1.5;
         closed(waterLevel,decout,LowestwaterLevel,deta)
+        closed(waterLevel,decout,MaxwaterLevel,deta)
     }
 }

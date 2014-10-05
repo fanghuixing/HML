@@ -1,22 +1,22 @@
 package IMP.Translate;
 
 
-
-import java.util.*;
-
 import AntlrGen.HMLParser;
-import IMP.Basic.Template;
 import IMP.Basic.VariableForSMT2;
 import IMP.HML2SMT;
-import com.sun.javafx.scene.control.skin.EmbeddedTextContextMenuContent;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
  * Created by fofo on 2014/9/30.
  */
-public class Dynamics {
+public class DynamicWithConcreteExpr {
     private static int odeIndex = 1;
     private static final String guardPrefix = "@guard:";
     private static HashMap<Integer,String> odeMap = new HashMap<Integer, String>();
@@ -24,8 +24,8 @@ public class Dynamics {
     private List<ContextWithVarLink> discrete = new ArrayList<ContextWithVarLink>();
     private ContextWithVarLink continuous;
     private String resultFormula;
-    HashMap<String, AbstractExpr>  ID2ExpMap;
-    HashMap<AbstractExpr, String>  TempOdesMap = new HashMap<AbstractExpr, String>();
+    HashMap<String, ConcreteExpr>  ID2ExpMap;
+    HashMap<ConcreteExpr, String>  TempOdesMap = new HashMap<ConcreteExpr, String>();
     private int guardIndex =0;
     private static HashMap<String, Integer> odeformula = new HashMap<String, Integer>();
     private int mode;
@@ -47,7 +47,6 @@ public class Dynamics {
     }
 
     private void renderDisFormulas(){
-        ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
         for (ContextWithVarLink c : discrete) {
             ParserRuleContext r = c.getPrc();
             if (r instanceof HMLParser.AssignmentContext) {
@@ -72,23 +71,26 @@ public class Dynamics {
     private void refeshAndSave(String ID, HMLParser.ExprContext eprc, VariableLink variableLink) {
         ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
         AbstractExpr abstractExpr = exprs.get(eprc);
+        ConcreteExpr concreteExpr = new ConcreteExpr(abstractExpr);
         if (variableLink!=null) {
-            abstractExpr.resolve(variableLink);
+            concreteExpr.resolve(variableLink);
+            System.out.println("OLD VAR: " + ID);
             ID = variableLink.getRealVar(ID);
+            System.out.println("REAL VAR: " + ID);
         }
-        refreshExpression(abstractExpr);
-        ID2ExpMap.put(ID, abstractExpr);
+        refreshExpression(concreteExpr);
+        ID2ExpMap.put(ID, concreteExpr);
     }
 
 
 
-    private void refreshExpression(AbstractExpr abstractExpr) {
-        List<String> IDList = abstractExpr.getIDList();
+    private void refreshExpression(ConcreteExpr concreteExpr) {
+        List<String> IDList = concreteExpr.getIDList();
         for (String ID : IDList) {
-            AbstractExpr abstractExprforID = ID2ExpMap.get(ID);
-            if (abstractExprforID != null) {
+            ConcreteExpr concreteExprforID = ID2ExpMap.get(ID);
+            if (concreteExprforID != null) {
                 System.out.println(String.format("Relacing %s ... ... ...", ID));
-                abstractExpr.replace(ID, abstractExprforID);
+                concreteExpr.replace(ID, concreteExprforID);
             }
         }
     }
@@ -103,7 +105,7 @@ public class Dynamics {
         }
         StringBuilder result = new StringBuilder();
         List<String> vars = new ArrayList<String>();
-        for (Map.Entry<AbstractExpr, String>  e : TempOdesMap.entrySet()) {
+        for (Map.Entry<ConcreteExpr, String>  e : TempOdesMap.entrySet()) {
             result.append(e.getValue());
             addList(vars, e.getKey().getVarsList(r.getVrl())); // 获取方程中涉及的变量
         }
@@ -111,6 +113,7 @@ public class Dynamics {
             //如果是新的flow
             odeformula.put(result.toString(), odeIndex);
             odeMap.put(odeIndex, String.format("(define-ode flow_%s (%s))", odeIndex, result)); //存储方程定义
+            System.out.println("-----Define ode----- " + result);
             removeDuplicate(vars);
             OdeInSMT2 odeInSMT2 = new OdeInSMT2(vars, depth, odeIndex); //准备SMT2格式的连续行为表示
             mode = odeIndex;
@@ -165,10 +168,10 @@ public class Dynamics {
     }
 
     private void analyzeRelation(HMLParser.RelationContext relation, StringBuilder flows, ContextWithVarLink r){
-        AbstractExpr flow = resolveRelation(relation); //得到方程的抽象表示
-
+        ConcreteExpr flow = new ConcreteExpr(resolveRelation(relation)); //得到方程的抽象表示
+        System.out.println("The flow " + flow);
         String result = flow.toString(r.getVrl());     //还原真实变量
-
+        System.out.println("The result flow after resolve vars : " + result);
         TempOdesMap.put(flow, result);
 
     }
@@ -178,7 +181,10 @@ public class Dynamics {
         ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
         AbstractExpr left = new AbstractExpr("d/dt", new AbstractExpr(varName, AbstractExpr.Sort.VAR),null);
         AbstractExpr right = exprs.get(relation.expr());
-        return new AbstractExpr("=", left, right);
+        AbstractExpr r = new AbstractExpr("=", left, right);
+        System.out.println("Resolve Relation ... ");
+        System.out.println(r);
+        return r;
     }
 
     public static HashMap<Integer, String> getOdeMap() {
@@ -188,16 +194,16 @@ public class Dynamics {
     public void analyzeGuard(HMLParser.GuardContext guard, VariableLink variableLink) {
         ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
 
-        AbstractExpr abstractExpr = guardPtp.get(guard);
+        ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
 
         if (variableLink!=null) {
             //variableLink.printAll();
-            abstractExpr.resolve(variableLink);
+            concreteExpr.resolve(variableLink);
         }
-        refreshExpression(abstractExpr);
+        refreshExpression(concreteExpr);
         // 因为Guard是没有副作用的，所以可以放入ID2ExpMap中
         // 在导出公式的时候需要处理这个特殊的ID
-        ID2ExpMap.put(guardName(""+guardIndex), abstractExpr);
+        ID2ExpMap.put(guardName(""+guardIndex), concreteExpr);
         guardIndex++;
     }
 
@@ -214,27 +220,30 @@ public class Dynamics {
 
         if (resultFormula!=null) return resultFormula;
         StringBuilder sb = new StringBuilder();
-
+        ID2ExpMap = new HashMap<String, ConcreteExpr>();
         if (depth == 0) {
             System.out.println("Use the variables initializations information");
-            ID2ExpMap = HML2SMT.getInitID2ExpMap();
+
+            for (Map.Entry<String, AbstractExpr> e : HML2SMT.getInitID2ExpMap().entrySet()) {
+                ID2ExpMap.put(e.getKey(), new ConcreteExpr(e.getValue()));
+            }
             System.out.println("Size : " + ID2ExpMap.size());
             for (Map.Entry idem : ID2ExpMap.entrySet()) {
                 System.out.println("The mapping in Initializations:" +idem.getKey());
             }
         }
-        else  ID2ExpMap = new HashMap<String, AbstractExpr>();
+
 
         if (depth!=0) {
             List<VariableForSMT2> vars = HML2SMT.getVarlist();
             for (VariableForSMT2 v : vars) {
-                ID2ExpMap.put(v.getName(), new AbstractExpr(v.getName(), AbstractExpr.Sort.VAR, null, null));
+                ID2ExpMap.put(v.getName(), new ConcreteExpr(v.getName(), AbstractExpr.Sort.VAR, null, null));
             }
         }
 
         renderDisFormulas();
         //show all the formulas for discrete actions
-        for (Map.Entry<String, AbstractExpr> abe : ID2ExpMap.entrySet()) {
+        for (Map.Entry<String, ConcreteExpr> abe : ID2ExpMap.entrySet()) {
             String ID = abe.getKey();
             if (ID.startsWith("@"))
                 sb.append(String.format("(%s)", abe.getValue().toString(depth-1)));
@@ -245,6 +254,7 @@ public class Dynamics {
         sb.append(renderConFormulas());
         sb.replace(0,0,String.format("(= mode_%s %s)", depth, mode));
         sb.append(String.format("(= mode_%s %s)", depth, mode));
+        sb.append("\n \n");
         resultFormula = sb.toString();
         return resultFormula;
     }

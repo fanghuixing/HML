@@ -6,7 +6,7 @@ import IMP.Infos.HML2SMTListener;
 import IMP.Infos.HSTErrorListener;
 import IMP.Scope.ScopeConstructor;
 import IMP.Translate.AbstractExpr;
-import IMP.Translate.Dynamics;
+import IMP.Translate.DynamicWithConcreteExpr;
 import IMP.Translate.HMLProgram2SMTVisitor;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
@@ -24,7 +24,7 @@ import org.stringtemplate.v4.STGroupFile;
  * Created by Huixing Fang on 2014/9/25.
  */
 public class HML2SMT {
-    final static int depth = 10;
+    final static int depth = 4;
     static ParseTreeProperty<AbstractExpr> exprPtp;
     static ParseTreeProperty<AbstractExpr> guardPtp;
     static  HashMap<String, AbstractExpr>  InitID2ExpMap;
@@ -83,19 +83,19 @@ public class HML2SMT {
         trans.setCurrentVariableLink(hml2SMTListener.getFinalVariableLinks());
         trans.visit(tree);
 
-        for (Dynamics dy : trans.getDynamicsList()) {
+        for (DynamicWithConcreteExpr dy : trans.getDynamicsList()) {
             System.out.println(dy);
             st.add("formulas", dy.toString());
             System.out.println();
         }
 
-        for (Map.Entry<Integer,String> ode : Dynamics.getOdeMap().entrySet()) {
+        for (Map.Entry<Integer,String> ode : DynamicWithConcreteExpr.getOdeMap().entrySet()) {
             System.out.println(ode.getValue());
             st.add("flows", ode.getValue());
         }
 
 
-        int modeNum = Dynamics.getOdeMap().size();
+        int modeNum = DynamicWithConcreteExpr.getOdeMap().size();
         st.add("constraints", new Constraint("mode", "1", modeNum+"").getNormalConstraintList(depth));
 
 
@@ -105,6 +105,7 @@ public class HML2SMT {
         if (out.createNewFile())  System.out.println("File successfully created");
         else                      System.out.println("File already exits.");
         st.write(out, new HSTErrorListener());
+        exprPtp = hml2SMTListener.getExprPtp();
     }
 
 

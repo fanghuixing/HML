@@ -83,7 +83,7 @@ blockStatement
     |  blockStatement '|'  blockStatement                    #NonCh     // non-deterministrate choice
     |  blockStatement '||' blockStatement                    #ParaCom   // parallel composition
     |  blockStatement ';'?  blockStatement                   #SeqCom    // sequential composition
-    |  '(' blockStatement '<' expr '>' blockStatement ')'    #ConCh     // conditional choice
+    |  '(' blockStatement '<' expr '>' blockStatement ')'    #ConChoice     // conditional choice
     |  equation 'until' guard                                #Ode       // differential equation
     |  'when' '{' guardedchoice '}'                          #WhenPro   // when program
     |  'while' parExpression parStatement                    #LoopPro   // loop

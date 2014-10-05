@@ -21,13 +21,15 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     Scope currentScope; // resolve symbols starting in this scope
     private int currentDepth;
     private int depth;
-    private List<Dynamics> dynamicsList = new ArrayList<Dynamics>();
+    //private List<Dynamics> dynamicsList = new ArrayList<Dynamics>();
+    private List<DynamicWithConcreteExpr> dynamicsList = new ArrayList<DynamicWithConcreteExpr>();
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     private VariableLink currentVariableLink;
     private Stack<VariableLink> variableStack = new Stack<VariableLink>();
 
 
-    Dynamics currentDynamics = new Dynamics();
+    //Dynamics currentDynamics = new Dynamics();
+    DynamicWithConcreteExpr currentDynamics = new DynamicWithConcreteExpr();
 
 
     public HMLProgram2SMTVisitor(ParseTreeProperty<Scope> scopes, GlobalScope globals, HashMap<String, Template> tmpMap, int depth) {
@@ -39,7 +41,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
 
 
-    public List<Dynamics> getDynamicsList() {
+    public List<DynamicWithConcreteExpr> getDynamicsList() {
         return dynamicsList;
     }
 
@@ -178,7 +180,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
     private void createNewDynamics(){
         if (isDepthReached()) return;
-        currentDynamics = new Dynamics();
+        currentDynamics = new DynamicWithConcreteExpr();
     }
 
     public static String getType(Symbol.Type type) {

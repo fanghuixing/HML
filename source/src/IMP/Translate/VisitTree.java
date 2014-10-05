@@ -20,7 +20,7 @@ public class VisitTree {
     /**
      * 存储语法环境
      */
-    private Dynamics dynamics = null;
+    private DynamicWithConcreteExpr dynamics = null;
 
     /**
      * 当达到最大深度或者该节点没有子树可以展开时，terminal为true
@@ -44,7 +44,7 @@ public class VisitTree {
      * @param dynamics 当前行为
      * @param father    父亲节点
      */
-    public VisitTree(Dynamics dynamics, VisitTree father) {
+    public VisitTree(DynamicWithConcreteExpr dynamics, VisitTree father) {
         this(dynamics, false, father);
     }
 
@@ -54,7 +54,7 @@ public class VisitTree {
      * @param terminal 是否是终端节点
      * @param father 父亲节点
      */
-    public VisitTree(Dynamics dynamics, boolean terminal, VisitTree father) {
+    public VisitTree(DynamicWithConcreteExpr dynamics, boolean terminal, VisitTree father) {
         this.dynamics = dynamics;
         this.terminal = terminal;
         this.father = father;
@@ -137,11 +137,11 @@ public class VisitTree {
         return null;
     }
 
-    public Dynamics getDynamics() {
+    public DynamicWithConcreteExpr getDynamics() {
         return dynamics;
     }
 
-    public void setDynamics(Dynamics dynamics) {
+    public void setDynamics(DynamicWithConcreteExpr dynamics) {
         this.dynamics = dynamics;
     }
 }

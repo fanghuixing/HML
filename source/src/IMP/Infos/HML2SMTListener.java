@@ -162,6 +162,7 @@ public class HML2SMTListener extends HMLBaseListener {
     }
 
     public void exitCompExpr(HMLParser.CompExprContext ctx) {
+        log.log("=================================comp expr================================="+ctx.getText());
         setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);
     }
 
