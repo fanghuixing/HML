@@ -1,6 +1,5 @@
 package IMP.Infos;
 import IMP.Basic.*;
-import IMP.Translate.AbstractExpr;
 import IMP.Translate.VariableLink;
 import org.antlr.v4.runtime.Token;
 import AntlrGen.HMLBaseListener;

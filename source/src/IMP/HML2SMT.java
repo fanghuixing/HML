@@ -5,7 +5,7 @@ import IMP.Basic.VariableForSMT2;
 import IMP.Infos.HML2SMTListener;
 import IMP.Infos.HSTErrorListener;
 import IMP.Scope.ScopeConstructor;
-import IMP.Translate.AbstractExpr;
+import IMP.Infos.AbstractExpr;
 import IMP.Translate.DiscreteWithContinuous;
 import IMP.Translate.Dynamic;
 import IMP.Translate.HMLProgram2SMTVisitor;

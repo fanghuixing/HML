@@ -1,5 +1,7 @@
 package IMP.Translate;
 
+import IMP.Infos.AbstractExpr;
+
 /**
  * Created by fofo on 2014/10/4.
  */

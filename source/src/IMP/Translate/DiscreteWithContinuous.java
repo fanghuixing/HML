@@ -4,6 +4,7 @@ package IMP.Translate;
 import AntlrGen.HMLParser;
 import IMP.Basic.VariableForSMT2;
 import IMP.HML2SMT;
+import IMP.Infos.AbstractExpr;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 

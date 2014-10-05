@@ -1,6 +1,6 @@
 package IMP.Translate;
 
-import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
+import IMP.Infos.AbstractExpr;
 
 import java.util.ArrayList;
 import java.util.List;

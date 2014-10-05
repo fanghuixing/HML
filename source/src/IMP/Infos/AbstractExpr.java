@@ -1,10 +1,4 @@
-package IMP.Translate;
-
-import AntlrGen.HMLParser;
-
-import java.sql.RowIdLifetime;
-import java.util.ArrayList;
-import java.util.List;
+package IMP.Infos;
 
 /**
  * Created by fofo on 2014/10/1.
