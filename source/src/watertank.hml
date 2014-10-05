@@ -11,6 +11,7 @@ final int MaxwaterLevel=10, LowestwaterLevel=5;
 //Constraints
 waterLevel in [5,  10];
 time in [0, 100];
+//this time is for each continuous evolution
 
 //Templates
 Template open(float h, float a, int H, float e){
