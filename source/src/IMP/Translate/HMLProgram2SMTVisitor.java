@@ -10,7 +10,9 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import java.util.*;
 
 /**
- * Created by fofo on 2014/9/30.
+ * This is the visitor that does the main work for
+ * unrolling (translation) from HML model to SMT2 formulas
+ * @author fofo (fang.huixing@gmail.com)
  */
 public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     ParseTreeProperty<Scope> scopes;
@@ -23,6 +25,11 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     private Stack<VariableLink> variableStack = new Stack<VariableLink>();
     private VisitTree root = new VisitTree(null,  new DiscreteWithContinuous(), new ArrayList<Dynamic>());
     private VisitTree visitTree = root;
+
+    /**
+     * All the paths that represent running of the model
+     * Each path contains (size=depth) dynamics which contains both discrete and continuous behaviors
+     */
     private List<List<Dynamic>> paths = new ArrayList<List<Dynamic>>();
 
 
@@ -301,10 +308,6 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         }
         return l;
     }
-
-
-
-
 
     public List<List<Dynamic>> getPaths() {
         return paths;
