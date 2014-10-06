@@ -87,20 +87,20 @@ public class HML2SMT {
         //add paths
         //List<Dynamic> onePath = trans.getCurrentDynamicsList();
 
-        VisitTree rootTree = trans.getVisitTree();
+
 
         List<List<Dynamic>> paths = trans.getPaths();
-
-
-        System.out.println("------------------Begin one path------------------");
         for (List<Dynamic> onePath : paths) {
+            System.out.println("------------------Begin one path------------------");
             for (Dynamic dy : onePath) {
                 System.out.println(dy);
                 st.add("formulas", dy.toString());
                 System.out.println();
             }
+            System.out.println("------------------End path------------------------");
+            break;
         }
-        System.out.println("------------------End path------------------");
+
 
 
         for (Map.Entry<Integer,String> ode : DiscreteWithContinuous.getOdeMap().entrySet()) {

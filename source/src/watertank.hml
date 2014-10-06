@@ -37,8 +37,8 @@ Main {
         open(waterLevel,accin,MaxwaterLevel,deta);
         !off;
         // let water out
-         waterLevel = 1.5;
-        ((waterLevel = waterLevel+1) <waterLevel==1> skip);
+         waterLevel = 5;
+        (skip <waterLevel==5> skip);
         closed(waterLevel,decout,LowestwaterLevel,deta)
         // closed(waterLevel,decout,MaxwaterLevel,deta)
     }

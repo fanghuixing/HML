@@ -157,10 +157,13 @@ public class VisitTree {
     }
 
 
+    //删除已经达到最大深度的节点路径，免得下次加子树的时候又加一次
     public void delete(){
         if (father!=null){
-            if (children==null) {
+            if (children==null || children.size()==0) {
+                System.out.println("Delete one path in the tree "+father.getChildren().size());
                 father.getChildren().remove(this);
+                System.out.println("After Delete : " + father.getChildren().size());
                 father.delete();
             }
         }

@@ -7,8 +7,6 @@ import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
-
-import java.time.DayOfWeek;
 import java.util.*;
 
 /**
@@ -20,13 +18,10 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     Scope currentScope; // resolve symbols starting in this scope
 
     private int depth;
-    private List<Dynamic> currentDynamicsList = new ArrayList<Dynamic>();
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     private VariableLink currentVariableLink;
     private Stack<VariableLink> variableStack = new Stack<VariableLink>();
-    //Dynamics currentDynamics = new Dynamics();
-    Dynamic currentDynamics = new DiscreteWithContinuous();
-    private VisitTree root = new VisitTree(null, currentDynamics, currentDynamicsList);
+    private VisitTree root = new VisitTree(null,  new DiscreteWithContinuous(), new ArrayList<Dynamic>());
     private VisitTree visitTree = root;
     private List<List<Dynamic>> paths = new ArrayList<List<Dynamic>>();
 
@@ -43,9 +38,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
 
 
-    public List<Dynamic> getCurrentDynamicsList() {
-        return currentDynamicsList;
-    }
+
 
     public Void visitHybridModel(HMLParser.HybridModelContext ctx) {
         System.out.println("Visiting HybridModel... ... ...");
@@ -71,7 +64,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     }
 
     public Void visitConChoice(HMLParser.ConChoiceContext ctx) {
-        System.out.println("Visiting Conditional Choice.....");
+        System.out.println("Visiting Conditional Choice....." + ctx.getText());
         HMLParser.ExprContext condition =  ctx.expr();
         System.out.println(condition.getText());
 
@@ -79,8 +72,8 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         root.collectLeaves(leaves);
         VisitTree oldRoot = root;
         for (VisitTree v : leaves) {
-            Dynamic leftDynamic = currentDynamics.copy();
-            Dynamic rightDynamic = currentDynamics.copy();
+            Dynamic leftDynamic = v.getCurrentDynamics().copy();
+            Dynamic rightDynamic = v.getCurrentDynamics().copy();
             List<Dynamic> leftList = copyList(v.getCurrentDynamicList());
             List<Dynamic> righList = copyList(v.getCurrentDynamicList());
             VisitTree leftTree = new VisitTree(v,leftDynamic, leftList);
@@ -91,8 +84,8 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
             root = leftTree;
             leftDynamic.addDiscrete(new ContextWithVarLink(condition, currentVariableLink));
-            System.out.println("The block statement : " + ctx.blockStatement(0).getText());
             visit(ctx.blockStatement(0));
+
 
 
             root = rightTree;
@@ -167,9 +160,9 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
             System.out.println("THE DEPTH OF THE LEAF IS : "+ leaf.getCurrentDepth() + " " + depth + ", the dynamic list size: " + leaf.getCurrentDynamicList().size());
             System.out.println("\n");
             if (leaf.getCurrentDepth() < depth+1) {
-                currentDynamics = new DiscreteWithContinuous();
-                currentDynamics.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
-                leaf.setCurrentDynamics(currentDynamics);
+                Dynamic dy = new DiscreteWithContinuous();
+                dy.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
+                leaf.setCurrentDynamics(dy);
             }
             else  finishOnePath(leaf);
         }
@@ -186,7 +179,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     private void finishOnePath(VisitTree leaf) {
         System.out.println("Finishing one Path of Unrolling.....");
         paths.add(leaf.getCurrentDynamicList());
-        leaf.delete();
+        leaf.delete();//递归地从树中删除已经保存的path，这样可以使树变小，遍历的时候快些
 
 
     }
@@ -282,6 +275,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         List<VisitTree> vt = new ArrayList<VisitTree>();
         visitTree.collectLeaves(vt);
         for (VisitTree v : vt){
+            //对每一个叶子判断是否完成了深度展开，如果有一个叶子没有达到则需要继续展开
             if (v.getCurrentDynamicList().size()<depth+1)
                 return false;
         }
@@ -310,9 +304,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
 
 
-    public VisitTree getVisitTree() {
-        return visitTree;
-    }
+
 
     public List<List<Dynamic>> getPaths() {
         return paths;
