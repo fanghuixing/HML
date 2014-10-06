@@ -6,9 +6,9 @@ import IMP.Basic.Template;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
-import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
+import java.time.DayOfWeek;
 import java.util.*;
 
 /**
@@ -18,20 +18,20 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     ParseTreeProperty<Scope> scopes;
     GlobalScope globals;
     Scope currentScope; // resolve symbols starting in this scope
-    private int currentDepth;
+
     private int depth;
-    //private List<Dynamics> dynamicsList = new ArrayList<Dynamics>();
-    private List<Dynamic> dynamicsList = new ArrayList<Dynamic>();
-    private List<List<Dynamic>> unrollPath = new ArrayList<List<Dynamic>>();
-
-
+    private List<Dynamic> currentDynamicsList = new ArrayList<Dynamic>();
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     private VariableLink currentVariableLink;
     private Stack<VariableLink> variableStack = new Stack<VariableLink>();
-
-
     //Dynamics currentDynamics = new Dynamics();
-    DiscreteWithContinuous currentDynamics = new DiscreteWithContinuous();
+    Dynamic currentDynamics = new DiscreteWithContinuous();
+    private VisitTree root = new VisitTree(null, currentDynamics, currentDynamicsList);
+    private VisitTree visitTree = root;
+    private List<List<Dynamic>> paths = new ArrayList<List<Dynamic>>();
+
+
+
 
 
     public HMLProgram2SMTVisitor(ParseTreeProperty<Scope> scopes, GlobalScope globals, HashMap<String, Template> tmpMap, int depth) {
@@ -43,8 +43,8 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
 
 
-    public List<Dynamic> getDynamicsList() {
-        return dynamicsList;
+    public List<Dynamic> getCurrentDynamicsList() {
+        return currentDynamicsList;
     }
 
     public Void visitHybridModel(HMLParser.HybridModelContext ctx) {
@@ -74,11 +74,35 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         System.out.println("Visiting Conditional Choice.....");
         HMLParser.ExprContext condition =  ctx.expr();
         System.out.println(condition.getText());
-        currentDynamics.addDiscrete(new ContextWithVarLink(condition, currentVariableLink, true));
-        visit(ctx.blockStatement(1));
 
+        List<VisitTree> leaves = new ArrayList<VisitTree>();
+        root.collectLeaves(leaves);
+        VisitTree oldRoot = root;
+        for (VisitTree v : leaves) {
+            Dynamic leftDynamic = currentDynamics.copy();
+            Dynamic rightDynamic = currentDynamics.copy();
+            List<Dynamic> leftList = copyList(v.getCurrentDynamicList());
+            List<Dynamic> righList = copyList(v.getCurrentDynamicList());
+            VisitTree leftTree = new VisitTree(v,leftDynamic, leftList);
+            VisitTree rightTree = new VisitTree(v,rightDynamic, righList);
+            //创建分支也需要在树根节点创建， 这里需要修改
+            v.addChild(leftTree);
+            v.addChild(rightTree);
+
+            root = leftTree;
+            leftDynamic.addDiscrete(new ContextWithVarLink(condition, currentVariableLink));
+            System.out.println("The block statement : " + ctx.blockStatement(0).getText());
+            visit(ctx.blockStatement(0));
+
+
+            root = rightTree;
+            rightDynamic.addDiscrete(new ContextWithVarLink(condition, currentVariableLink, true));
+            visit(ctx.blockStatement(1));
+        }
+        root = oldRoot;//需要指向原来的叶子节点
         return null;
     }
+
 
 
     public Void visitAtomPro(HMLParser.AtomProContext ctx) {
@@ -89,7 +113,14 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
     public Void visitAssignment(HMLParser.AssignmentContext ctx) {
         System.out.println("Visiting Assignment... ... ...");
-        currentDynamics.addDiscrete(new ContextWithVarLink(ctx,currentVariableLink));
+        List<VisitTree> dynamicsLeaves = new ArrayList<VisitTree>();
+        root.collectLeaves(dynamicsLeaves);
+        //如果已经到达最大深度，就在树中删除该节点路径
+        for (VisitTree leaf : dynamicsLeaves) {
+            System.out.println(ctx.getText());
+            leaf.getCurrentDynamics().addDiscrete(new ContextWithVarLink(ctx,currentVariableLink));
+        }
+
         return null;
     }
 
@@ -110,21 +141,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         else if (boolCondition instanceof HMLParser.ConstantFalseContext) {
             return null;
         }
-        else {
-            DiscreteWithContinuous old = currentDynamics.copy();
-            List<Dynamic> oldlist = copyList(dynamicsList);
-            int olddepth = currentDepth;
-            oldlist.add(old);
-            currentDynamics.addDiscrete(new ContextWithVarLink(boolCondition, currentVariableLink));
-            visit(ctx.parStatement().blockStatement());
-            visit(ctx);
-            currentDynamics = old;
-            dynamicsList = oldlist;
-            currentDepth = olddepth;
-            System.out.println(String.format("Try other paths, %s ..............", currentDepth));
-            currentDynamics.addDiscrete(new ContextWithVarLink(boolCondition, currentVariableLink, true));
 
-        }
         System.out.println("End visit Loop...");
         return null;
     }
@@ -134,26 +151,44 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     public Void visitOde(HMLParser.OdeContext ctx) {
         System.out.println("Visiting Ode ... ...");
         visit(ctx.equation());
-        currentDynamics.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
-        currentDynamics.setDepth(currentDepth++);
-        dynamicsList.add(currentDynamics);
 
-        if (!isMaxDepth()) {
-            createNewDynamics();
-            //add guard into the discrete part
-            currentDynamics.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
+
+        List<VisitTree> dynamicsLeaves = new ArrayList<VisitTree>();
+
+        root.collectLeaves(dynamicsLeaves);
+        //如果已经到达最大深度，就在树中删除该节点路径
+        for (VisitTree leaf : dynamicsLeaves) {
+            System.out.println("\n");
+            System.out.println("THE DEPTH OF THE LEAF IS : "+ leaf.getCurrentDepth() + " " + depth + ", the dynamic list size: " + leaf.getCurrentDynamicList().size());
+            Dynamic dynamic = leaf.getCurrentDynamics();
+            dynamic.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
+            dynamic.setDepth(leaf.getCurrentDepth());
+            leaf.getCurrentDynamicList().add(dynamic);
+            System.out.println("THE DEPTH OF THE LEAF IS : "+ leaf.getCurrentDepth() + " " + depth + ", the dynamic list size: " + leaf.getCurrentDynamicList().size());
+            System.out.println("\n");
+            if (leaf.getCurrentDepth() < depth+1) {
+                currentDynamics = new DiscreteWithContinuous();
+                currentDynamics.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
+                leaf.setCurrentDynamics(currentDynamics);
+            }
+            else  finishOnePath(leaf);
         }
-        else {
-            finishOnePath();
-        }
+
+
+
+
+
 
         return null;
     }
 
 
-    private void finishOnePath() {
+    private void finishOnePath(VisitTree leaf) {
         System.out.println("Finishing one Path of Unrolling.....");
-        unrollPath.add(dynamicsList);
+        paths.add(leaf.getCurrentDynamicList());
+        leaf.delete();
+
+
     }
 
     //不带初始值的方程
@@ -165,7 +200,13 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     //带初始值的方程
     public Void visitEqWithInit(HMLParser.EqWithInitContext ctx) {
         System.out.println("Visiting Ode with init ... ...");
-        currentDynamics.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink)); //将初值对应为连续变量的值
+        List<VisitTree> dynamicsLeaves = new ArrayList<VisitTree>();
+        root.collectLeaves(dynamicsLeaves);
+        //如果已经到达最大深度，就在树中删除该节点路径
+        for (VisitTree leaf : dynamicsLeaves) {
+            leaf.getCurrentDynamics().addDiscrete(new ContextWithVarLink(ctx, currentVariableLink)); //将初值对应为连续变量的值
+        }
+
         return null;
     }
 
@@ -223,10 +264,6 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         return null;
     }
 
-    private void createNewDynamics(){
-        if (isMaxDepth()) return;
-        currentDynamics = new DiscreteWithContinuous();
-    }
 
     public static String getType(Symbol.Type type) {
         if (type.equals(Symbol.Type.Real))   return "float";
@@ -241,7 +278,14 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
     //判定是否已经到达最大深度
     private boolean isMaxDepth(){
-        return currentDepth>depth;
+
+        List<VisitTree> vt = new ArrayList<VisitTree>();
+        visitTree.collectLeaves(vt);
+        for (VisitTree v : vt){
+            if (v.getCurrentDynamicList().size()<depth+1)
+                return false;
+        }
+        return true;
 
     }
 
@@ -264,7 +308,13 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         return l;
     }
 
-    public List<List<Dynamic>> getUnrollPath() {
-        return unrollPath;
+
+
+    public VisitTree getVisitTree() {
+        return visitTree;
+    }
+
+    public List<List<Dynamic>> getPaths() {
+        return paths;
     }
 }

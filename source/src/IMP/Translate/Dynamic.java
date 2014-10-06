@@ -16,5 +16,7 @@ public interface Dynamic{
 
     public HashMap<Integer, String> getOdeDefinitionMap();
 
+    public Dynamic copy();
+
 
 }

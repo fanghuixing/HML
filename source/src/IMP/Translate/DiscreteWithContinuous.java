@@ -237,7 +237,10 @@ public class DiscreteWithContinuous implements Dynamic{
         }
         refreshExpression(concreteExpr);
 
-        if (negation) concreteExpr = concreteExpr.negation();
+        if (negation) {
+            System.out.println("Need to negation.");
+            concreteExpr = concreteExpr.negation();}
+        else System.out.println("Not need to negation.");
 
         // 因为Guard是没有副作用的，所以可以放入ID2ExpMap中
         // 在导出公式的时候需要处理这个特殊的ID
@@ -304,7 +307,10 @@ public class DiscreteWithContinuous implements Dynamic{
     }
     public DiscreteWithContinuous copy(){
         DiscreteWithContinuous obj = new DiscreteWithContinuous();
-        obj.discrete = this.discrete;
+        obj.discrete = new ArrayList<ContextWithVarLink>();
+        for (ContextWithVarLink e : this.discrete) {
+            obj.discrete.add(e);
+        }
         obj.continuous = this.continuous;
         obj.depth = this.depth;
         return obj;

@@ -9,6 +9,7 @@ import IMP.Infos.AbstractExpr;
 import IMP.Translate.DiscreteWithContinuous;
 import IMP.Translate.Dynamic;
 import IMP.Translate.HMLProgram2SMTVisitor;
+import IMP.Translate.VisitTree;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import java.io.File;
@@ -84,16 +85,23 @@ public class HML2SMT {
         trans.setCurrentVariableLink(hml2SMTListener.getFinalVariableLinks());
         trans.visit(tree);
         //add paths
-        List<List<Dynamic>> paths = trans.getUnrollPath();
-        for (List<Dynamic> p : paths) {
-            System.out.println("------------------Begin one path------------------");
-            for (Dynamic dy : p) {
+        //List<Dynamic> onePath = trans.getCurrentDynamicsList();
+
+        VisitTree rootTree = trans.getVisitTree();
+
+        List<List<Dynamic>> paths = trans.getPaths();
+
+
+        System.out.println("------------------Begin one path------------------");
+        for (List<Dynamic> onePath : paths) {
+            for (Dynamic dy : onePath) {
                 System.out.println(dy);
                 st.add("formulas", dy.toString());
                 System.out.println();
             }
-            System.out.println("------------------End path------------------");
         }
+        System.out.println("------------------End path------------------");
+
 
         for (Map.Entry<Integer,String> ode : DiscreteWithContinuous.getOdeMap().entrySet()) {
             System.out.println(ode.getValue());

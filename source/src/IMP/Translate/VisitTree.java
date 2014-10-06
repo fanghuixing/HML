@@ -1,6 +1,7 @@
 package IMP.Translate;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -16,19 +17,18 @@ public class VisitTree {
     private int layer = 0;
 
     /**
-     * 存储语法环境
+     * 存储当前dynamic
      */
-    private DiscreteWithContinuous dynamics = null;
+    private Dynamic currentDynamics = null;
+
+    private int currentDepth = 0;
+
+    private List<Dynamic> currentDynamicList = null;
 
     /**
      * 当达到最大深度或者该节点没有子树可以展开时，terminal为true
      */
     private boolean terminal = false;
-
-    /**
-     * 父节点，双向树可以方便遍历
-     */
-    private VisitTree father = null;
 
     /**
      * 因为子树未必只有2个，所以需要用列表方式存储
@@ -37,29 +37,25 @@ public class VisitTree {
 
     private int currentChildIndex = 0;
 
+    private VisitTree father = null;
+
+
+
     /**
      * 创建非终端节点
      * @param dynamics 当前行为
-     * @param father    父亲节点
+     *
      */
-    public VisitTree(DiscreteWithContinuous dynamics, VisitTree father) {
-        this(dynamics, false, father);
+    public VisitTree(Dynamic dynamics, List<Dynamic> dynamicList) {
+        this.currentDynamics = dynamics;
+        this.currentDynamicList = dynamicList;
     }
 
-    /**
-     * 可用于创建终端节点
-     * @param dynamics   当前行为
-     * @param terminal 是否是终端节点
-     * @param father 父亲节点
-     */
-    public VisitTree(DiscreteWithContinuous dynamics, boolean terminal, VisitTree father) {
-        this.dynamics = dynamics;
-        this.terminal = terminal;
+
+    public VisitTree(VisitTree father, Dynamic currentDynamics, List<Dynamic> currentDynamicList) {
         this.father = father;
-        if (father!=null) {
-            //layer的值可以在父亲的层次上加1
-            this.layer = this.father.layer + 1;
-        }
+        this.currentDynamics = currentDynamics;
+        this.currentDynamicList = currentDynamicList;
     }
 
     /**
@@ -76,9 +72,7 @@ public class VisitTree {
         this.terminal = terminal;
     }
 
-    public void setFather(VisitTree father) {
-        this.father = father;
-    }
+
 
     public int getLayer() {
         return layer;
@@ -90,9 +84,7 @@ public class VisitTree {
         return terminal;
     }
 
-    public VisitTree getFather() {
-        return father;
-    }
+
 
     public ArrayList<VisitTree> getChildren() {
         return children;
@@ -108,6 +100,15 @@ public class VisitTree {
         }
         children.add(tree);
     }
+
+    public void collectLeaves(List<VisitTree> leaves){
+        if (children==null)
+            leaves.add(this);
+        else {
+            for (VisitTree e : children) e.collectLeaves(leaves);
+        }
+    }
+
 
     /**
      *
@@ -135,11 +136,33 @@ public class VisitTree {
         return null;
     }
 
-    public DiscreteWithContinuous getDynamics() {
-        return dynamics;
+    public Dynamic getCurrentDynamics() {
+        return currentDynamics;
     }
 
-    public void setDynamics(DiscreteWithContinuous dynamics) {
-        this.dynamics = dynamics;
+    public void setCurrentDynamics(Dynamic currentDynamics) {
+        this.currentDynamics = currentDynamics;
+    }
+
+    public List<Dynamic> getCurrentDynamicList() {
+        return currentDynamicList;
+    }
+
+    public void setCurrentDynamicList(List<Dynamic> currentDynamicList) {
+        this.currentDynamicList = currentDynamicList;
+    }
+
+    public int getCurrentDepth() {
+        return currentDynamicList.size();
+    }
+
+
+    public void delete(){
+        if (father!=null){
+            if (children==null) {
+                father.getChildren().remove(this);
+                father.delete();
+            }
+        }
     }
 }
