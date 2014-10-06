@@ -70,6 +70,17 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         return null;
     }
 
+    public Void visitConChoice(HMLParser.ConChoiceContext ctx) {
+        System.out.println("Visiting Conditional Choice.....");
+        HMLParser.ExprContext condition =  ctx.expr();
+        System.out.println(condition.getText());
+        currentDynamics.addDiscrete(new ContextWithVarLink(condition, currentVariableLink, true));
+        visit(ctx.blockStatement(1));
+
+        return null;
+    }
+
+
     public Void visitAtomPro(HMLParser.AtomProContext ctx) {
         System.out.println("Visiting Atom Program... ... ...");
         visit(ctx.atom());
@@ -93,7 +104,6 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         HMLParser.ExprContext boolCondition = ctx.parExpression().expr();
         if (boolCondition instanceof HMLParser.ConstantTrueContext) {
             while (!isMaxDepth()) {
-                currentDynamics.addDiscrete(new ContextWithVarLink(ctx.parExpression().expr(),currentVariableLink));
                 visit(ctx.parStatement().blockStatement());
             }
         }

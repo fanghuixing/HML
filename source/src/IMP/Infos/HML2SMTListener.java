@@ -182,6 +182,7 @@ public class HML2SMTListener extends HMLBaseListener {
         AbstractExpr left = exprPtp.get(leftEC);
         AbstractExpr right = exprPtp.get(rightEC);
         String op = opt.getText();
+        if (op.equals("==")) op = "=";
         exprPtp.put(ctx,  new AbstractExpr(op, left, right));
     }
 

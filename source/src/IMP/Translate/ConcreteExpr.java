@@ -1,5 +1,6 @@
 package IMP.Translate;
 
+import AntlrGen.HMLParser;
 import IMP.Infos.AbstractExpr;
 
 import java.util.ArrayList;
@@ -218,6 +219,10 @@ public class ConcreteExpr {
         for (String s : from) {
             target.add(s);
         }
+    }
+
+    public ConcreteExpr negation(){
+        return new ConcreteExpr("not", AbstractExpr.Sort.NVAR, clone(this), null );
     }
 
 }

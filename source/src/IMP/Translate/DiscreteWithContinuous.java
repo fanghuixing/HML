@@ -65,6 +65,11 @@ public class DiscreteWithContinuous implements Dynamic{
                 //System.out.println("--------------analysis guard-----------");
                 analyzeGuard((HMLParser.GuardContext) r, c.getVrl());
             }
+            else if (r instanceof HMLParser.ExprContext) {
+                System.out.println("-----Condition: " + r.getText());
+                analyzeCondition((HMLParser.ExprContext) r, c.getVrl(), c.negation);
+
+            }
         }
     }
 
@@ -178,6 +183,7 @@ public class DiscreteWithContinuous implements Dynamic{
             //如果是方程组
             for (HMLParser.EquationContext e : ((HMLParser.ParaEqContext) equ).equation()) {
                 analyzeEquaiton(e, flows, r);
+
             }
         }
     }
@@ -214,6 +220,25 @@ public class DiscreteWithContinuous implements Dynamic{
             concreteExpr.resolve(variableLink);
         }
         refreshExpression(concreteExpr);
+        // 因为Guard是没有副作用的，所以可以放入ID2ExpMap中
+        // 在导出公式的时候需要处理这个特殊的ID
+        ID2ExpMap.put(guardName(""+guardIndex), concreteExpr);
+        //guard name 只会出现在hashmap的key中，不会在expr中出现，所以expr中不用判段guard名称前缀
+        guardIndex++;
+    }
+
+    private void analyzeCondition(HMLParser.ExprContext Condition, VariableLink variableLink, boolean negation) {
+        ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
+        ConcreteExpr concreteExpr = new ConcreteExpr(exprs.get(Condition));
+
+        if (variableLink!=null) {
+            //variableLink.printAll();
+            concreteExpr.resolve(variableLink);
+        }
+        refreshExpression(concreteExpr);
+
+        if (negation) concreteExpr = concreteExpr.negation();
+
         // 因为Guard是没有副作用的，所以可以放入ID2ExpMap中
         // 在导出公式的时候需要处理这个特殊的ID
         ID2ExpMap.put(guardName(""+guardIndex), concreteExpr);
