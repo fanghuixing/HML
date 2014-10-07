@@ -337,5 +337,7 @@ public class DiscreteWithContinuous implements Dynamic{
         this.continuousResult = continuousDynamics;
     }
 
-
+    public ContextWithVarLink getContinuous() {
+        return continuous;
+    }
 }

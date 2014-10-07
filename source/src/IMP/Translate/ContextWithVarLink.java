@@ -29,4 +29,19 @@ public class ContextWithVarLink {
     public VariableLink getVrl() {
         return vrl;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ContextWithVarLink)) return false;
+
+        ContextWithVarLink that = (ContextWithVarLink) o;
+
+        if (negation != that.negation) return false;
+        if (prc != that.prc) return false;
+        if (vrl != that.vrl) return false;
+
+        return true;
+    }
+
 }

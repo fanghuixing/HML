@@ -6,6 +6,8 @@ import IMP.Basic.Template;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
+import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import java.util.*;
 
@@ -25,6 +27,8 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     private Stack<VariableLink> variableStack = new Stack<VariableLink>();
     private VisitTree root = new VisitTree(null,  new DiscreteWithContinuous(), new ArrayList<Dynamic>());
     private VisitTree visitTree = root;
+
+
 
     /**
      * All the paths that represent running of the model
@@ -60,6 +64,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         currentScope = scopes.get(ctx);
         visit(ctx.blockStatement());
 
+
         return null;
     }
 
@@ -89,11 +94,9 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
             //创建分支也需要在树根节点创建， 这里需要修改
             v.addChild(leftTree);
             v.addChild(rightTree);
-
             root = leftTree;
             leftDynamic.addDiscrete(new ContextWithVarLink(condition, currentVariableLink));
             visit(ctx.blockStatement(0));
-
             root = rightTree;
             rightDynamic.addDiscrete(new ContextWithVarLink(condition, currentVariableLink, true));
             visit(ctx.blockStatement(1));
@@ -103,6 +106,27 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         System.out.println("End Visiting Con Choice ... " + odenumering);
         return null;
     }
+
+    private boolean checkCondition(HMLParser.ExprContext expr, VisitTree tree){
+        Dynamic curr = tree.getCurrentDynamics().copy();
+        curr.addDiscrete(new ContextWithVarLink(expr, currentVariableLink));
+        curr.setDepth(tree.getCurrentDynamicList().size());
+
+        System.out.println("-------------------------Start----------------------------");
+        for (Dynamic dy : tree.getCurrentDynamicList()) {
+            System.out.println(dy);
+        }
+        curr.toString();
+        StringBuilder sb = new StringBuilder(curr.getDiscreteDynamics());
+        int st = sb.indexOf(")", 0);
+
+        System.out.println(sb.substring(st+1));
+
+        System.out.println("--------------------------End---------------------------");
+
+        return true;
+    }
+
 
 
 
@@ -131,8 +155,6 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
      * @return null
      */
     public Void visitLoopPro(HMLParser.LoopProContext ctx) {
-
-
         HMLParser.ExprContext boolCondition = ctx.parExpression().expr();
         if (boolCondition instanceof HMLParser.ConstantTrueContext) {
             while (!isMaxDepth()) {
@@ -142,8 +164,6 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         else if (boolCondition instanceof HMLParser.ConstantFalseContext) {
             return null;
         }
-
-
         return null;
     }
 
@@ -155,14 +175,15 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         List<VisitTree> dynamicsLeaves = new ArrayList<VisitTree>();
 
         root.collectLeaves(dynamicsLeaves);
+        System.out.println("The leaves : " + dynamicsLeaves.size());
         //如果已经到达最大深度，就在树中删除该节点路径
         for (VisitTree leaf : dynamicsLeaves) {
+            System.out.println(leaf.getCurrentDynamicList().size());
             Dynamic dynamic = leaf.getCurrentDynamics();
             dynamic.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
             dynamic.setDepth(leaf.getCurrentDepth());
             leaf.getCurrentDynamicList().add(dynamic);
-
-
+            System.out.println(leaf.getCurrentDynamicList().size());
             if (leaf.getCurrentDepth() < depth+1) {
                 Dynamic dy = new DiscreteWithContinuous();
                 dy.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
@@ -170,9 +191,14 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
             }
             else  finishOnePath(leaf);
         }
-        System.out.println("End Visiting ODE ... ... " + odenumering++);
+
+        root.merge();
+
         return null;
     }
+
+
+
 
 
     private void finishOnePath(VisitTree leaf) {

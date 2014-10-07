@@ -33,7 +33,7 @@ public interface Dynamic{
     public void setDiscreteDynamics(String discreteDynamics);
 
     public void setContinuousDynamics(String continuousDynamics);
-
+    public ContextWithVarLink getContinuous();
 
 
 }

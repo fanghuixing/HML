@@ -63,7 +63,7 @@ public class PathsMerge {
 
 
 
-    public boolean match(List<Dynamic> pa, List<Dynamic> pb) {
+    public static boolean match(List<Dynamic> pa, List<Dynamic> pb) {
         if (pa==null || pb==null) return false;
         if (pa.size() != pb.size()) return false;
         for (int i=0; i<pa.size(); i++) {
@@ -89,7 +89,7 @@ public class PathsMerge {
         }
     }
 
-    public String mergeDynamics(List<String> dynamics){
+    public static String mergeDynamics(List<String> dynamics){
         StringBuilder sb = new StringBuilder();
         if (dynamics.size()==1) return dynamics.get(0);
         else if (dynamics.size()==0) return null;
@@ -100,12 +100,7 @@ public class PathsMerge {
     }
 
     public List<List<Dynamic>> getMergeResult(){
-        System.out.println("Merge Result Size:" + result.size());
-        for (List<Dynamic> path : result){
-            for (Dynamic dy : path){
-                System.out.println(dy.getDiscreteDynamics()+dy.getContinuousDynamics());
-            }
-        }
+
         return result;
     }
 

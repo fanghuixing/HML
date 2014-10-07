@@ -1,6 +1,10 @@
 package IMP.Translate;
 
+import IMP.Merge.PathsMerge;
+import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 
@@ -165,5 +169,98 @@ public class VisitTree {
                 father.delete();
             }
         }
+    }
+
+    public void merge(){
+        System.out.println("Merge ... ...");
+        if (children==null || children.size()==0){
+            if (father==null) return;
+            List<VisitTree> terminals =  getTerminalChildren(father);
+            for (int i=0; i<terminals.size(); i++){
+                System.out.println("In loop ...");
+                VisitTree Va = terminals.get(i);
+                HashSet<String> set = new HashSet<String>();
+                boolean flag = false;
+                for (int j=i+1; j<terminals.size(); j++){
+                    VisitTree Vb = terminals.get(j);
+                    if (match(Va.getCurrentDynamicList(), Vb.getCurrentDynamicList())){
+                        Dynamic lastVa = Va.getLastDynamic();
+                        Dynamic lastVb = Vb.getLastDynamic();
+                        System.out.println(lastVa);
+                        System.out.println(lastVb);
+                        set.add(lastVa.getDiscreteDynamics());
+                        set.add(lastVb.getDiscreteDynamics());
+                        father.removeChild(Vb);
+                        terminals.remove(Vb);
+                        j--;
+                        flag = true;
+                        System.out.println(" in if currentDynamicList size :" + currentDynamicList.size());
+                    }
+                }
+                if (flag) merge(Va, set);
+
+            }
+
+            if (father.children.size()<2){
+                VisitTree newFather = father.father;
+                if (newFather==null) return;
+                newFather.removeChild(father);
+                father = newFather;
+                father.children.add(this);
+            }
+
+
+        }
+        else if (children!=null && children.size()>0) {
+            for (VisitTree v : children){
+                System.out.println("Merge...");
+                v.merge();
+            }
+        }
+
+    }
+
+    private void merge(VisitTree visitTree, HashSet<String> set){
+        System.out.println(" size :" + visitTree.currentDynamicList.size());
+        List<String> dynamics = new ArrayList<String>();
+        dynamics.addAll(set);
+        visitTree.getLastDynamic().setDiscreteDynamics(PathsMerge.mergeDynamics(dynamics));
+        System.out.println("--"+visitTree.getLastDynamic().getDiscreteDynamics());
+        System.out.println(" size :" + visitTree.currentDynamicList.size());
+    }
+
+
+
+    private boolean match(List<Dynamic> pa, List<Dynamic> pb) {
+        if (pa==null || pb==null) return false;
+        if (pa.size() != pb.size()) return false;
+        for (int i=0; i<pa.size(); i++) {
+            if (!pa.get(i).getContinuous().equals(pb.get(i).getContinuous())){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+    private List<VisitTree> getTerminalChildren(VisitTree visitTree){
+        List<VisitTree> ret = visitTree.children;
+        List<VisitTree> res = new ArrayList<VisitTree>();
+        if (ret!=null) {
+            for (VisitTree vt : ret) {
+                if (vt.children==null || vt.children.size()==0){
+                    res.add(vt);
+                }
+            }
+        }
+        return res;
+    }
+
+    public void removeChild(VisitTree visitTree){
+        children.remove(visitTree);
+    }
+
+    public Dynamic getLastDynamic(){
+        return currentDynamicList.get(currentDynamicList.size()-1);
     }
 }

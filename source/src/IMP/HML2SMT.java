@@ -93,9 +93,10 @@ public class HML2SMT {
 
         List<List<Dynamic>> paths = trans.getPaths();
         for (List<Dynamic> onePath : paths) {
-
             for (Dynamic dy : onePath) {
-                st.add("formulas", dy.toString());
+                st.add("formulas", dy.getDiscreteDynamics());
+                st.add("formulas", dy.getContinuousDynamics());
+                st.add("formulas", "\n");
             }
 
         }
