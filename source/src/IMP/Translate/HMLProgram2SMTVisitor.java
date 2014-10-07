@@ -73,6 +73,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     public Void visitConChoice(HMLParser.ConChoiceContext ctx) {
         System.out.println("Visiting Conditional Choice....." + ctx.getText());
         HMLParser.ExprContext condition =  ctx.expr();
+        //如果可以判定这个条件当前的值，就可以极大地降低分支数目
         System.out.println(condition.getText());
 
         List<VisitTree> leaves = new ArrayList<VisitTree>();
