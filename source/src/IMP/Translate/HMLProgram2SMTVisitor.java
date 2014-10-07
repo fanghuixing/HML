@@ -31,6 +31,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
      * Each path contains (size=depth) dynamics which contains both discrete and continuous behaviors
      */
     private List<List<Dynamic>> paths = new ArrayList<List<Dynamic>>();
+    int odenumering = 0;
 
 
 
@@ -48,34 +49,33 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
 
     public Void visitHybridModel(HMLParser.HybridModelContext ctx) {
-        System.out.println("Visiting HybridModel... ... ...");
+
         currentScope = globals;
         visit(ctx.program());
         return null;
     }
 
     public Void visitProgram(HMLParser.ProgramContext ctx) {
-        System.out.println("Visiting Program... ... ...");
+
         currentScope = scopes.get(ctx);
         visit(ctx.blockStatement());
-        System.out.println("End visit of Program ... ...");
+
         return null;
     }
 
     public Void visitSeqCom(HMLParser.SeqComContext ctx) {
-        System.out.println("Visiting Seq Program... ... ...");
+
         for (HMLParser.BlockStatementContext bs : ctx.blockStatement())
             visit(bs);
-        System.out.println("End visit of Seq Program ... ...");
+
         return null;
     }
 
     public Void visitConChoice(HMLParser.ConChoiceContext ctx) {
-        System.out.println("Visiting Conditional Choice....." + ctx.getText());
+        System.out.println("Begin Visiting Con Choice ... " + odenumering);
         HMLParser.ExprContext condition =  ctx.expr();
-        //如果可以判定这个条件当前的值，就可以极大地降低分支数目
-        System.out.println(condition.getText());
 
+        //如果可以判定这个条件当前的值，就可以极大地降低分支数目
         List<VisitTree> leaves = new ArrayList<VisitTree>();
         root.collectLeaves(leaves);
         VisitTree oldRoot = root;
@@ -94,31 +94,31 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
             leftDynamic.addDiscrete(new ContextWithVarLink(condition, currentVariableLink));
             visit(ctx.blockStatement(0));
 
-
-
             root = rightTree;
             rightDynamic.addDiscrete(new ContextWithVarLink(condition, currentVariableLink, true));
             visit(ctx.blockStatement(1));
+
         }
         root = oldRoot;//需要指向原来的叶子节点
+        System.out.println("End Visiting Con Choice ... " + odenumering);
         return null;
     }
 
 
 
     public Void visitAtomPro(HMLParser.AtomProContext ctx) {
-        System.out.println("Visiting Atom Program... ... ...");
+
         visit(ctx.atom());
         return null;
     }
 
     public Void visitAssignment(HMLParser.AssignmentContext ctx) {
-        System.out.println("Visiting Assignment... ... ...");
+
         List<VisitTree> dynamicsLeaves = new ArrayList<VisitTree>();
         root.collectLeaves(dynamicsLeaves);
         //如果已经到达最大深度，就在树中删除该节点路径
         for (VisitTree leaf : dynamicsLeaves) {
-            System.out.println(ctx.getText());
+
             leaf.getCurrentDynamics().addDiscrete(new ContextWithVarLink(ctx,currentVariableLink));
         }
 
@@ -132,7 +132,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
      */
     public Void visitLoopPro(HMLParser.LoopProContext ctx) {
 
-        System.out.println("Visiting Loop Program... ... ...");
+
         HMLParser.ExprContext boolCondition = ctx.parExpression().expr();
         if (boolCondition instanceof HMLParser.ConstantTrueContext) {
             while (!isMaxDepth()) {
@@ -143,30 +143,26 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
             return null;
         }
 
-        System.out.println("End visit Loop...");
+
         return null;
     }
 
 
 
     public Void visitOde(HMLParser.OdeContext ctx) {
-        System.out.println("Visiting Ode ... ...");
+        System.out.println("Visiting ODE ... ... " + odenumering);
         visit(ctx.equation());
-
-
         List<VisitTree> dynamicsLeaves = new ArrayList<VisitTree>();
 
         root.collectLeaves(dynamicsLeaves);
         //如果已经到达最大深度，就在树中删除该节点路径
         for (VisitTree leaf : dynamicsLeaves) {
-            System.out.println("\n");
-            System.out.println("THE DEPTH OF THE LEAF IS : "+ leaf.getCurrentDepth() + " " + depth + ", the dynamic list size: " + leaf.getCurrentDynamicList().size());
             Dynamic dynamic = leaf.getCurrentDynamics();
             dynamic.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
             dynamic.setDepth(leaf.getCurrentDepth());
             leaf.getCurrentDynamicList().add(dynamic);
-            System.out.println("THE DEPTH OF THE LEAF IS : "+ leaf.getCurrentDepth() + " " + depth + ", the dynamic list size: " + leaf.getCurrentDynamicList().size());
-            System.out.println("\n");
+
+
             if (leaf.getCurrentDepth() < depth+1) {
                 Dynamic dy = new DiscreteWithContinuous();
                 dy.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
@@ -174,33 +170,28 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
             }
             else  finishOnePath(leaf);
         }
-
-
-
-
-
-
+        System.out.println("End Visiting ODE ... ... " + odenumering++);
         return null;
     }
 
 
     private void finishOnePath(VisitTree leaf) {
-        System.out.println("Finishing one Path of Unrolling.....");
+
         paths.add(leaf.getCurrentDynamicList());
         leaf.delete();//递归地从树中删除已经保存的path，这样可以使树变小，遍历的时候快些
-
+        System.out.println("Finish one Path" + paths.size());
 
     }
 
     //不带初始值的方程
     public Void visitEqWithNoInit(HMLParser.EqWithNoInitContext ctx) {
-        System.out.println("Visiting Ode without init ... ...");
+
         return null;
     }
 
     //带初始值的方程
     public Void visitEqWithInit(HMLParser.EqWithInitContext ctx) {
-        System.out.println("Visiting Ode with init ... ...");
+
         List<VisitTree> dynamicsLeaves = new ArrayList<VisitTree>();
         root.collectLeaves(dynamicsLeaves);
         //如果已经到达最大深度，就在树中删除该节点路径
@@ -212,14 +203,14 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     }
 
     public Void visitParaEq(HMLParser.ParaEqContext ctx) {
-        System.out.println("Visiting Para Ode  ... ...");
+
         for (HMLParser.EquationContext e : ctx.equation())  visit(e);
         return null;
     }
 
 
     public Void visitCallTem(HMLParser.CallTemContext ctx) {
-        System.out.println("Visiting Call Template...");
+
         StringBuilder key = new StringBuilder();
         List<String> cvars = new ArrayList<String>();
         key.append(ctx.ID().getText());
@@ -234,7 +225,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
                 key.append(getType(s.getType()));
             }
             Template template = tmpMap.get(key.toString());
-            System.out.println(key.toString());
+
 
             List<String> fvars = template.getFormalVarNames();
 

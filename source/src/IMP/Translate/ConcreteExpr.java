@@ -105,12 +105,12 @@ public class ConcreteExpr {
         StringBuilder sb  = new StringBuilder();
         sb.append("(");
 
-        System.out.println("---Render String From : " + ID);
+
         String realID = cwvk.getRealVar(ID);
-        System.out.println("---To : " + realID);
+
         if (realID.startsWith("@")) {
             //如果是常量，则设置替换后的类型为CONSTANT
-            System.out.println("This is a constant");
+
             realID = realID.substring(1);
             sb.append(realID);
             sort = AbstractExpr.Sort.CONSTANT;
@@ -140,7 +140,7 @@ public class ConcreteExpr {
 
     public void resolve(VariableLink variableLink){
         if (this.sort== AbstractExpr.Sort.VAR && variableLink!=null) {
-            System.out.println("Resolve --------- " + ID);
+
             ID = variableLink.getRealVar(this.ID);
 
             if (ID.startsWith("@")) {
@@ -148,7 +148,7 @@ public class ConcreteExpr {
                 ID = ID.substring(1);
                 sort = AbstractExpr.Sort.CONSTANT;
             }
-            System.out.println("to --------- " + ID);
+
         }
         else {
             if (this.Left != null) {

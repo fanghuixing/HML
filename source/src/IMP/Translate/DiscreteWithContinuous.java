@@ -24,6 +24,8 @@ public class DiscreteWithContinuous implements Dynamic{
     private List<ContextWithVarLink> discrete = new ArrayList<ContextWithVarLink>();
     private ContextWithVarLink continuous;
     private String resultFormula;
+    private String discreteResult;
+    private String continuousResult;
     HashMap<String, ConcreteExpr>  ID2ExpMap;
     HashMap<ConcreteExpr, String>  TempOdesMap = new HashMap<ConcreteExpr, String>();
     private int guardIndex =0;
@@ -66,7 +68,6 @@ public class DiscreteWithContinuous implements Dynamic{
                 analyzeGuard((HMLParser.GuardContext) r, c.getVrl());
             }
             else if (r instanceof HMLParser.ExprContext) {
-                System.out.println("-----Condition: " + r.getText());
                 analyzeCondition((HMLParser.ExprContext) r, c.getVrl(), c.negation);
 
             }
@@ -79,9 +80,9 @@ public class DiscreteWithContinuous implements Dynamic{
         ConcreteExpr concreteExpr = new ConcreteExpr(abstractExpr);
         if (variableLink!=null) {
             concreteExpr.resolve(variableLink);
-            System.out.println("OLD VAR: " + ID);
+
             ID = variableLink.getRealVar(ID);
-            System.out.println("REAL VAR: " + ID);
+
         }
         refreshExpression(concreteExpr);
         ID2ExpMap.put(ID, concreteExpr);
@@ -94,7 +95,7 @@ public class DiscreteWithContinuous implements Dynamic{
         for (String ID : IDList) {
             ConcreteExpr concreteExprforID = ID2ExpMap.get(ID);
             if (concreteExprforID != null) {
-                System.out.println(String.format("Relacing %s ... ... ...", ID));
+
                 concreteExpr.replace(ID, concreteExprforID);
             }
         }
@@ -133,7 +134,7 @@ public class DiscreteWithContinuous implements Dynamic{
             //如果是新的flow
             odeformula.put(result.toString(), odeIndex);
             odeMap.put(odeIndex, String.format("(define-ode flow_%s (%s))", odeIndex, result)); //存储方程定义
-            System.out.println("-----Define ode----- " + result);
+
             removeDuplicate(vars);
             OdeInSMT2 odeInSMT2 = new OdeInSMT2(vars, depth, odeIndex); //准备SMT2格式的连续行为表示
             mode = odeIndex;
@@ -190,9 +191,9 @@ public class DiscreteWithContinuous implements Dynamic{
 
     private void analyzeRelation(HMLParser.RelationContext relation, StringBuilder flows, ContextWithVarLink r){
         ConcreteExpr flow = new ConcreteExpr(resolveRelation(relation)); //得到方程的抽象表示
-        System.out.println("The flow " + flow);
+
         String result = flow.toString(r.getVrl());     //还原真实变量
-        System.out.println("The result flow after resolve vars : " + result);
+
         TempOdesMap.put(flow, result);
 
     }
@@ -202,10 +203,7 @@ public class DiscreteWithContinuous implements Dynamic{
         ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
         AbstractExpr left = new AbstractExpr("d/dt", new AbstractExpr(varName, AbstractExpr.Sort.VAR),null);
         AbstractExpr right = exprs.get(relation.expr());
-        AbstractExpr r = new AbstractExpr("=", left, right);
-        System.out.println("Resolve Relation ... ");
-        System.out.println(r);
-        return r;
+        return new AbstractExpr("=", left, right);
     }
 
     public static  HashMap<Integer, String> getOdeMap() {
@@ -237,10 +235,8 @@ public class DiscreteWithContinuous implements Dynamic{
         }
         refreshExpression(concreteExpr);
 
-        if (negation) {
-            System.out.println("Need to negation.");
-            concreteExpr = concreteExpr.negation();}
-        else System.out.println("Not need to negation.");
+        if (negation)   concreteExpr = concreteExpr.negation();
+
 
         // 因为Guard是没有副作用的，所以可以放入ID2ExpMap中
         // 在导出公式的时候需要处理这个特殊的ID
@@ -295,9 +291,12 @@ public class DiscreteWithContinuous implements Dynamic{
         }
         sb.append("\n");
         sb.append(renderConFormulas());
-        sb.replace(0,0,String.format("\n(= mode_%s %s)", depth, mode));
+        sb.replace(0, 0, String.format("\n(= mode_%s %s)", depth, mode));
         sb.append(String.format("(= mode_%s %s)", depth, mode));
         sb.append("\n");
+        int sep = sb.indexOf("\n",1);
+        discreteResult = sb.substring(0, sep);
+        continuousResult = sb.substring(sep);
         resultFormula = sb.toString();
         return resultFormula;
     }
@@ -315,4 +314,28 @@ public class DiscreteWithContinuous implements Dynamic{
         obj.depth = this.depth;
         return obj;
     }
+
+
+    @Override
+    public String getDiscreteDynamics() {
+        return discreteResult;
+    }
+
+    @Override
+    public String getContinuousDynamics() {
+        return continuousResult;
+    }
+
+
+    @Override
+    public void setDiscreteDynamics(String discreteDynamics) {
+        this.discreteResult = discreteDynamics;
+    }
+
+    @Override
+    public void setContinuousDynamics(String continuousDynamics) {
+        this.continuousResult = continuousDynamics;
+    }
+
+
 }

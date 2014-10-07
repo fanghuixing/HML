@@ -30,6 +30,7 @@ Template closed(float h, float b, int L, float e){
 Main {
 
     // Loop
+
     while(true){
         // waterLevel = waterLevel+1;
         !on;
@@ -38,7 +39,7 @@ Main {
         !off;
         // let water out
         // waterLevel = 5;
-        //(skip <waterLevel==5> skip);
+        (skip <waterLevel==5> skip);
         closed(waterLevel,decout,LowestwaterLevel,deta)
         // closed(waterLevel,decout,MaxwaterLevel,deta)
     }

@@ -4,6 +4,7 @@ import IMP.Basic.Constraint;
 import IMP.Basic.VariableForSMT2;
 import IMP.Infos.HML2SMTListener;
 import IMP.Infos.HSTErrorListener;
+import IMP.Merge.PathsMerge;
 import IMP.Scope.ScopeConstructor;
 import IMP.Infos.AbstractExpr;
 import IMP.Translate.DiscreteWithContinuous;
@@ -15,6 +16,7 @@ import org.antlr.v4.runtime.tree.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.file.PathMatcher;
 import java.util.*;
 import AntlrGen.*;
 import org.stringtemplate.v4.ST;
@@ -26,7 +28,7 @@ import org.stringtemplate.v4.STGroupFile;
  * Created by Huixing Fang on 2014/9/25.
  */
 public class HML2SMT {
-    final static int depth = 100;
+    final static int depth = 40;
     static ParseTreeProperty<AbstractExpr> exprPtp;
     static ParseTreeProperty<AbstractExpr> guardPtp;
     static  HashMap<String, AbstractExpr>  InitID2ExpMap;
@@ -91,15 +93,19 @@ public class HML2SMT {
 
         List<List<Dynamic>> paths = trans.getPaths();
         for (List<Dynamic> onePath : paths) {
-            System.out.println("------------------Begin one path------------------");
+
             for (Dynamic dy : onePath) {
-                System.out.println(dy);
                 st.add("formulas", dy.toString());
-                System.out.println();
             }
-            System.out.println("------------------End path------------------------");
-            break;
+
         }
+
+        PathsMerge PM = new PathsMerge();
+        PM.mergePaths(paths);
+        PM.getMergeResult();
+
+
+
 
 
 

@@ -18,5 +18,22 @@ public interface Dynamic{
 
     public Dynamic copy();
 
+    /**
+     *
+     * @return 解析后的离散行为以SMT2公式表示，前后有换行符
+     */
+    public String getDiscreteDynamics();
+
+    /**
+     *
+     * @return 解析后的连续行为以SMT2公式表示，前后有换行符
+     */
+    public String getContinuousDynamics();
+
+    public void setDiscreteDynamics(String discreteDynamics);
+
+    public void setContinuousDynamics(String continuousDynamics);
+
+
 
 }
