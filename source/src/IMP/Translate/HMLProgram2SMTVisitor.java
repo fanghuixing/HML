@@ -183,6 +183,13 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
             dynamic.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
             dynamic.setDepth(leaf.getCurrentDepth());
             leaf.getCurrentDynamicList().add(dynamic);
+            dynamic.toString();
+
+
+
+
+
+
             System.out.println(leaf.getCurrentDynamicList().size());
             if (leaf.getCurrentDepth() < depth+1) {
                 Dynamic dy = new DiscreteWithContinuous();
@@ -204,7 +211,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     private void finishOnePath(VisitTree leaf) {
 
         paths.add(leaf.getCurrentDynamicList());
-        leaf.delete();//递归地从树中删除已经保存的path，这样可以使树变小，遍历的时候快些
+        //leaf.delete();//递归地从树中删除已经保存的path，这样可以使树变小，遍历的时候快些
         System.out.println("Finish one Path" + paths.size());
 
     }
