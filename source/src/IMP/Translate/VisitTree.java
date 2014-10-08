@@ -172,12 +172,12 @@ public class VisitTree {
     }
 
     public void merge(){
-        System.out.println("Merge ... ...");
+
         if (children==null || children.size()==0){
             if (father==null) return;
             List<VisitTree> terminals =  getTerminalChildren(father);
             for (int i=0; i<terminals.size(); i++){
-                System.out.println("In loop ...");
+
                 VisitTree Va = terminals.get(i);
                 HashSet<String> set = new HashSet<String>();
                 boolean flag = false;
@@ -186,15 +186,13 @@ public class VisitTree {
                     if (match(Va.getCurrentDynamicList(), Vb.getCurrentDynamicList())){
                         Dynamic lastVa = Va.getLastDynamic();
                         Dynamic lastVb = Vb.getLastDynamic();
-                        System.out.println(lastVa);
-                        System.out.println(lastVb);
                         set.add(lastVa.getDiscreteDynamics());
                         set.add(lastVb.getDiscreteDynamics());
                         father.removeChild(Vb);
                         terminals.remove(Vb);
                         j--;
                         flag = true;
-                        System.out.println(" in if currentDynamicList size :" + currentDynamicList.size());
+
                     }
                 }
                 if (flag) merge(Va, set);
@@ -213,7 +211,7 @@ public class VisitTree {
         }
         else if (children!=null && children.size()>0) {
             for (VisitTree v : children){
-                System.out.println("Merge...");
+
                 v.merge();
             }
         }
@@ -221,12 +219,12 @@ public class VisitTree {
     }
 
     private void merge(VisitTree visitTree, HashSet<String> set){
-        System.out.println(" size :" + visitTree.currentDynamicList.size());
+
         List<String> dynamics = new ArrayList<String>();
         dynamics.addAll(set);
         visitTree.getLastDynamic().setDiscreteDynamics(PathsMerge.mergeDynamics(dynamics));
-        System.out.println("--"+visitTree.getLastDynamic().getDiscreteDynamics());
-        System.out.println(" size :" + visitTree.currentDynamicList.size());
+
+
     }
 
 

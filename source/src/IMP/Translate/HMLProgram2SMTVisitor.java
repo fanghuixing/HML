@@ -77,7 +77,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     }
 
     public Void visitConChoice(HMLParser.ConChoiceContext ctx) {
-        System.out.println("Begin Visiting Con Choice ... " + odenumering);
+
         HMLParser.ExprContext condition =  ctx.expr();
 
         //如果可以判定这个条件当前的值，就可以极大地降低分支数目
@@ -103,7 +103,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
         }
         root = oldRoot;//需要指向原来的叶子节点
-        System.out.println("End Visiting Con Choice ... " + odenumering);
+
         return null;
     }
 
@@ -170,27 +170,20 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
 
     public Void visitOde(HMLParser.OdeContext ctx) {
-        System.out.println("Visiting ODE ... ... " + odenumering);
+
         visit(ctx.equation());
         List<VisitTree> dynamicsLeaves = new ArrayList<VisitTree>();
 
         root.collectLeaves(dynamicsLeaves);
-        System.out.println("The leaves : " + dynamicsLeaves.size());
+
         //如果已经到达最大深度，就在树中删除该节点路径
         for (VisitTree leaf : dynamicsLeaves) {
-            System.out.println(leaf.getCurrentDynamicList().size());
+
             Dynamic dynamic = leaf.getCurrentDynamics();
             dynamic.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
             dynamic.setDepth(leaf.getCurrentDepth());
             leaf.getCurrentDynamicList().add(dynamic);
             dynamic.toString();
-
-
-
-
-
-
-            System.out.println(leaf.getCurrentDynamicList().size());
             if (leaf.getCurrentDepth() < depth+1) {
                 Dynamic dy = new DiscreteWithContinuous();
                 dy.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
