@@ -178,7 +178,8 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
         //如果已经到达最大深度，就在树中删除该节点路径
         for (VisitTree leaf : dynamicsLeaves) {
-
+            //当leaf的深度达到depth+1时停止
+            if (leaf.getCurrentDepth()>depth) continue;
             Dynamic dynamic = leaf.getCurrentDynamics();
             dynamic.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
             dynamic.setDepth(leaf.getCurrentDepth());
@@ -202,10 +203,9 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
 
     private void finishOnePath(VisitTree leaf) {
-
-        paths.add(leaf.getCurrentDynamicList());
+        //paths.add(leaf.getCurrentDynamicList());
         //leaf.delete();//递归地从树中删除已经保存的path，这样可以使树变小，遍历的时候快些
-        System.out.println("Finish one Path" + paths.size());
+        //System.out.println("Finish one Path" + paths.size());
 
     }
 
@@ -301,7 +301,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         visitTree.collectLeaves(vt);
         for (VisitTree v : vt){
             //对每一个叶子判断是否完成了深度展开，如果有一个叶子没有达到则需要继续展开
-            if (v.getCurrentDynamicList().size()<depth+1)
+            if (v.getCurrentDepth()<depth+1)
                 return false;
         }
         return true;
@@ -328,6 +328,11 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     }
 
     public List<List<Dynamic>> getPaths() {
+        List<VisitTree> leaves = new ArrayList<VisitTree>();
+        visitTree.collectLeaves(leaves);
+        for (VisitTree v : leaves) {
+            paths.add(v.getCurrentDynamicList());
+        }
         return paths;
     }
 }

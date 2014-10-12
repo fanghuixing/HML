@@ -15,6 +15,7 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.PathMatcher;
 import java.util.*;
@@ -28,7 +29,7 @@ import org.stringtemplate.v4.STGroupFile;
  * Created by Huixing Fang on 2014/9/25.
  */
 public class HML2SMT {
-    final static int depth = 1000;
+    final static int depth = 10;
     static ParseTreeProperty<AbstractExpr> exprPtp;
     static ParseTreeProperty<AbstractExpr> guardPtp;
     static  HashMap<String, AbstractExpr>  InitID2ExpMap;
@@ -59,8 +60,6 @@ public class HML2SMT {
         ScopeConstructor scl = new ScopeConstructor();
         walker.walk(scl, tree);
 
-
-
         varlist = hml2SMTListener.getVarlist();
         STGroup group = new STGroupFile("HML.stg");
         ST st = group.getInstanceOf("SMT2");
@@ -89,27 +88,6 @@ public class HML2SMT {
         //add paths
         //List<Dynamic> onePath = trans.getCurrentDynamicsList();
 
-
-
-        List<List<Dynamic>> paths = trans.getPaths();
-        for (List<Dynamic> onePath : paths) {
-            for (Dynamic dy : onePath) {
-                st.add("formulas", dy.getDiscreteDynamics());
-                st.add("formulas", dy.getContinuousDynamics());
-                st.add("formulas", "\n");
-            }
-
-        }
-
-        PathsMerge PM = new PathsMerge();
-        PM.mergePaths(paths);
-        PM.getMergeResult();
-
-
-
-
-
-
         for (Map.Entry<Integer,String> ode : DiscreteWithContinuous.getOdeMap().entrySet()) {
             System.out.println(ode.getValue());
             st.add("flows", ode.getValue());
@@ -120,15 +98,30 @@ public class HML2SMT {
         st.add("constraints", new Constraint("mode", "1", modeNum+"").getNormalConstraintList(depth));
 
 
+        List<List<Dynamic>> paths = trans.getPaths();
+        int pathId = 0;
+        for (List<Dynamic> onePath : paths) {
+            for (Dynamic dy : onePath) {
+                st.add("formulas", dy.getDiscreteDynamics());
+                st.add("formulas", dy.getContinuousDynamics());
+                st.add("formulas", "\n");
+            }
+            writeToFile(st, pathId++);
+            st.remove("formulas");
+        }
 
+        //PathsMerge PM = new PathsMerge();
+        //PM.mergePaths(paths);
+        //PM.getMergeResult();
+    }
+
+    public  static void writeToFile(ST st, int pathId) throws IOException {
         //String result = st.render();
-        File out = new File("H:\\Antlr\\HML\\source\\src\\HML.smt2");
+        File out = new File("H:\\Antlr\\HML\\source\\src\\HML_" + depth + "_" + pathId + ".smt2");
         if (out.createNewFile())  System.out.println("File successfully created");
         else                      System.out.println("File already exits.");
         st.write(out, new HSTErrorListener());
-
     }
-
 
 
     public static List getVarListforSMT2(String prefix, String type, int depth){
