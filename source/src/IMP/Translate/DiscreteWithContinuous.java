@@ -119,8 +119,7 @@ public class DiscreteWithContinuous implements Dynamic{
             HMLParser.EquationContext equ = ((HMLParser.OdeContext) r.getPrc()).equation();
             analyzeEquaiton(equ, flows, r);
 
-            HMLParser.GuardContext guard = ((HMLParser.OdeContext) r.getPrc()).guard();
-            guard2Invariant(guard, r.getVrl());
+
         }
         StringBuilder result = new StringBuilder();
         List<String> vars = new ArrayList<String>();
@@ -172,13 +171,41 @@ public class DiscreteWithContinuous implements Dynamic{
      * @param guard
      * @param variableLink
      */
-    private void guard2Invariant(HMLParser.GuardContext guard, VariableLink variableLink) {
-        ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
-        ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
-        if (variableLink!=null)  concreteExpr.resolve(variableLink);
-        concreteExpr.switchToInvariant();
-        invariant = concreteExpr.toString(depth); //因为是对当前的变量进行约束，所以使用当前depth
+    private String guard2Invariant(HMLParser.GuardContext guard, VariableLink variableLink, int mode) {
 
+        if (guard instanceof HMLParser.BoolGuardContext) {
+            ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
+            ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
+            if (variableLink != null) concreteExpr.resolve(variableLink);
+            concreteExpr.switchToInvariant();
+            return String.format("(forall_t %s [0 time_%s] %s) ", mode,  depth, concreteExpr.toString(depth));
+            //因为是对当前的变量进行约束，所以使用当前depth
+        }
+        else if (guard instanceof HMLParser.EmptyGuardContext) {
+            return String.format("(= time_%s 0)", depth);
+        }
+        else if (guard instanceof HMLParser.ConjunctGuardContext) {
+            HMLParser.GuardContext left = ((HMLParser.ConjunctGuardContext) guard).guard(0);
+            HMLParser.GuardContext right = ((HMLParser.ConjunctGuardContext) guard).guard(1);
+            return String.format("(or %s %s)",
+                    guard2Invariant(left, variableLink, mode),
+                    guard2Invariant(right, variableLink, mode));
+        }
+        else if (guard instanceof HMLParser.DisjunctGuardContext) {
+            HMLParser.GuardContext left = ((HMLParser.DisjunctGuardContext) guard).guard(0);
+            HMLParser.GuardContext right = ((HMLParser.DisjunctGuardContext) guard).guard(1);
+            return String.format("(and %s %s)",
+                    guard2Invariant(left, variableLink, mode),
+                    guard2Invariant(right, variableLink, mode));
+        }
+        else if (guard instanceof HMLParser.ParGuardContext) {
+            HMLParser.GuardContext inner = ((HMLParser.ParGuardContext) guard).guard();
+            return guard2Invariant(inner, variableLink, mode);
+        }
+        else if (guard instanceof HMLParser.SignalGuardContext) {
+            return  null;//need to do
+        }
+        return null;
     }
 
     private void addList(List<String> target, List<String> from) {
@@ -324,7 +351,10 @@ public class DiscreteWithContinuous implements Dynamic{
         sb.append(renderConFormulas());
 
         sb.replace(0, 0, String.format("\n(= mode_%s %s)", depth, mode));
-        sb.append(String.format("(forall_t %s [0 time_%s] %s) ", mode,  depth, invariant));
+        HMLParser.GuardContext guard = ((HMLParser.OdeContext) continuous.getPrc()).guard();
+        invariant = guard2Invariant(guard, continuous.getVrl(), mode);
+        //sb.append(String.format("(forall_t %s [0 time_%s] %s) ", mode,  depth, invariant));
+        sb.append(invariant);
         sb.append(String.format("(= mode_%s %s)", depth, mode));
         sb.append("\n");
         int sep = sb.indexOf("\n",1);
