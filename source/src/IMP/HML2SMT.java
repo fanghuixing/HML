@@ -19,16 +19,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.PathMatcher;
 import java.util.*;
+
+
 import AntlrGen.*;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
-
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 /**
  * ${PROJECT_NAME} - ${PACKAGE_NAME}
  * Created by Huixing Fang on 2014/9/25.
  */
 public class HML2SMT {
+    private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
     final static int depth = 10;
     static ParseTreeProperty<AbstractExpr> exprPtp;
     static ParseTreeProperty<AbstractExpr> guardPtp;
@@ -89,7 +93,8 @@ public class HML2SMT {
         //List<Dynamic> onePath = trans.getCurrentDynamicsList();
 
         for (Map.Entry<Integer,String> ode : DiscreteWithContinuous.getOdeMap().entrySet()) {
-            System.out.println(ode.getValue());
+
+            logger.trace(ode.getValue());
             st.add("flows", ode.getValue());
         }
 
@@ -118,8 +123,8 @@ public class HML2SMT {
     public  static void writeToFile(ST st, int pathId) throws IOException {
         //String result = st.render();
         File out = new File("H:\\Antlr\\HML\\source\\src\\HML_" + depth + "_" + pathId + ".smt2");
-        if (out.createNewFile())  System.out.println("File successfully created");
-        else                      System.out.println("File already exits.");
+        if (out.createNewFile())  logger.debug("File successfully created");
+        else                      logger.debug("File already exits.");
         st.write(out, new HSTErrorListener());
     }
 

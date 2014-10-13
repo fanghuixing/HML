@@ -1,0 +1,31 @@
+<component name="libraryTable">
+  <library name="java">
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-api/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-api/src/test/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-jcl/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-jcl/src/test/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-web/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-web/src/test/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-core/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-core/src/test/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-perf/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-nosql/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-nosql/src/test/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-taglib/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-taglib/src/test/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-1.2-api/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-1.2-api/src/test/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-jmx-gui/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-samples/flume-common/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-flume-ng/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-flume-ng/src/test/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-to-slf4j/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-to-slf4j/src/test/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-slf4j-impl/src/main/java" />
+      <root url="jar://H:/Log4j2/apache-log4j-2.0.2-src.zip!/apache-log4j-2.0.2-src/log4j-slf4j-impl/src/test/java" />
+    </SOURCES>
+  </library>
+</component>

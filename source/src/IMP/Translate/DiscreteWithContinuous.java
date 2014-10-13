@@ -7,9 +7,12 @@ import IMP.HML2SMT;
 import IMP.Infos.AbstractExpr;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
-
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * Created by fofo on 2014/9/30.
@@ -17,6 +20,8 @@ import java.util.*;
  * 这样就不会破坏已经存储的程序结构
  */
 public class DiscreteWithContinuous implements Dynamic{
+
+    private static Logger logger = LogManager.getLogger(DiscreteWithContinuous.class.getName());
     private static int odeIndex = 1;
     private static final String guardPrefix = "@guard:";
     private static HashMap<Integer,String> odeMap = new HashMap<Integer, String>();
@@ -261,14 +266,14 @@ public class DiscreteWithContinuous implements Dynamic{
 
         ID2ExpMap = new HashMap<String, ConcreteExpr>();
         if (depth == 0) {
-            System.out.println("Use the variables initializations information");
+            logger.debug("Use the variables initializations information");
 
             for (Map.Entry<String, AbstractExpr> e : HML2SMT.getInitID2ExpMap().entrySet()) {
                 ID2ExpMap.put(e.getKey(), new ConcreteExpr(e.getValue()));
             }
-            System.out.println("Size : " + ID2ExpMap.size());
+            logger.debug("ID2ExpMap Size : " + ID2ExpMap.size());
             for (Map.Entry idem : ID2ExpMap.entrySet()) {
-                System.out.println("The mapping in Initializations:" +idem.getKey());
+                logger.debug("The mapping in Initializations:" +idem.getKey());
             }
         }
 

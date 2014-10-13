@@ -7,13 +7,14 @@ import AntlrGen.HMLParser;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
 import java.util.*;
-
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 /**
  * Created by Huixing Fang on 2014/9/25.
  *
  */
 public class HML2SMTListener extends HMLBaseListener {
-    Logger log = Logger.getInstance();
+    private static Logger  logger = LogManager.getLogger(HML2SMTListener.class.getName());
 
     //用于转换SMT2公式的变量列表
     private List<VariableForSMT2> varlist = new ArrayList<VariableForSMT2>();
@@ -161,7 +162,7 @@ public class HML2SMTListener extends HMLBaseListener {
     }
 
     public void exitCompExpr(HMLParser.CompExprContext ctx) {
-        log.log("=================================comp expr================================="+ctx.getText());
+        logger.debug("=================================comp expr=================================" + ctx.getText());
         setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);
     }
 
@@ -199,7 +200,7 @@ public class HML2SMTListener extends HMLBaseListener {
     }
 
     public void exitTemplate(HMLParser.TemplateContext ctx) {
-        log.log("Exit Template ...");
+        logger.debug("Exit Template ...");
         StringBuilder key = new StringBuilder();
         List<String> formalVarNames = new ArrayList<String>();
         key.append(ctx.ID().getText());
@@ -210,12 +211,12 @@ public class HML2SMTListener extends HMLBaseListener {
             fpc = fpc.formalParameterDeclsRest().formalParameterDecls();
         }
         if (tmpMap.get(key.toString()) != null) {
-            log.log("Duplicated Template " + key + " had been defined already!");
+            logger.debug("Duplicated Template " + key + " had been defined already!");
             return;
         }
         //以模板名加参数类型为key保存Template, tmpMap为存储体
         tmpMap.put(key.toString(), new Template(formalVarNames, ctx));
-        log.log("Store Template: " +key.toString());
+        logger.debug("Store Template: " +key.toString());
     }
 
     public void exitVariableConstraint(HMLParser.VariableConstraintContext ctx) {

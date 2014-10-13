@@ -8,7 +8,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * HML-IMP.Merge
@@ -16,13 +17,13 @@ import java.util.Set;
  */
 public class PathsMerge {
 
-
+    private static Logger  logger = LogManager.getLogger(PathsMerge.class.getName());
     private List<List<Dynamic>> result;
     private List<HashSet<String>> sets;
 
 
     public void mergePaths(List<List<Dynamic>> preMerge) {
-        System.out.println("The size of paths before merge:" + preMerge.size());
+        logger.info("The size of paths before merge:" + preMerge.size());
         List<List<Dynamic>> postMerge = new ArrayList<List<Dynamic>>();
 
         for (int i = 0; i < preMerge.size(); i++) {
@@ -49,9 +50,9 @@ public class PathsMerge {
         }
 
 
-        System.out.println("The size of paths after merge:" + preMerge.size());
+
         result = postMerge;
-        System.out.println(result.size());
+
     }
 
     private void createSet(int max) {

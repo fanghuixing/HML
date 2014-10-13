@@ -6,17 +6,18 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
-import IMP.Basic.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
 
 /**
  * Created by fofo on 2014/9/30.
  */
 public class ScopeConstructor extends HMLBaseListener {
-
+    private static Logger  logger = LogManager.getLogger(ScopeConstructor.class.getName());
     ParseTreeProperty<Scope> scopes = new ParseTreeProperty<Scope>();
     GlobalScope globals;
     Scope currentScope; // 当前所处的scope
-    Logger log = Logger.getInstance();
+
 
     public ParseTreeProperty<Scope> getScopes() {
         return scopes;
@@ -52,7 +53,7 @@ public class ScopeConstructor extends HMLBaseListener {
     }
 
     public void exitTemplate(HMLParser.TemplateContext ctx) {
-        log.log(currentScope.toString());
+        logger.debug(currentScope.toString());
         currentScope = currentScope.getEnclosingScope();
     }
 
@@ -66,7 +67,7 @@ public class ScopeConstructor extends HMLBaseListener {
     }
 
     public void exitProgram(HMLParser.ProgramContext ctx) {
-        log.log(currentScope.toString());
+        logger.debug(currentScope.toString());
         currentScope = currentScope.getEnclosingScope();
     }
 
