@@ -3,7 +3,7 @@ package IMP.Translate;
 import java.util.List;
 
 /**
- * Created by fofo on 2014/10/2.
+ * 将ode转成smt2公式定义
  */
 public class OdeInSMT2 {
     int odeIndex;
