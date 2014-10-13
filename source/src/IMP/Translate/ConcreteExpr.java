@@ -225,4 +225,12 @@ public class ConcreteExpr {
         return new ConcreteExpr("not", AbstractExpr.Sort.NVAR, clone(this), null );
     }
 
+    public void switchToInvariant() {
+
+        ConcreteExpr tmp = Left;
+        Left = Right;
+        Right = tmp;
+
+    }
+
 }

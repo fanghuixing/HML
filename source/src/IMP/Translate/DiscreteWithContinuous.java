@@ -2,6 +2,7 @@ package IMP.Translate;
 
 
 import AntlrGen.HMLParser;
+import IMP.Basic.Variable;
 import IMP.Basic.VariableForSMT2;
 import IMP.HML2SMT;
 import IMP.Infos.AbstractExpr;
@@ -28,10 +29,12 @@ public class DiscreteWithContinuous implements Dynamic{
     private int depth;
     private List<ContextWithVarLink> discrete = new ArrayList<ContextWithVarLink>();
     private ContextWithVarLink continuous;
+    private String invariant = null;
     private String resultFormula;
     private String discreteResult;
     private String continuousResult;
     HashMap<String, ConcreteExpr>  ID2ExpMap;
+
     HashMap<ConcreteExpr, String>  TempOdesMap = new HashMap<ConcreteExpr, String>();
     private int guardIndex =0;
     private static HashMap<String, Integer> odeformula = new HashMap<String, Integer>();
@@ -69,10 +72,11 @@ public class DiscreteWithContinuous implements Dynamic{
                 refeshAndSave(ID, eprc, c.getVrl());
             }
             else if (r instanceof  HMLParser.GuardContext) {
-                //System.out.println("--------------analysis guard-----------");
+                //连续行为退出条件
                 analyzeGuard((HMLParser.GuardContext) r, c.getVrl());
             }
             else if (r instanceof HMLParser.ExprContext) {
+                //条件选择语句中的条件表达式
                 analyzeCondition((HMLParser.ExprContext) r, c.getVrl(), c.negation);
 
             }
@@ -111,9 +115,12 @@ public class DiscreteWithContinuous implements Dynamic{
         if (r==null) return null;
 
         if (r.getPrc() instanceof  HMLParser.OdeContext) {
-                //如果是方程
-                HMLParser.EquationContext equ = ((HMLParser.OdeContext) r.getPrc()).equation();
-                analyzeEquaiton(equ, flows, r);
+            //如果是方程
+            HMLParser.EquationContext equ = ((HMLParser.OdeContext) r.getPrc()).equation();
+            analyzeEquaiton(equ, flows, r);
+
+            HMLParser.GuardContext guard = ((HMLParser.OdeContext) r.getPrc()).guard();
+            guard2Invariant(guard, r.getVrl());
         }
         StringBuilder result = new StringBuilder();
         List<String> vars = new ArrayList<String>();
@@ -122,7 +129,7 @@ public class DiscreteWithContinuous implements Dynamic{
             tempOdesList.add(e);
         }
         //支持排序，使得方程的表示形式唯一
-        Collections.sort(tempOdesList,new Comparator<Map.Entry<ConcreteExpr, String>>(){
+        Collections.sort(tempOdesList, new Comparator<Map.Entry<ConcreteExpr, String>>(){
             public int compare(Map.Entry<ConcreteExpr, String> arg0, Map.Entry<ConcreteExpr, String> arg1) {
                 return arg0.getValue().compareTo(arg1.getValue());
             }
@@ -157,6 +164,21 @@ public class DiscreteWithContinuous implements Dynamic{
         }
 
         return flows.toString();
+    }
+
+
+    /**
+     * 将guard转成invariant
+     * @param guard
+     * @param variableLink
+     */
+    private void guard2Invariant(HMLParser.GuardContext guard, VariableLink variableLink) {
+        ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
+        ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
+        if (variableLink!=null)  concreteExpr.resolve(variableLink);
+        concreteExpr.switchToInvariant();
+        invariant = concreteExpr.toString(depth); //因为是对当前的变量进行约束，所以使用当前depth
+
     }
 
     private void addList(List<String> target, List<String> from) {
@@ -300,12 +322,14 @@ public class DiscreteWithContinuous implements Dynamic{
         }
         sb.append("\n");
         sb.append(renderConFormulas());
+
         sb.replace(0, 0, String.format("\n(= mode_%s %s)", depth, mode));
+        sb.append(String.format("(forall_t %s [0 time_%s] %s) ", mode,  depth, invariant));
         sb.append(String.format("(= mode_%s %s)", depth, mode));
         sb.append("\n");
         int sep = sb.indexOf("\n",1);
         discreteResult = sb.substring(0, sep);
-        continuousResult = sb.substring(sep);
+        continuousResult = sb.substring(sep);//连续部分也包含了不变式
         resultFormula = sb.toString();
         return resultFormula;
     }
@@ -349,4 +373,6 @@ public class DiscreteWithContinuous implements Dynamic{
     public ContextWithVarLink getContinuous() {
         return continuous;
     }
+
+
 }
