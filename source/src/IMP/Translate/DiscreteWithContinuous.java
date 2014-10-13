@@ -230,18 +230,22 @@ public class DiscreteWithContinuous implements Dynamic{
         guardIndex++;
     }
 
+
+    /**
+     *
+     * @param Condition 条件表达式
+     * @param variableLink 变量关系
+     * @param negation 是否要取非，若该值为true，则取需要对表达式取非
+     */
     private void analyzeCondition(HMLParser.ExprContext Condition, VariableLink variableLink, boolean negation) {
         ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
         ConcreteExpr concreteExpr = new ConcreteExpr(exprs.get(Condition));
 
-        if (variableLink!=null) {
-            //variableLink.printAll();
-            concreteExpr.resolve(variableLink);
-        }
+        if (variableLink!=null) concreteExpr.resolve(variableLink);
+
         refreshExpression(concreteExpr);
 
         if (negation)   concreteExpr = concreteExpr.negation();
-
 
         // 因为Guard是没有副作用的，所以可以放入ID2ExpMap中
         // 在导出公式的时候需要处理这个特殊的ID
