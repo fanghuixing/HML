@@ -7,18 +7,20 @@ float waterLevel=8;
 final float accin=1, decout=1;
 final int MaxwaterLevel=10, LowestwaterLevel=5;
 float clock = 0;
+float global = 0;
 
 
 //Constraints
 waterLevel in [5,  10];
 time in [0, 100];
 clock in [0, 100];
+
 //this time is for each continuous evolution
 
 //Templates
 Template open(float h, float a, int H, float e){
     //h = h + 2;
-    dot h = a until (h >= H-e)
+    dot h = a until (h == H-e)
     //closed(h,a,H,e)
 }
 

@@ -40,6 +40,7 @@ public class DiscreteWithContinuous implements Dynamic{
     private static HashMap<String, Integer> odeformula = new HashMap<String, Integer>();
     private int mode;
     private final static String clock_ode ="(= d/dt[clock] 1)";
+    private final static String global_ode = "(= d/dt[global] 1)";
 
     public void setDepth(int depth) {
         this.depth = depth;
@@ -147,7 +148,7 @@ public class DiscreteWithContinuous implements Dynamic{
         if (!odeformula.containsKey(result.toString())) {
             //如果是新的flow
             odeformula.put(result.toString(), odeIndex);
-            odeMap.put(odeIndex, String.format("(define-ode flow_%s (%s))", odeIndex, result+clock_ode)); //存储方程定义
+            odeMap.put(odeIndex, String.format("(define-ode flow_%s (%s))", odeIndex, result+clock_ode + global_ode)); //存储方程定义
 
             removeDuplicate(vars);
             OdeInSMT2 odeInSMT2 = new OdeInSMT2(vars, depth, odeIndex); //准备SMT2格式的连续行为表示
@@ -195,11 +196,15 @@ public class DiscreteWithContinuous implements Dynamic{
     }
 
     private ConcreteExpr invariantExpr(ConcreteExpr concreteExpr){
+        return concreteExpr.negation();
+        //测试表明dReal SMT2 公式里面的区间表示虽然形式上是闭区间，但实际上却是开区间的
+        /*
         ConcreteExpr clock_term =  createClockExpr("=");
         ConcreteExpr termination = new ConcreteExpr("=>", AbstractExpr.Sort.NVAR, clock_term, concreteExpr);
         ConcreteExpr clock_stable = createClockExpr("<");
         ConcreteExpr stable = new ConcreteExpr("=>", AbstractExpr.Sort.NVAR, clock_stable, concreteExpr.negation());
         return new ConcreteExpr("and", AbstractExpr.Sort.NVAR, stable, termination);
+        */
     }
 
 

@@ -36,15 +36,22 @@ public class OdeInSMT2 {
         }
 
         addClockVar(conStable, conInit);
+        addGlobalClockVar(conStable, conInit);
 
         conStable.insert(0, "[").replace(conStable.length()-1,conStable.length()-1,"]");
         conInit.insert(0, "[").replace(conInit.length()-1, conInit.length()-1,"]");
         return  conStable.append("@").append(conInit);
     }
 
-    //添加时钟变量
+    //添加时钟变量, 每个连续行为从0开始计时
     private void addClockVar(StringBuilder conStable, StringBuilder conInit){
         conStable.append(String.format("%s_%s_t ", "clock", depth));
         conInit.append(String.format("%s_%s_0 ", "clock", depth));
+    }
+
+    //添加全局时钟变量，从系统开始运行的时候计时，不重置
+    private void addGlobalClockVar(StringBuilder conStable, StringBuilder conInit){
+        conStable.append(String.format("%s_%s_t ", "global", depth));
+        conInit.append(String.format("%s_%s_0 ", "global", depth));
     }
 }
