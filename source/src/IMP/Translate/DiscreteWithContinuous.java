@@ -39,6 +39,7 @@ public class DiscreteWithContinuous implements Dynamic{
     private int guardIndex =0;
     private static HashMap<String, Integer> odeformula = new HashMap<String, Integer>();
     private int mode;
+    private final static String clock_ode ="(= d/dt[clock] 1)";
 
     public void setDepth(int depth) {
         this.depth = depth;
@@ -57,6 +58,8 @@ public class DiscreteWithContinuous implements Dynamic{
     }
 
     private void renderDisFormulas(){
+        //reset clock
+        ID2ExpMap.put("clock", new ConcreteExpr("0", AbstractExpr.Sort.CONSTANT));
         for (ContextWithVarLink c : discrete) {
             ParserRuleContext r = c.getPrc();
             if (r instanceof HMLParser.AssignmentContext) {
@@ -144,7 +147,7 @@ public class DiscreteWithContinuous implements Dynamic{
         if (!odeformula.containsKey(result.toString())) {
             //如果是新的flow
             odeformula.put(result.toString(), odeIndex);
-            odeMap.put(odeIndex, String.format("(define-ode flow_%s (%s))", odeIndex, result)); //存储方程定义
+            odeMap.put(odeIndex, String.format("(define-ode flow_%s (%s))", odeIndex, result+clock_ode)); //存储方程定义
 
             removeDuplicate(vars);
             OdeInSMT2 odeInSMT2 = new OdeInSMT2(vars, depth, odeIndex); //准备SMT2格式的连续行为表示
@@ -172,41 +175,33 @@ public class DiscreteWithContinuous implements Dynamic{
      * @param variableLink
      */
     private String guard2Invariant(HMLParser.GuardContext guard, VariableLink variableLink, int mode) {
-
-        if (guard instanceof HMLParser.BoolGuardContext) {
+        if (guard instanceof HMLParser.SignalGuardContext) {
+            return  null;//need to do
+        }
+        else  {
             ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
             ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
             if (variableLink != null) concreteExpr.resolve(variableLink);
-            concreteExpr.switchToInvariant();
-            return String.format("(forall_t %s [0 time_%s] %s) ", mode,  depth, concreteExpr.toString(depth));
+            ConcreteExpr result = invariantExpr(concreteExpr);
+            return String.format("(forall_t %s [0 time_%s] %s) ", mode,  depth, result.toString(depth));
             //因为是对当前的变量进行约束，所以使用当前depth
         }
-        else if (guard instanceof HMLParser.EmptyGuardContext) {
-            return String.format("(= time_%s 0)", depth);
-        }
-        else if (guard instanceof HMLParser.ConjunctGuardContext) {
-            HMLParser.GuardContext left = ((HMLParser.ConjunctGuardContext) guard).guard(0);
-            HMLParser.GuardContext right = ((HMLParser.ConjunctGuardContext) guard).guard(1);
-            return String.format("(or %s %s)",
-                    guard2Invariant(left, variableLink, mode),
-                    guard2Invariant(right, variableLink, mode));
-        }
-        else if (guard instanceof HMLParser.DisjunctGuardContext) {
-            HMLParser.GuardContext left = ((HMLParser.DisjunctGuardContext) guard).guard(0);
-            HMLParser.GuardContext right = ((HMLParser.DisjunctGuardContext) guard).guard(1);
-            return String.format("(and %s %s)",
-                    guard2Invariant(left, variableLink, mode),
-                    guard2Invariant(right, variableLink, mode));
-        }
-        else if (guard instanceof HMLParser.ParGuardContext) {
-            HMLParser.GuardContext inner = ((HMLParser.ParGuardContext) guard).guard();
-            return guard2Invariant(inner, variableLink, mode);
-        }
-        else if (guard instanceof HMLParser.SignalGuardContext) {
-            return  null;//need to do
-        }
-        return null;
     }
+
+    private ConcreteExpr createClockExpr(String op){
+       return new ConcreteExpr(op, AbstractExpr.Sort.NVAR,
+                new ConcreteExpr("clock", AbstractExpr.Sort.VAR),
+                new ConcreteExpr("time_"+depth, AbstractExpr.Sort.NVAR));
+    }
+
+    private ConcreteExpr invariantExpr(ConcreteExpr concreteExpr){
+        ConcreteExpr clock_term =  createClockExpr("=");
+        ConcreteExpr termination = new ConcreteExpr("=>", AbstractExpr.Sort.NVAR, clock_term, concreteExpr);
+        ConcreteExpr clock_stable = createClockExpr("<");
+        ConcreteExpr stable = new ConcreteExpr("=>", AbstractExpr.Sort.NVAR, clock_stable, concreteExpr.negation());
+        return new ConcreteExpr("and", AbstractExpr.Sort.NVAR, stable, termination);
+    }
+
 
     private void addList(List<String> target, List<String> from) {
         for (String s : from) {

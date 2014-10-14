@@ -6,11 +6,13 @@ final float deta=0.5;
 float waterLevel=8;
 final float accin=1, decout=1;
 final int MaxwaterLevel=10, LowestwaterLevel=5;
+float clock = 0;
 
 
 //Constraints
 waterLevel in [5,  10];
 time in [0, 100];
+clock in [0, 100];
 //this time is for each continuous evolution
 
 //Templates

@@ -34,8 +34,17 @@ public class OdeInSMT2 {
             conStable.append(String.format("%s_%s_t ", v, depth));
             conInit.append(String.format("%s_%s_0 ", v, depth));
         }
+
+        addClockVar(conStable, conInit);
+
         conStable.insert(0, "[").replace(conStable.length()-1,conStable.length()-1,"]");
         conInit.insert(0, "[").replace(conInit.length()-1, conInit.length()-1,"]");
         return  conStable.append("@").append(conInit);
+    }
+
+    //添加时钟变量
+    private void addClockVar(StringBuilder conStable, StringBuilder conInit){
+        conStable.append(String.format("%s_%s_t ", "clock", depth));
+        conInit.append(String.format("%s_%s_0 ", "clock", depth));
     }
 }

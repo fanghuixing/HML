@@ -28,6 +28,10 @@ public class ConcreteExpr {
         copy(abstractExpr);
     }
 
+    public ConcreteExpr(String ID,  AbstractExpr.Sort sort){
+        this(ID, sort, null, null);
+    }
+
     public ConcreteExpr(String ID,  AbstractExpr.Sort sort, ConcreteExpr left, ConcreteExpr right) {
         this.ID = ID;
         this.Left = left;
