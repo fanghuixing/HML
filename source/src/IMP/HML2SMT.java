@@ -33,10 +33,10 @@ import org.apache.logging.log4j.LogManager;
  */
 public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
-    final static int depth = 0;
+    final static int depth = 16;
     static ParseTreeProperty<AbstractExpr> exprPtp;
     static ParseTreeProperty<AbstractExpr> guardPtp;
-    static  HashMap<String, AbstractExpr>  InitID2ExpMap;
+    static HashMap<String, AbstractExpr>  InitID2ExpMap;
     static List<VariableForSMT2> varlist;
 
     public static void main(String[] args) throws Exception {
