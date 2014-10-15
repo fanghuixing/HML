@@ -48,7 +48,9 @@ public class HML2SMT {
         }
 
         //测试文件
-        is = new FileInputStream("H:\\Antlr\\HML\\source\\src\\watertank.hml");
+
+
+        is = new FileInputStream("/home/fofo/work/HML/HML/source/src/watertank.hml");
 
         ANTLRInputStream input = new ANTLRInputStream(is);
         HMLLexer lexer = new HMLLexer(input);
@@ -122,7 +124,7 @@ public class HML2SMT {
 
     public  static void writeToFile(ST st, int pathId) throws IOException {
         //String result = st.render();
-        File out = new File("H:\\Antlr\\HML\\source\\src\\HML_" + depth + "_" + pathId + ".smt2");
+        File out = new File("/home/fofo/work/HML/HML/source/src/HML_" + depth + "_" + pathId + ".smt2");
         if (out.createNewFile())  logger.debug("File successfully created");
         else                      logger.debug("File already exits.");
         st.write(out, new HSTErrorListener());

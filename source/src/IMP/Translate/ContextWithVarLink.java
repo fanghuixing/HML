@@ -3,7 +3,7 @@ package IMP.Translate;
 import org.antlr.v4.runtime.ParserRuleContext;
 
 /**
- * Created by fofo on 2014/10/1.
+ *
  */
 public class ContextWithVarLink {
 
