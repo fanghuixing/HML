@@ -2,6 +2,7 @@ package IMP;
 
 import IMP.Basic.Constraint;
 import IMP.Basic.VariableForSMT2;
+import IMP.Check.ExecSMT;
 import IMP.Infos.HML2SMTListener;
 import IMP.Infos.HSTErrorListener;
 import IMP.Merge.PathsMerge;
@@ -27,13 +28,13 @@ import org.stringtemplate.v4.STGroup;
 import org.stringtemplate.v4.STGroupFile;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+
 /**
- * ${PROJECT_NAME} - ${PACKAGE_NAME}
- * Created by Huixing Fang on 2014/9/25.
+ *
  */
 public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
-    final static int depth = 16;
+    final static int depth = 1;
     static ParseTreeProperty<AbstractExpr> exprPtp;
     static ParseTreeProperty<AbstractExpr> guardPtp;
     static HashMap<String, AbstractExpr>  InitID2ExpMap;
@@ -50,7 +51,7 @@ public class HML2SMT {
         //测试文件
 
 
-        is = new FileInputStream("/home/fofo/work/HML/HML/source/src/watertank.hml");
+        is = new FileInputStream("./source/src/watertank.hml");
 
         ANTLRInputStream input = new ANTLRInputStream(is);
         HMLLexer lexer = new HMLLexer(input);
@@ -124,10 +125,11 @@ public class HML2SMT {
 
     public  static void writeToFile(ST st, int pathId) throws IOException {
         //String result = st.render();
-        File out = new File("/home/fofo/work/HML/HML/source/src/HML_" + depth + "_" + pathId + ".smt2");
+        File out = new File("./source/src/HML_" + depth + "_" + pathId + ".smt2");
         if (out.createNewFile())  logger.debug("File successfully created");
         else                      logger.debug("File already exits.");
         st.write(out, new HSTErrorListener());
+        ExecSMT.exec("0.0001", out.getPath());
     }
 
 

@@ -41,7 +41,10 @@ public class DiscreteWithContinuous implements Dynamic{
     private int mode;
     private final static String clock_ode ="(= d/dt[clock] 1)";
     private final static String global_ode = "(= d/dt[global] 1)";
-
+    private final static ConcreteExpr emptyGuard =
+            new ConcreteExpr("<=", AbstractExpr.Sort.GUARD,
+            new ConcreteExpr("clock", AbstractExpr.Sort.VAR),
+            new ConcreteExpr("0", AbstractExpr.Sort.CONSTANT));
     public void setDepth(int depth) {
         this.depth = depth;
     }
@@ -183,8 +186,14 @@ public class DiscreteWithContinuous implements Dynamic{
             ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
             ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
             if (variableLink != null) concreteExpr.resolve(variableLink);
-            ConcreteExpr result = invariantExpr(concreteExpr);
-            return String.format("(forall_t %s [0 time_%s] %s) ", mode,  depth, result.toString(depth));
+
+
+            //连续变化过程中满足的条件，即不满足guard的情况
+            ConcreteExpr result = concreteExpr.negationForInv();
+
+            //处理瞬间返回的情况
+            String empty = String.format("(and %s %s)", emptyGuard.toString(depth) , concreteExpr.toString(depth));
+            return String.format("(or %s (forall_t %s [0 time_%s] %s))", empty, mode,  depth, result.toString(depth));
             //因为是对当前的变量进行约束，所以使用当前depth
         }
     }
@@ -196,7 +205,7 @@ public class DiscreteWithContinuous implements Dynamic{
     }
 
     private ConcreteExpr invariantExpr(ConcreteExpr concreteExpr){
-        return concreteExpr.negation();
+        return concreteExpr.negationForInv();
         //测试表明dReal SMT2 公式里面的区间表示虽然形式上是闭区间，但实际上却是开区间的
         /*
         ConcreteExpr clock_term =  createClockExpr("=");
@@ -314,7 +323,7 @@ public class DiscreteWithContinuous implements Dynamic{
     @Override
     public String toString() {
 
-        if (resultFormula!=null) return resultFormula;
+        //if (resultFormula!=null) return resultFormula;
         StringBuilder sb = new StringBuilder();
 
         ID2ExpMap = new HashMap<String, ConcreteExpr>();

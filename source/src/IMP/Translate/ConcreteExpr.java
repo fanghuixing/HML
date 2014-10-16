@@ -78,6 +78,33 @@ public class ConcreteExpr {
         return renderStr;
     }
 
+    public String toStringForStartPoint(int depth) {
+        StringBuilder sb  = new StringBuilder();
+        sb.append("(");
+
+        if (sort== AbstractExpr.Sort.VAR) //对变量需要加下标
+            sb.append(ID).append("_").append(depth).append("_0");
+        else if (sort== AbstractExpr.Sort.GUARD) {
+            if (ID.equals("timeout")) sb.append(ID).append("_").append(depth);
+            else sb.append(ID);
+        }
+        else
+            sb.append(ID);
+
+        if (Left != null) {
+            sb.append(" ");
+            sb.append(Left.toStringForStartPoint(depth));
+            if (Right != null) {
+                sb.append(" ");
+                sb.append(Right.toStringForStartPoint(depth));
+            }
+            sb.append(")");
+        }
+        else
+            sb.deleteCharAt(0);
+        return sb.toString();
+    }
+
     public String toString(int depth) {
         StringBuilder sb  = new StringBuilder();
         sb.append("(");
@@ -223,6 +250,31 @@ public class ConcreteExpr {
         for (String s : from) {
             target.add(s);
         }
+    }
+
+    public ConcreteExpr negationForInv(){
+        ConcreteExpr result =new ConcreteExpr("not", AbstractExpr.Sort.NVAR, clone(this), null );
+        result.checkEmptyGuard();
+        return result;
+    }
+
+    /**
+     *  转换成INV时不能直接用true，因为not true 为false，
+     */
+    private void checkEmptyGuard(){
+        if (ID.equals("true")) {
+             ID = ">=";
+             Left = new ConcreteExpr("clock", AbstractExpr.Sort.VAR);
+             Right =new ConcreteExpr("0", AbstractExpr.Sort.CONSTANT);
+        }
+        if (Left != null) {
+            Left.checkEmptyGuard();
+        }
+
+        if (Right != null) {
+            Right.checkEmptyGuard();
+        }
+
     }
 
     public ConcreteExpr negation(){
