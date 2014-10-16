@@ -119,7 +119,7 @@ public class DiscreteWithContinuous implements Dynamic{
     private String renderConFormulas(){
         StringBuilder flows = new StringBuilder();
         ContextWithVarLink r = continuous;
-        if (r==null) return null;
+        if (r==null) return "";
 
         if (r.getPrc() instanceof  HMLParser.OdeContext) {
             //如果是方程

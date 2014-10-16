@@ -3,7 +3,7 @@ Signal on, off;
 
 //Global Variables
 final float deta=0.5;
-float waterLevel=8;
+float waterLevel=9;
 final float accin=1, decout=1;
 final int MaxwaterLevel=10, LowestwaterLevel=5;
 float clock = 0;
@@ -21,7 +21,7 @@ global in [0, 200];
 //Templates
 Template open(float h, float a, int H, float e){
     //h = h + 2;
-    dot h = a until (h>=0 <or> h >= H - e <or> h>=9)
+    dot h = a until (h>=8.5 <or> h >= H - e <or> h>=9)
     //closed(h,a,H,e)
 }
 

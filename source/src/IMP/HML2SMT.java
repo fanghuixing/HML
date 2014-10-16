@@ -34,7 +34,7 @@ import org.apache.logging.log4j.LogManager;
  */
 public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
-    final static int depth = 1;
+    final static int depth = 2;
     static ParseTreeProperty<AbstractExpr> exprPtp;
     static ParseTreeProperty<AbstractExpr> guardPtp;
     static HashMap<String, AbstractExpr>  InitID2ExpMap;
@@ -129,6 +129,7 @@ public class HML2SMT {
         if (out.createNewFile())  logger.debug("File successfully created");
         else                      logger.debug("File already exits.");
         st.write(out, new HSTErrorListener());
+
         ExecSMT.exec("0.0001", out.getPath());
     }
 

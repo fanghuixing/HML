@@ -58,7 +58,7 @@ public class ExecSMT {
     }
 
     public static void main(String[] args) throws Exception {
-        boolean ret = exec("0.0001", "./source/src/HML_1_0.smt2");
+        boolean ret = exec("0.0001", "./source/src/HML_2_0.smt2");
         logger.debug("SAT : " + ret);
 
     }
