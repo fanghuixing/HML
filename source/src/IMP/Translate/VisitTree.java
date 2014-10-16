@@ -261,4 +261,15 @@ public class VisitTree {
     public Dynamic getLastDynamic(){
         return currentDynamicList.get(currentDynamicList.size()-1);
     }
+
+    public void addDiscrete(ContextWithVarLink contextWithVarLink){
+        currentDynamics.addDiscrete(contextWithVarLink);
+    }
+    public void addContinuous(ContextWithVarLink contextWithVarLink) {
+        currentDynamics.addContinuous(contextWithVarLink);
+    }
+
+    public void addDynamics(Dynamic dynamic){
+        currentDynamicList.add(dynamic);
+    }
 }

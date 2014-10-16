@@ -27,8 +27,8 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     private VariableLink currentVariableLink;
     private Stack<VariableLink> variableStack = new Stack<VariableLink>();
-    private VisitTree root = new VisitTree(null,  new DiscreteWithContinuous(), new ArrayList<Dynamic>());
-    private VisitTree visitTree = root;
+    private VisitTree currentTree = new VisitTree(null,  new DiscreteWithContinuous(), new ArrayList<Dynamic>());
+
 
 
 
@@ -82,29 +82,14 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
 
         HMLParser.ExprContext condition =  ctx.expr();
 
-        //如果可以判定这个条件当前的值，就可以极大地降低分支数目
-        List<VisitTree> leaves = new ArrayList<VisitTree>();
-        root.collectLeaves(leaves);
-        VisitTree oldRoot = root;
-        for (VisitTree v : leaves) {
-            Dynamic leftDynamic = v.getCurrentDynamics().copy();
-            Dynamic rightDynamic = v.getCurrentDynamics().copy();
-            List<Dynamic> leftList = copyList(v.getCurrentDynamicList());
-            List<Dynamic> righList = copyList(v.getCurrentDynamicList());
-            VisitTree leftTree = new VisitTree(v,leftDynamic, leftList);
-            VisitTree rightTree = new VisitTree(v,rightDynamic, righList);
-            //创建分支也需要在树根节点创建， 这里需要修改
-            v.addChild(leftTree);
-            v.addChild(rightTree);
-            root = leftTree;
-            leftDynamic.addDiscrete(new ContextWithVarLink(condition, currentVariableLink));
-            visit(ctx.blockStatement(0));
-            root = rightTree;
-            rightDynamic.addDiscrete(new ContextWithVarLink(condition, currentVariableLink, true));
-            visit(ctx.blockStatement(1));
+        //条件满足的情况
+        currentTree.addDiscrete(new ContextWithVarLink(condition, currentVariableLink));
+        visit(ctx.blockStatement(0));
 
-        }
-        root = oldRoot;//需要指向原来的叶子节点
+        //条件不满足的情况
+
+
+
 
         return null;
     }
@@ -140,14 +125,7 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
 
     public Void visitAssignment(HMLParser.AssignmentContext ctx) {
 
-        List<VisitTree> dynamicsLeaves = new ArrayList<VisitTree>();
-        root.collectLeaves(dynamicsLeaves);
-        //如果已经到达最大深度，就在树中删除该节点路径
-        for (VisitTree leaf : dynamicsLeaves) {
-
-            leaf.getCurrentDynamics().addDiscrete(new ContextWithVarLink(ctx,currentVariableLink));
-        }
-
+        currentTree.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink));
         return null;
     }
 
@@ -173,34 +151,36 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
 
     public Void visitOde(HMLParser.OdeContext ctx) {
 
+
+        checkGuard(ctx.guard(), currentTree);
+
+
         visit(ctx.equation());
-        List<VisitTree> dynamicsLeaves = new ArrayList<VisitTree>();
+        if (currentTree.getCurrentDepth()>depth) return null;
 
-        root.collectLeaves(dynamicsLeaves);
-
-        //如果已经到达最大深度，就在树中删除该节点路径
-        for (VisitTree leaf : dynamicsLeaves) {
-            //当leaf的深度达到depth+1时停止
-            if (leaf.getCurrentDepth()>depth) continue;
-            Dynamic dynamic = leaf.getCurrentDynamics();
-            dynamic.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
-            dynamic.setDepth(leaf.getCurrentDepth());
-            leaf.getCurrentDynamicList().add(dynamic);
-            dynamic.toString();
-            if (leaf.getCurrentDepth() < depth+1) {
-                Dynamic dy = new DiscreteWithContinuous();
-                dy.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
-                leaf.setCurrentDynamics(dy);
-            }
-            else  finishOnePath(leaf);
+        currentTree.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
+        currentTree.getCurrentDynamics().setDepth(currentTree.getCurrentDepth());
+        currentTree.addDynamics(currentTree.getCurrentDynamics());
+        currentTree.getCurrentDynamics().toString();
+        if (currentTree.getCurrentDepth() < depth+1) {
+            Dynamic dy = new DiscreteWithContinuous();
+            dy.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
+            currentTree.setCurrentDynamics(dy);
         }
-
-        root.merge();
+        else  finishOnePath(currentTree);
 
         return null;
     }
 
+    private boolean checkGuard(HMLParser.GuardContext guard, VisitTree visitTree){
+        Dynamic curDy = visitTree.getCurrentDynamics();
+        List<Dynamic> curDyList = visitTree.getCurrentDynamicList();
+        int curDepth = visitTree.getCurrentDepth();
+        curDy.setDepth(curDepth);
 
+
+        return false;
+    }
 
 
 
@@ -219,14 +199,7 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
 
     //带初始值的方程
     public Void visitEqWithInit(HMLParser.EqWithInitContext ctx) {
-
-        List<VisitTree> dynamicsLeaves = new ArrayList<VisitTree>();
-        root.collectLeaves(dynamicsLeaves);
-        //如果已经到达最大深度，就在树中删除该节点路径
-        for (VisitTree leaf : dynamicsLeaves) {
-            leaf.getCurrentDynamics().addDiscrete(new ContextWithVarLink(ctx, currentVariableLink)); //将初值对应为连续变量的值
-        }
-
+        currentTree.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink)); //将初值对应为连续变量的值
         return null;
     }
 
@@ -298,15 +271,8 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
 
     //判定是否已经到达最大深度
     private boolean isMaxDepth(){
-
-        List<VisitTree> vt = new ArrayList<VisitTree>();
-        visitTree.collectLeaves(vt);
-        for (VisitTree v : vt){
-            //对每一个叶子判断是否完成了深度展开，如果有一个叶子没有达到则需要继续展开
-            if (v.getCurrentDepth()<depth+1)
-                return false;
-        }
-        return true;
+       if (currentTree.getCurrentDepth()<depth+1) return false;
+       return true;
 
     }
 
@@ -329,12 +295,7 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
         return l;
     }
 
-    public List<List<Dynamic>> getPaths() {
-        List<VisitTree> leaves = new ArrayList<VisitTree>();
-        visitTree.collectLeaves(leaves);
-        for (VisitTree v : leaves) {
-            paths.add(v.getCurrentDynamicList());
-        }
-        return paths;
+    public List<Dynamic> getPaths() {
+        return currentTree.getCurrentDynamicList();
     }
 }
