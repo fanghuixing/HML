@@ -21,7 +21,7 @@ global in [0, 200];
 //Templates
 Template open(float h, float a, int H, float e){
     //h = h + 2;
-    dot h = a until (EMP <or> h >= H - e)
+    dot h = a until (h>=0 <or> h >= H - e <or> h>=9)
     //closed(h,a,H,e)
 }
 

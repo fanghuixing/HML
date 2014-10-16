@@ -289,4 +289,28 @@ public class ConcreteExpr {
 
     }
 
+    public List<String> guardBranches(int depth){
+        if (ID.equals("not")) {
+            List<String> tmp =Left.guardBranches(depth);
+            List<String> res = new ArrayList<String>();
+            for (String s : tmp) {
+                res.add(String.format("(not %s)", s));
+            }
+            return res;
+        }
+        else if (ID.equals("or")) {
+            List<String> ltmp = Left.guardBranches(depth);
+            List<String> rtmp = Right.guardBranches(depth);
+            List<String> res = new ArrayList<String>();
+            res.addAll(ltmp);
+            res.addAll(rtmp);
+            return res;
+        }
+        else {
+            List<String> tmp = new ArrayList<String>();
+            tmp.add(toString(depth));
+            return tmp;
+        }
+    }
+
 }

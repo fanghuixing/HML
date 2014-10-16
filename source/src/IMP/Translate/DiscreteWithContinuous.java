@@ -191,10 +191,27 @@ public class DiscreteWithContinuous implements Dynamic{
             //连续变化过程中满足的条件，即不满足guard的情况
             ConcreteExpr result = concreteExpr.negationForInv();
 
+            List<String> branches = result.guardBranches(depth);
+            String inv = mergeBranches(branches, mode, depth);
+
+
             //处理瞬间返回的情况
             String empty = String.format("(and %s %s)", emptyGuard.toString(depth) , concreteExpr.toString(depth));
-            return String.format("(or %s (forall_t %s [0 time_%s] %s))", empty, mode,  depth, result.toString(depth));
+            return String.format("(or %s %s)", empty, inv);
             //因为是对当前的变量进行约束，所以使用当前depth
+        }
+    }
+
+    private String mergeBranches(List<String> branches, int mode, int depth){
+        StringBuilder sb = new StringBuilder();
+        if (branches.size()==1)
+            return  String.format("(forall_t %s [0 time_%s] %s)", mode,  depth, branches.remove(0));
+        else if (branches.size()==0) return null;
+        else {
+            sb.append(String.format("(and %s %s)",
+                    String.format("(forall_t %s [0 time_%s] %s)", mode,  depth, branches.remove(0)),
+                    mergeBranches(branches, mode, depth)));
+            return sb.toString();
         }
     }
 
