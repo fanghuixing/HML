@@ -104,25 +104,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         return null;
     }
 
-    private boolean checkCondition(HMLParser.ExprContext expr, VisitTree tree){
-        Dynamic curr = tree.getCurrentDynamics().copy();
-        curr.addDiscrete(new ContextWithVarLink(expr, currentVariableLink));
-        curr.setDepth(tree.getCurrentDynamicList().size());
 
-        System.out.println("-------------------------Start----------------------------");
-        for (Dynamic dy : tree.getCurrentDynamicList()) {
-            System.out.println(dy);
-        }
-        curr.toString();
-        StringBuilder sb = new StringBuilder(curr.getDiscreteDynamics());
-        int st = sb.indexOf(")", 0);
-
-        System.out.println(sb.substring(st+1));
-
-        System.out.println("--------------------------End---------------------------");
-
-        return true;
-    }
 
 
 

@@ -3,9 +3,6 @@ package IMP.Basic;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by fofo on 2014/9/29.
- */
 public class Constraint {
 
     String name;

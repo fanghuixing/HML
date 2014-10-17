@@ -37,7 +37,7 @@ public interface Dynamic{
     public void setContinuousDynamics(String continuousDynamics);
     public ContextWithVarLink getContinuous();
 
-    public String getPartialResult(HMLParser.GuardContext guard, VariableLink variableLink);
+    public String getPartialResult(ConcreteExpr guard, VariableLink variableLink);
     public void setGuardCheckEnable(boolean checkEnable);
 
 }

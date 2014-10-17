@@ -29,6 +29,7 @@ public class ExecSMT {
         try {
             proc = runtime.exec(sb.toString());
 
+
             in = proc.getInputStream();
 
             BufferedReader br = new BufferedReader(new InputStreamReader(in));

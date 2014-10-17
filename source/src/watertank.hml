@@ -21,7 +21,7 @@ global in [0, 200];
 //Templates
 Template open(float h, float a, int H, float e){
     //h = h + 2;
-    dot h = a until (h>=8.5 <or> h >= H - e <or> h>=9)
+    dot h = a until (h >= H - e )
     //closed(h,a,H,e)
 }
 
@@ -44,7 +44,7 @@ Main {
         !off;
         // let water out
         // waterLevel = 5;
-        // ( skip <waterLevel == 5> skip);
+        // ( skip < ~ (waterLevel == 5) > skip);
         closed(waterLevel,decout,LowestwaterLevel,deta)
         // closed(waterLevel,decout,MaxwaterLevel,deta)
     }

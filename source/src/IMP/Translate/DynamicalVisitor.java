@@ -3,6 +3,7 @@ package IMP.Translate;
 import AntlrGen.HMLParser;
 import IMP.Basic.Template;
 import IMP.HML2SMT;
+import IMP.Infos.AbstractExpr;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
@@ -80,37 +81,21 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
 
         HMLParser.ExprContext condition =  ctx.expr();
 
+        boolean condSatInit = checkChoice(condition, currentTree);
+
         //条件满足的情况
-        currentTree.addDiscrete(new ContextWithVarLink(condition, currentVariableLink));
-        visit(ctx.blockStatement(0));
-
-        //条件不满足的情况
-
-
-
-
+        if (condSatInit) {
+            //currentTree.addDiscrete(new ContextWithVarLink(condition, currentVariableLink));
+            visit(ctx.blockStatement(0));
+        }
+        else {//条件不满足的情况
+            //currentTree.addDiscrete(new ContextWithVarLink(condition, currentVariableLink, true));
+            visit(ctx.blockStatement(1));
+        }
         return null;
     }
 
-    private boolean checkCondition(HMLParser.ExprContext expr, VisitTree tree){
-        Dynamic curr = tree.getCurrentDynamics().copy();
-        curr.addDiscrete(new ContextWithVarLink(expr, currentVariableLink));
-        curr.setDepth(tree.getCurrentDynamicList().size());
 
-        System.out.println("-------------------------Start----------------------------");
-        for (Dynamic dy : tree.getCurrentDynamicList()) {
-            System.out.println(dy);
-        }
-        curr.toString();
-        StringBuilder sb = new StringBuilder(curr.getDiscreteDynamics());
-        int st = sb.indexOf(")", 0);
-
-        System.out.println(sb.substring(st+1));
-
-        System.out.println("--------------------------End---------------------------");
-
-        return true;
-    }
 
 
 
@@ -139,8 +124,14 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
                 visit(ctx.parStatement().blockStatement());
             }
         }
-        else if (boolCondition instanceof HMLParser.ConstantFalseContext) {
-            return null;
+        else if (boolCondition instanceof HMLParser.ConstantFalseContext) return null;
+        else {
+            HMLParser.ExprContext condition = ctx.parExpression().expr();
+            boolean condSatInit = checkChoice(condition, currentTree);
+            while (condSatInit && !isMaxDepth()) {
+                visit(ctx.parStatement().blockStatement());
+                condSatInit = checkChoice(condition, currentTree);
+            }
         }
         return null;
     }
@@ -175,16 +166,28 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     }
 
     private boolean checkGuard(HMLParser.GuardContext guard, VisitTree visitTree){
+        ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
+        ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
+        return checkExpr(concreteExpr, visitTree);
+    }
+
+    private boolean checkChoice(HMLParser.ExprContext condition, VisitTree visitTree) {
+        ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
+        ConcreteExpr concreteExpr = new ConcreteExpr(exprs.get(condition));
+        return checkExpr(concreteExpr, visitTree);
+    }
+
+    private boolean checkExpr(ConcreteExpr concreteExpr, VisitTree visitTree) {
         Dynamic curDy = visitTree.getCurrentDynamics();
         List<Dynamic> curDyList = visitTree.getCurrentDynamicList();
         int curDepth = visitTree.getCurrentDepth();
         curDy.setDepth(curDepth);
-        String guardCondition =  curDy.getPartialResult(guard, currentVariableLink);
-        logger.debug("Guard Condition: " + guardCondition);
 
-        return HML2SMT.checkTempleFormulas(this, guardCondition, curDepth);
+        String conditionStr =  curDy.getPartialResult(concreteExpr, currentVariableLink);
+        logger.debug("Condition: " + conditionStr);
+
+        return HML2SMT.checkTempleFormulas(this, conditionStr, curDepth);
     }
-
 
 
     private void finishOnePath(VisitTree leaf) {

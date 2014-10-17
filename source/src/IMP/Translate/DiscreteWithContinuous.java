@@ -109,7 +109,6 @@ public class DiscreteWithContinuous implements Dynamic{
         for (String ID : IDList) {
             ConcreteExpr concreteExprforID = ID2ExpMap.get(ID);
             if (concreteExprforID != null) {
-
                 concreteExpr.replace(ID, concreteExprforID);
             }
         }
@@ -397,15 +396,11 @@ public class DiscreteWithContinuous implements Dynamic{
         return resultFormula;
     }
 
-    public String getPartialResult(HMLParser.GuardContext guard, VariableLink variableLink) {
+    public String getPartialResult(ConcreteExpr concreteExpr, VariableLink variableLink) {
         prepareIDMap();
         renderDisFormulas();
         StringBuilder sb = new StringBuilder();
         transDis2SMT(sb);
-
-
-        ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
-        ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
         if (variableLink != null) concreteExpr.resolve(variableLink);
         concreteExpr.checkEmptyGuard();
         String startPoint = concreteExpr.toStringForStartPoint(depth);
