@@ -244,7 +244,7 @@ public class HML2SMTListener extends HMLBaseListener {
     }
 
     public void exitTimeOutGuard(HMLParser.TimeOutGuardContext ctx) {
-        guardPtp.put(ctx, new AbstractExpr("=", AbstractExpr.Sort.GUARD, new AbstractExpr("clock", AbstractExpr.Sort.VAR) , exprPtp.get(ctx.expr())));
+        guardPtp.put(ctx, new AbstractExpr(">=", AbstractExpr.Sort.GUARD, new AbstractExpr("clock", AbstractExpr.Sort.VAR) , exprPtp.get(ctx.expr())));
     }
 
     public void exitConjunctGuard(HMLParser.ConjunctGuardContext ctx) {

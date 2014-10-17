@@ -31,7 +31,7 @@ import org.apache.logging.log4j.LogManager;
  */
 public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
-    final static int depth = 40;
+    final static int depth = 1;
     //若为true则选择基于SMT判定的深度优先展开，若为false则选择全展开的方式
     private static boolean deepApproach = true;
     static ParseTreeProperty<AbstractExpr> exprPtp;

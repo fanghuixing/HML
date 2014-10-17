@@ -13,7 +13,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 
 /**
- * Created by fofo on 2014/9/30.
+ * Created by Huixing Fang on 2014/9/30.
  * 这个Dynamic实现中用了ConcreteExpr，而没有去修改AbstractExpr
  * 这样就不会破坏已经存储的程序结构
  */
@@ -60,8 +60,8 @@ public class DiscreteWithContinuous implements Dynamic{
     }
 
     private void renderDisFormulas(){
-        //reset clock
-        ID2ExpMap.put("clock", new ConcreteExpr("0", AbstractExpr.Sort.CONSTANT));
+
+
         for (ContextWithVarLink c : discrete) {
             ParserRuleContext r = c.getPrc();
             if (r instanceof HMLParser.AssignmentContext) {
@@ -79,6 +79,8 @@ public class DiscreteWithContinuous implements Dynamic{
             else if (r instanceof  HMLParser.GuardContext) {
                 //连续行为退出条件
                 analyzeGuard((HMLParser.GuardContext) r, c.getVrl());
+                //reset clock, after the guard has been analyzed.
+                ID2ExpMap.put("clock", new ConcreteExpr("0", AbstractExpr.Sort.CONSTANT));
             }
             else if (r instanceof HMLParser.ExprContext) {
                 //条件选择语句中的条件表达式
@@ -198,7 +200,7 @@ public class DiscreteWithContinuous implements Dynamic{
                 //因为是对当前的变量进行约束，所以使用当前depth
             }
             else  return inv;
-
+            //guardCheckEnable为真时候表示我们不需要再添加guard条件到公式中，因为我们已经判断过这个条件
         }
     }
 
@@ -215,23 +217,7 @@ public class DiscreteWithContinuous implements Dynamic{
         }
     }
 
-    private ConcreteExpr createClockExpr(String op){
-       return new ConcreteExpr(op, AbstractExpr.Sort.NVAR,
-                new ConcreteExpr("clock", AbstractExpr.Sort.VAR),
-                new ConcreteExpr("time_"+depth, AbstractExpr.Sort.NVAR));
-    }
 
-    private ConcreteExpr invariantExpr(ConcreteExpr concreteExpr){
-        return concreteExpr.negationForInv();
-        //测试表明dReal SMT2 公式里面的区间表示虽然形式上是闭区间，但实际上却是开区间的
-        /*
-        ConcreteExpr clock_term =  createClockExpr("=");
-        ConcreteExpr termination = new ConcreteExpr("=>", AbstractExpr.Sort.NVAR, clock_term, concreteExpr);
-        ConcreteExpr clock_stable = createClockExpr("<");
-        ConcreteExpr stable = new ConcreteExpr("=>", AbstractExpr.Sort.NVAR, clock_stable, concreteExpr.negation());
-        return new ConcreteExpr("and", AbstractExpr.Sort.NVAR, stable, termination);
-        */
-    }
 
 
     private void addList(List<String> target, List<String> from) {
@@ -396,6 +382,12 @@ public class DiscreteWithContinuous implements Dynamic{
         return resultFormula;
     }
 
+    /**
+     *
+     * @param concreteExpr 表达式
+     * @param variableLink 变量关系
+     * @return SMT2公式用于动态检查条件是否满足
+     */
     public String getPartialResult(ConcreteExpr concreteExpr, VariableLink variableLink) {
         prepareIDMap();
         renderDisFormulas();
@@ -452,5 +444,25 @@ public class DiscreteWithContinuous implements Dynamic{
     public void setGuardCheckEnable(boolean guardCheckEnable){
         this.guardCheckEnable = guardCheckEnable;
     }
+
+    private ConcreteExpr createClockExpr(String op){
+        return new ConcreteExpr(op, AbstractExpr.Sort.NVAR,
+                new ConcreteExpr("clock", AbstractExpr.Sort.VAR),
+                new ConcreteExpr("time_"+depth, AbstractExpr.Sort.NVAR));
+    }
+
+    private ConcreteExpr invariantExpr(ConcreteExpr concreteExpr){
+        return concreteExpr.negationForInv();
+        //测试表明dReal SMT2 公式里面的区间表示虽然形式上是闭区间，但实际上却是开区间的
+        /*
+        ConcreteExpr clock_term =  createClockExpr("=");
+        ConcreteExpr termination = new ConcreteExpr("=>", AbstractExpr.Sort.NVAR, clock_term, concreteExpr);
+        ConcreteExpr clock_stable = createClockExpr("<");
+        ConcreteExpr stable = new ConcreteExpr("=>", AbstractExpr.Sort.NVAR, clock_stable, concreteExpr.negation());
+        return new ConcreteExpr("and", AbstractExpr.Sort.NVAR, stable, termination);
+        */
+    }
+
+
 
 }
