@@ -2,7 +2,6 @@ package IMP.Translate;
 
 
 import AntlrGen.HMLParser;
-import IMP.Basic.Variable;
 import IMP.Basic.VariableForSMT2;
 import IMP.HML2SMT;
 import IMP.Infos.AbstractExpr;
@@ -12,8 +11,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.*;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 /**
  * Created by fofo on 2014/9/30.
@@ -33,6 +30,7 @@ public class DiscreteWithContinuous implements Dynamic{
     private String resultFormula;
     private String discreteResult;
     private String continuousResult;
+    private boolean guardCheckEnable = false;
     HashMap<String, ConcreteExpr>  ID2ExpMap;
 
     HashMap<ConcreteExpr, String>  TempOdesMap = new HashMap<ConcreteExpr, String>();
@@ -194,11 +192,14 @@ public class DiscreteWithContinuous implements Dynamic{
             List<String> branches = result.guardBranches(depth);
             String inv = mergeBranches(branches, mode, depth);
 
+            if (!guardCheckEnable) {
+                //处理瞬间返回的情况
+                String empty = String.format("(and %s %s)", emptyGuard.toString(depth), concreteExpr.toString(depth));
+                return String.format("(or %s %s)", empty, inv);
+                //因为是对当前的变量进行约束，所以使用当前depth
+            }
+            else  return inv;
 
-            //处理瞬间返回的情况
-            String empty = String.format("(and %s %s)", emptyGuard.toString(depth) , concreteExpr.toString(depth));
-            return String.format("(or %s %s)", empty, inv);
-            //因为是对当前的变量进行约束，所以使用当前depth
         }
     }
 
@@ -337,12 +338,7 @@ public class DiscreteWithContinuous implements Dynamic{
         return name.startsWith(guardPrefix);
     }
 
-    @Override
-    public String toString() {
-
-        //if (resultFormula!=null) return resultFormula;
-        StringBuilder sb = new StringBuilder();
-
+    private void prepareIDMap(){
         ID2ExpMap = new HashMap<String, ConcreteExpr>();
         if (depth == 0) {
             logger.debug("Use the variables initializations information");
@@ -355,16 +351,15 @@ public class DiscreteWithContinuous implements Dynamic{
                 logger.debug("The mapping in Initializations:" +idem.getKey());
             }
         }
-
-
-        if (depth!=0) {
+        else if (depth!=0) {
             List<VariableForSMT2> vars = HML2SMT.getVarlist();
             for (VariableForSMT2 v : vars) {
                 ID2ExpMap.put(v.getName(), new ConcreteExpr(v.getName(), AbstractExpr.Sort.VAR, null, null));
             }
         }
+    }
 
-        renderDisFormulas();
+    private void transDis2SMT(StringBuilder sb){
         //show all the formulas for discrete actions
         for (Map.Entry<String, ConcreteExpr> abe : ID2ExpMap.entrySet()) {
             String ID = abe.getKey();
@@ -374,13 +369,25 @@ public class DiscreteWithContinuous implements Dynamic{
                 sb.append(String.format("(= %s %s)", addDepthFlagToVar(abe.getKey()), abe.getValue().toString(depth-1)));
         }
         sb.append("\n");
-        sb.append(renderConFormulas());
+    }
 
-        sb.replace(0, 0, String.format("\n(= mode_%s %s)", depth, mode));
+    private void renderGuard(StringBuilder sb){
         HMLParser.GuardContext guard = ((HMLParser.OdeContext) continuous.getPrc()).guard();
         invariant = guard2Invariant(guard, continuous.getVrl(), mode);
-        //sb.append(String.format("(forall_t %s [0 time_%s] %s) ", mode,  depth, invariant));
         sb.append(invariant);
+    }
+
+    @Override
+    public String toString() {
+
+        //if (resultFormula!=null) return resultFormula;
+        prepareIDMap();
+        renderDisFormulas();
+        StringBuilder sb = new StringBuilder();
+        transDis2SMT(sb);
+        sb.append(renderConFormulas());
+        sb.replace(0, 0, String.format("\n(= mode_%s %s)", depth, mode));
+        renderGuard(sb);
         sb.append(String.format("(= mode_%s %s)", depth, mode));
         sb.append("\n");
         int sep = sb.indexOf("\n",1);
@@ -388,6 +395,23 @@ public class DiscreteWithContinuous implements Dynamic{
         continuousResult = sb.substring(sep);//连续部分也包含了不变式
         resultFormula = sb.toString();
         return resultFormula;
+    }
+
+    public String getPartialResult(HMLParser.GuardContext guard, VariableLink variableLink) {
+        prepareIDMap();
+        renderDisFormulas();
+        StringBuilder sb = new StringBuilder();
+        transDis2SMT(sb);
+
+
+        ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
+        ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
+        if (variableLink != null) concreteExpr.resolve(variableLink);
+        concreteExpr.checkEmptyGuard();
+        String startPoint = concreteExpr.toStringForStartPoint(depth);
+        logger.debug("Start Point: " + startPoint);
+        sb.append(startPoint);
+        return sb.toString();
     }
 
     public HashMap<Integer, String> getOdeDefinitionMap(){
@@ -430,5 +454,8 @@ public class DiscreteWithContinuous implements Dynamic{
         return continuous;
     }
 
+    public void setGuardCheckEnable(boolean guardCheckEnable){
+        this.guardCheckEnable = guardCheckEnable;
+    }
 
 }

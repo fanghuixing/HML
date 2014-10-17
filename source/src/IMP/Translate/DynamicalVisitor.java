@@ -1,8 +1,8 @@
 package IMP.Translate;
 
-import AntlrGen.HMLBaseVisitor;
 import AntlrGen.HMLParser;
 import IMP.Basic.Template;
+import IMP.HML2SMT;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
@@ -12,13 +12,17 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * This is the visitor that does the main work for
  * unrolling (translation) from HML model to SMT2 formulas
  * @author fofo (fang.huixing@gmail.com)
  */
-public class DynamicalVisitor extends HMLBaseVisitor<Void> {
+public class DynamicalVisitor extends HMLProgram2SMTVisitor {
+    private static Logger logger = LogManager.getLogger(DynamicalVisitor.class.getName());
     ParseTreeProperty<Scope> scopes;
     GlobalScope globals;
     Scope currentScope; // resolve symbols starting in this scope
@@ -40,19 +44,13 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
     int odenumering = 0;
 
 
-
-
-
     public DynamicalVisitor(ParseTreeProperty<Scope> scopes, GlobalScope globals, HashMap<String, Template> tmpMap, int depth) {
+        super();
         this.scopes = scopes;
         this.globals = globals;
         this.depth = depth;
         this.tmpMap = tmpMap;
     }
-
-
-
-
 
     public Void visitHybridModel(HMLParser.HybridModelContext ctx) {
 
@@ -152,13 +150,17 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
     public Void visitOde(HMLParser.OdeContext ctx) {
 
 
-        checkGuard(ctx.guard(), currentTree);
-
+        boolean guardSatInit = checkGuard(ctx.guard(), currentTree);
+        if (guardSatInit){
+            logger.debug("The Guard is satisfied initially, skip this flow.");
+            return null;
+        }
 
         visit(ctx.equation());
         if (currentTree.getCurrentDepth()>depth) return null;
 
         currentTree.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
+        currentTree.getCurrentDynamics().setGuardCheckEnable(true);
         currentTree.getCurrentDynamics().setDepth(currentTree.getCurrentDepth());
         currentTree.addDynamics(currentTree.getCurrentDynamics());
         currentTree.getCurrentDynamics().toString();
@@ -177,9 +179,10 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
         List<Dynamic> curDyList = visitTree.getCurrentDynamicList();
         int curDepth = visitTree.getCurrentDepth();
         curDy.setDepth(curDepth);
+        String guardCondition =  curDy.getPartialResult(guard, currentVariableLink);
+        logger.debug("Guard Condition: " + guardCondition);
 
-
-        return false;
+        return HML2SMT.checkTempleFormulas(this, guardCondition, curDepth);
     }
 
 
@@ -276,15 +279,15 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
 
     }
 
-    public Void visit(org.antlr.v4.runtime.tree.ParseTree tree){
+    public Void visit(ParseTree tree){
         if (isMaxDepth()) {
             return null;
         }
         else return superVisit(tree);
     }
 
-    public Void superVisit(org.antlr.v4.runtime.tree.ParseTree tree){
-        return super.visit(tree);
+    public Void superVisit(ParseTree tree){
+        return super.superVisit(tree);
     }
 
     private List<Dynamic> copyList(List<Dynamic> from) {
@@ -295,7 +298,9 @@ public class DynamicalVisitor extends HMLBaseVisitor<Void> {
         return l;
     }
 
-    public List<Dynamic> getPaths() {
-        return currentTree.getCurrentDynamicList();
+    public List<List<Dynamic>> getPaths() {
+        List<List<Dynamic>> res  = new ArrayList<List<Dynamic>>();
+        res.add(currentTree.getCurrentDynamicList());
+        return res;
     }
 }

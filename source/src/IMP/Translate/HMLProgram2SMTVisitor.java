@@ -6,8 +6,6 @@ import IMP.Basic.Template;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
-import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import java.util.*;
 
@@ -37,9 +35,8 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     private List<List<Dynamic>> paths = new ArrayList<List<Dynamic>>();
     int odenumering = 0;
 
-
-
-
+    public HMLProgram2SMTVisitor() {
+    }
 
     public HMLProgram2SMTVisitor(ParseTreeProperty<Scope> scopes, GlobalScope globals, HashMap<String, Template> tmpMap, int depth) {
         this.scopes = scopes;

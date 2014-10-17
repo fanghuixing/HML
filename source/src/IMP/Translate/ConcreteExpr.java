@@ -261,7 +261,7 @@ public class ConcreteExpr {
     /**
      *  转换成INV时不能直接用true，因为not true 为false，
      */
-    private void checkEmptyGuard(){
+    public void checkEmptyGuard(){
         if (ID.equals("true")) {
              ID = ">=";
              Left = new ConcreteExpr("clock", AbstractExpr.Sort.VAR);

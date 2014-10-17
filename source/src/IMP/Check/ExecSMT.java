@@ -23,10 +23,13 @@ public class ExecSMT {
 
         logger.info("Exec " + sb.toString());
         Runtime runtime = Runtime.getRuntime();
-
+        Process proc = null;
+        InputStream in = null;
+        InputStream err = null;
         try {
-            Process proc = runtime.exec(sb.toString());
-            InputStream in = proc.getInputStream();
+            proc = runtime.exec(sb.toString());
+
+            in = proc.getInputStream();
 
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             String result = br.readLine();
@@ -40,7 +43,7 @@ public class ExecSMT {
             }
             else {
                 logger.info("Error in dReal Running");
-                InputStream err = proc.getErrorStream();
+                err = proc.getErrorStream();
                 BufferedReader brErr = new BufferedReader(new InputStreamReader(err));
                 String error = brErr.readLine();
                 if (error == null) logger.debug("No error info ");
@@ -48,18 +51,26 @@ public class ExecSMT {
                     logger.info("The errors : " + error);
                     error = brErr.readLine();
                 }
+
             }
             return false;
 
         } catch (IOException e) {
             logger.error(e.getMessage());
             return false;
+        } finally {
+            if (proc != null) proc.destroy();
+            try {
+                if (in != null) in.close();
+                if (err != null) err.close();
+            }catch (IOException e) {
+                logger.error("Error when closing input/error stream: " + e.getMessage());
+            }
         }
     }
 
     public static void main(String[] args) throws Exception {
-        boolean ret = exec("0.0001", "./source/src/HML_2_0.smt2");
+        boolean ret = exec("0.0001", "./source/src/HML_100_1413530682523.smt2");
         logger.debug("SAT : " + ret);
-
     }
 }

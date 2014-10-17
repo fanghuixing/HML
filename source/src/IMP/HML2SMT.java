@@ -8,10 +8,7 @@ import IMP.Infos.HSTErrorListener;
 import IMP.Merge.PathsMerge;
 import IMP.Scope.ScopeConstructor;
 import IMP.Infos.AbstractExpr;
-import IMP.Translate.DiscreteWithContinuous;
-import IMP.Translate.Dynamic;
-import IMP.Translate.HMLProgram2SMTVisitor;
-import IMP.Translate.VisitTree;
+import IMP.Translate.*;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import java.io.File;
@@ -34,33 +31,32 @@ import org.apache.logging.log4j.LogManager;
  */
 public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
-    final static int depth = 2;
+    final static int depth = 10;
+    //若为true则选择基于SMT判定的深度优先展开，若为false则选择全展开的方式
+    private static boolean deepApproach = true;
     static ParseTreeProperty<AbstractExpr> exprPtp;
     static ParseTreeProperty<AbstractExpr> guardPtp;
     static HashMap<String, AbstractExpr>  InitID2ExpMap;
     static List<VariableForSMT2> varlist;
+    private static HML2SMTListener hml2SMTListener = new HML2SMTListener();
+    private static ParseTree  tree;
+    private static STGroup group = new STGroupFile("HML.stg");
+    private static ST st = group.getInstanceOf("SMT2");
 
     public static void main(String[] args) throws Exception {
         String inputFile = null;
         if ( args.length>0 ) inputFile = args[0];
-        InputStream is = System.in;
-        if ( inputFile!=null ) {
-            is = new FileInputStream(inputFile);
-        }
-
-        //测试文件
-
-
-        is = new FileInputStream("./source/src/watertank.hml");
-
-        ANTLRInputStream input = new ANTLRInputStream(is);
+        InputStream inputStream = System.in;
+        if ( inputFile!=null ) inputStream = new FileInputStream(inputFile);
+        inputStream = new FileInputStream("./source/src/watertank.hml");
+        ANTLRInputStream input = new ANTLRInputStream(inputStream);
         HMLLexer lexer = new HMLLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         HMLParser parser = new HMLParser(tokens);
         parser.setBuildParseTree(true);
-        ParseTree tree = parser.hybridModel();
+        tree = parser.hybridModel();
         ParseTreeWalker walker = new ParseTreeWalker();
-        HML2SMTListener hml2SMTListener = new HML2SMTListener();
+
         walker.walk(hml2SMTListener, tree);
         exprPtp = hml2SMTListener.getExprPtp();
         guardPtp = hml2SMTListener.getGuardPtp();
@@ -68,69 +64,62 @@ public class HML2SMT {
         walker.walk(scl, tree);
 
         varlist = hml2SMTListener.getVarlist();
-        STGroup group = new STGroupFile("HML.stg");
-        ST st = group.getInstanceOf("SMT2");
-        st.add("vars", varlist);
-        for (VariableForSMT2 v : varlist) {
-            st.add("uvars", getVarListforSMT2(v.name, v.type, depth));
-        }
+        HMLProgram2SMTVisitor trans;
+        if (!deepApproach)
+            trans = new HMLProgram2SMTVisitor(scl.getScopes(),scl.getGlobals(), hml2SMTListener.getTmpMap(), depth);
+        else
+            trans = new DynamicalVisitor(scl.getScopes(),scl.getGlobals(), hml2SMTListener.getTmpMap(), depth);
 
-        st.add("tvars", getTimeOrModeVarListforSMT2("time", "Real", depth));
-        st.add("mvars", getTimeOrModeVarListforSMT2("mode", "Int", depth));
-        hml2SMTListener.getInitializations();
-
-
-
-        List<Constraint> cons = hml2SMTListener.getConstraintsList();
-        for (Constraint c : cons) {
-            st.add("constraints", c.getNormalConstraintList(depth));
-        }
-
-
-
-        InitID2ExpMap = hml2SMTListener.getInitID2ExpMap();
-        HMLProgram2SMTVisitor trans = new HMLProgram2SMTVisitor(scl.getScopes(),scl.getGlobals(), hml2SMTListener.getTmpMap(), depth);
-        trans.setCurrentVariableLink(hml2SMTListener.getFinalVariableLinks());
-        trans.visit(tree);
-        //add paths
-        //List<Dynamic> onePath = trans.getCurrentDynamicsList();
-
-        for (Map.Entry<Integer,String> ode : DiscreteWithContinuous.getOdeMap().entrySet()) {
-
-            logger.trace(ode.getValue());
-            st.add("flows", ode.getValue());
-        }
-
-
-        int modeNum = DiscreteWithContinuous.getOdeMap().size();
-        st.add("constraints", new Constraint("mode", "1", modeNum+"").getNormalConstraintList(depth));
-
-
-        List<List<Dynamic>> paths = trans.getPaths();
-        int pathId = 0;
-        for (List<Dynamic> onePath : paths) {
-            for (Dynamic dy : onePath) {
-                st.add("formulas", dy.getDiscreteDynamics());
-                st.add("formulas", dy.getContinuousDynamics());
-                st.add("formulas", "\n");
-            }
-            writeToFile(st, pathId++);
-            st.remove("formulas");
-        }
+        constructComponents(trans);
+        writeFormulas(trans);
 
         //PathsMerge PM = new PathsMerge();
         //PM.mergePaths(paths);
         //PM.getMergeResult();
     }
 
-    public  static void writeToFile(ST st, int pathId) throws IOException {
-        //String result = st.render();
-        File out = new File("./source/src/HML_" + depth + "_" + pathId + ".smt2");
+    private static void writeFormulas(HMLProgram2SMTVisitor trans) throws IOException{
+        List<List<Dynamic>> paths = trans.getPaths();
+        int pathId = 0;
+        for (List<Dynamic> onePath : paths) {
+            prepareMainFormulas(st, onePath);
+            writeToFile(st, pathId++, "./source/src/HML_");
+            st.remove("formulas");
+        }
+    }
+
+    public static boolean checkTempleFormulas(HMLProgram2SMTVisitor trans, String startPoint, int depth){
+        addFlowsInSt(depth);
+        addVarsToSMT(depth);
+        prepareMainFormulas(st, trans.getPaths().get(0));
+        st.add("formulas", startPoint);
+        boolean res = false;
+        try {
+            res = writeToFile(st, System.currentTimeMillis(), "./source/src/dynamicChecking/HML_");
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+        }
+        st.remove("formulas");
+        removeFlowsInSt();
+        removeVarsInSMT();
+        return res;
+    }
+
+    private static void prepareMainFormulas(ST st, List<Dynamic> onePath){
+        for (Dynamic dy : onePath) {
+            st.add("formulas", dy.getDiscreteDynamics());
+            st.add("formulas", dy.getContinuousDynamics());
+            st.add("formulas", "\n");
+        }
+    }
+
+
+    public  static boolean writeToFile(ST st, long pathId, String prefix) throws IOException {
+        File out = new File(prefix + depth + "_" + pathId + ".smt2");
         if (out.createNewFile())  logger.debug("File successfully created");
         else                      logger.debug("File already exits.");
         st.write(out, new HSTErrorListener());
-
-        ExecSMT.exec("0.0001", out.getPath());
+        return ExecSMT.exec("0.0001", out.getPath());
     }
 
 
@@ -170,6 +159,56 @@ public class HML2SMT {
      */
     public static List<VariableForSMT2> getVarlist() {
         return varlist;
+    }
+
+
+    public static void constructComponents(HMLProgram2SMTVisitor trans){
+
+        hml2SMTListener.getInitializations();
+
+        InitID2ExpMap = hml2SMTListener.getInitID2ExpMap();
+        //HMLProgram2SMTVisitor trans = new HMLProgram2SMTVisitor(scl.getScopes(),scl.getGlobals(), hml2SMTListener.getTmpMap(), depth);
+        trans.setCurrentVariableLink(hml2SMTListener.getFinalVariableLinks());
+        trans.visit(tree);
+        addVarsToSMT(depth);
+        addFlowsInSt(depth);
+    }
+
+    private static void addVarsToSMT(int depth) {
+        st.add("vars", varlist);
+        for (VariableForSMT2 v : varlist) {
+            st.add("uvars", getVarListforSMT2(v.name, v.type, depth));
+        }
+        st.add("tvars", getTimeOrModeVarListforSMT2("time", "Real", depth));
+        st.add("mvars", getTimeOrModeVarListforSMT2("mode", "Int", depth));
+    }
+
+    private static void removeVarsInSMT() {
+        st.remove("vars");
+        st.remove("uvars");
+        st.remove("tvars");
+        st.remove("mvars");
+    }
+
+    public static void addFlowsInSt(int depth){
+        for (Map.Entry<Integer,String> ode : DiscreteWithContinuous.getOdeMap().entrySet()) {
+            logger.trace(ode.getValue());
+            st.add("flows", ode.getValue());
+        }
+
+        List<Constraint> cons = hml2SMTListener.getConstraintsList();
+        for (Constraint c : cons) {
+            st.add("constraints", c.getNormalConstraintList(depth));
+        }
+        int modeNum = DiscreteWithContinuous.getOdeMap().size();
+        String leftEnd = "1";
+        if (modeNum==0) leftEnd = "0";
+        st.add("constraints", new Constraint("mode", leftEnd, modeNum + "").getNormalConstraintList(depth));
+    }
+
+    public static void removeFlowsInSt(){
+        st.remove("flows");
+        st.remove("constraints");
     }
 
     /*

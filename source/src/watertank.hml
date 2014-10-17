@@ -12,8 +12,8 @@ float global = 0;
 
 //Constraints
 waterLevel in [5,  10];
-time in [0, 100];
-clock in [0, 100];
+time in [0, 5];
+clock in [0, 5];
 global in [0, 200];
 
 //this time is for each continuous evolution
