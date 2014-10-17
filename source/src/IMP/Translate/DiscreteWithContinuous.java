@@ -123,9 +123,7 @@ public class DiscreteWithContinuous implements Dynamic{
         if (r.getPrc() instanceof  HMLParser.OdeContext) {
             //如果是方程
             HMLParser.EquationContext equ = ((HMLParser.OdeContext) r.getPrc()).equation();
-            analyzeEquaiton(equ, flows, r);
-
-
+            analyzeEquaiton(equ, r);
         }
         StringBuilder result = new StringBuilder();
         List<String> vars = new ArrayList<String>();
@@ -173,7 +171,7 @@ public class DiscreteWithContinuous implements Dynamic{
 
 
     /**
-     * 将guard转成invariant
+     * 将　guard　转成　invariant
      * @param guard
      * @param variableLink
      */
@@ -194,7 +192,7 @@ public class DiscreteWithContinuous implements Dynamic{
             String inv = mergeBranches(branches, mode, depth);
 
             if (!guardCheckEnable) {
-                //处理瞬间返回的情况
+                //如果没有启用guard检查，就需要处理瞬间返回的情况
                 String empty = String.format("(and %s %s)", emptyGuard.toString(depth), concreteExpr.toString(depth));
                 return String.format("(or %s %s)", empty, inv);
                 //因为是对当前的变量进行约束，所以使用当前depth
@@ -235,27 +233,27 @@ public class DiscreteWithContinuous implements Dynamic{
         list.addAll(m.keySet());
     }
 
-    private void analyzeEquaiton(HMLParser.EquationContext equ, StringBuilder flows, ContextWithVarLink r){
+    private void analyzeEquaiton(HMLParser.EquationContext equ, ContextWithVarLink r){
         if (equ instanceof HMLParser.EqWithNoInitContext) {
             //如果方程不带初值
             HMLParser.RelationContext relation  = ((HMLParser.EqWithNoInitContext) equ).relation();
-            analyzeRelation(relation, flows, r);
+            analyzeRelation(relation, r);
         }
         else if (equ instanceof HMLParser.EqWithInitContext) {
             //如果方程不带初值
             HMLParser.RelationContext relation  = ((HMLParser.EqWithInitContext) equ).relation();
-            analyzeRelation(relation, flows, r);
+            analyzeRelation(relation, r);
         }
         else if (equ instanceof HMLParser.ParaEqContext) {
             //如果是方程组
             for (HMLParser.EquationContext e : ((HMLParser.ParaEqContext) equ).equation()) {
-                analyzeEquaiton(e, flows, r);
+                analyzeEquaiton(e, r);
 
             }
         }
     }
 
-    private void analyzeRelation(HMLParser.RelationContext relation, StringBuilder flows, ContextWithVarLink r){
+    private void analyzeRelation(HMLParser.RelationContext relation, ContextWithVarLink r){
         ConcreteExpr flow = new ConcreteExpr(resolveRelation(relation)); //得到方程的抽象表示
 
         String result = flow.toString(r.getVrl());     //还原真实变量
@@ -336,7 +334,7 @@ public class DiscreteWithContinuous implements Dynamic{
                 logger.debug("The mapping in Initializations:" +idem.getKey());
             }
         }
-        else if (depth!=0) {
+        else {
             List<VariableForSMT2> vars = HML2SMT.getVarlist();
             for (VariableForSMT2 v : vars) {
                 ID2ExpMap.put(v.getName(), new ConcreteExpr(v.getName(), AbstractExpr.Sort.VAR, null, null));
@@ -344,11 +342,11 @@ public class DiscreteWithContinuous implements Dynamic{
         }
     }
 
-    private void transDis2SMT(StringBuilder sb){
+    private void transDisExprToSMT(StringBuilder sb){
         //show all the formulas for discrete actions
         for (Map.Entry<String, ConcreteExpr> abe : ID2ExpMap.entrySet()) {
             String ID = abe.getKey();
-            if (ID.startsWith("@"))
+            if (isGuard(ID)) //guard condition (ID.startsWith("@"))
                 sb.append(String.format("(%s)", abe.getValue().toString(depth-1)));
             else
                 sb.append(String.format("(= %s %s)", addDepthFlagToVar(abe.getKey()), abe.getValue().toString(depth-1)));
@@ -369,7 +367,7 @@ public class DiscreteWithContinuous implements Dynamic{
         prepareIDMap();
         renderDisFormulas();
         StringBuilder sb = new StringBuilder();
-        transDis2SMT(sb);
+        transDisExprToSMT(sb);
         sb.append(renderConFormulas());
         sb.replace(0, 0, String.format("\n(= mode_%s %s)", depth, mode));
         renderGuard(sb);
@@ -392,7 +390,7 @@ public class DiscreteWithContinuous implements Dynamic{
         prepareIDMap();
         renderDisFormulas();
         StringBuilder sb = new StringBuilder();
-        transDis2SMT(sb);
+        transDisExprToSMT(sb);
         if (variableLink != null) concreteExpr.resolve(variableLink);
         concreteExpr.checkEmptyGuard();
         String startPoint = concreteExpr.toStringForStartPoint(depth);
