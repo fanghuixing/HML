@@ -70,8 +70,5 @@ public class ExecSMT {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        boolean ret = exec("0.0001", "./source/src/HML_100_1413530682523.smt2");
-        logger.debug("SAT : " + ret);
-    }
+
 }
