@@ -21,13 +21,13 @@ global in [0, 200];
 //Templates
 Template open(float h, float a, int H, float e){
     //h = h + 2;
-    dot h = a until (h >= H -e)
+    (dot h = a) until (h >= H -e)
     //closed(h,a,H,e)
 }
 
 
 Template closed(float h, float b, int L, float e){
-    dot h = -b  until  (h <= L+e)
+    (dot h = -b)  until  (h <= L+e)
     //open(h,b,L,e)
 }
 

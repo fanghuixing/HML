@@ -118,7 +118,7 @@ public class ConcreteExpr {
         else
             sb.append(ID);
 
-        if (Left != null) {
+       if (Left != null) {
             sb.append(" ");
             sb.append(Left.toString(depth));
             if (Right != null) {

@@ -140,12 +140,14 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
 
     public Void visitOde(HMLParser.OdeContext ctx) {
 
+        //maybe we don't have to check the guard initially
 
         boolean guardSatInit = checkGuard(ctx.guard(), currentTree);
         if (guardSatInit){
             logger.debug("The Guard is satisfied initially, skip this flow.");
             return null;
         }
+
 
         visit(ctx.equation());
         if (currentTree.getCurrentDepth()>depth) return null;

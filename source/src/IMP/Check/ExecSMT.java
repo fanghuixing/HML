@@ -43,7 +43,7 @@ public class ExecSMT {
                 logger.info("The result is : " + result);
             }
             else {
-                logger.info("Error in dReal Running");
+                logger.error("Error in dReal Running");
                 err = proc.getErrorStream();
                 BufferedReader brErr = new BufferedReader(new InputStreamReader(err));
                 String error = brErr.readLine();

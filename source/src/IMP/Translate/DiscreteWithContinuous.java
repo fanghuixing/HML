@@ -79,8 +79,7 @@ public class DiscreteWithContinuous implements Dynamic{
             else if (r instanceof  HMLParser.GuardContext) {
                 //连续行为退出条件
                 analyzeGuard((HMLParser.GuardContext) r, c.getVrl());
-                //reset clock, after the guard has been analyzed.
-                ID2ExpMap.put("clock", new ConcreteExpr("0", AbstractExpr.Sort.CONSTANT));
+
             }
             else if (r instanceof HMLParser.ExprContext) {
                 //条件选择语句中的条件表达式
@@ -88,6 +87,8 @@ public class DiscreteWithContinuous implements Dynamic{
 
             }
         }
+        //reset clock, after the guard has been analyzed.
+        ID2ExpMap.put("clock", new ConcreteExpr("0", AbstractExpr.Sort.CONSTANT));
     }
 
     private void refeshAndSave(String ID, HMLParser.ExprContext eprc, VariableLink variableLink) {
@@ -323,6 +324,7 @@ public class DiscreteWithContinuous implements Dynamic{
 
     private void prepareIDMap(){
         ID2ExpMap = new HashMap<String, ConcreteExpr>();
+
         if (depth == 0) {
             logger.debug("Use the variables initializations information");
 

@@ -144,7 +144,7 @@ equation
 
 
 relation
-    : 'dot' ID '=' expr
+    : '(' 'dot' ID '=' expr ')'
     ;
 
 

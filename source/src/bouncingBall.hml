@@ -1,0 +1,37 @@
+final float D=0.45;
+final float K=0.9;
+final float g=9.8;
+
+
+
+//球的高度和速度
+float height=10, velocity=0;
+float signal = -1;
+float clock = 0;
+float global = 0;
+
+height in [0, 15];
+velocity in [-18, 18];
+time in [0, 3]
+clock in [0, 3];
+global in [0, 1000];
+
+Template falling(float x, float v) {
+    (dot x = v) || (dot v = -g + (- D * v )) until (x<=0)
+}
+
+Template bouncing(float x, float v) {
+    (dot x = v) || (dot v = -g + (-D * v)) until (v<=0)
+}
+
+Main {
+    while(true) {
+        falling(height, velocity);
+        velocity = -K * velocity;
+        signal = clock;
+        bouncing(height, velocity)
+    }
+}
+
+
+

@@ -32,6 +32,7 @@ import org.apache.logging.log4j.LogManager;
 public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
     final static int depth = 1;
+    private static String modelPath = "./source/src/bouncingBall.hml";
     //若为true则选择基于SMT判定的深度优先展开，若为false则选择全展开的方式
     private static boolean deepApproach = true;
     static ParseTreeProperty<AbstractExpr> exprPtp;
@@ -48,7 +49,7 @@ public class HML2SMT {
         if ( args.length>0 ) inputFile = args[0];
         InputStream inputStream = System.in;
         if ( inputFile!=null ) inputStream = new FileInputStream(inputFile);
-        inputStream = new FileInputStream("./source/src/watertank.hml");
+        inputStream = new FileInputStream(modelPath);
         ANTLRInputStream input = new ANTLRInputStream(inputStream);
         HMLLexer lexer = new HMLLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -211,6 +212,7 @@ public class HML2SMT {
         st.remove("constraints");
     }
 
+    
     /*
     //获取符号xpath的子树，且子树的类型由Class c指定
     public static  void getMaths(ParseTree tree, String xpath, HMLParser parser, List<ParseTree> trees, Class c){

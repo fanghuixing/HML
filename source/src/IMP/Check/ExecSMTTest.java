@@ -20,7 +20,7 @@ public class ExecSMTTest {
 
     @Test
     public void testExec() throws Exception {
-        boolean ret = ExecSMT.exec("0.0001", "./source/src/HML_1_0.smt2");
+        boolean ret = ExecSMT.exec("0.0001", "./source/src/HML_20_0.smt2 --visualize");
         assertEquals(ret, true);
     }
 }
