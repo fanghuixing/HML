@@ -27,7 +27,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     ParseTreeProperty<Scope> scopes;
     GlobalScope globals;
     Scope currentScope; // resolve symbols starting in this scope
-
+    private static boolean CHECKINGGUARD = false;
     private int depth;
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     private VariableLink currentVariableLink;
@@ -130,6 +130,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
             boolean condSatInit = checkChoice(condition, currentTree);
             while (condSatInit && !isMaxDepth()) {
                 visit(ctx.parStatement().blockStatement());
+                if (isMaxDepth()) return null;
                 condSatInit = checkChoice(condition, currentTree);
             }
         }
@@ -141,12 +142,14 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     public Void visitOde(HMLParser.OdeContext ctx) {
 
         //maybe we don't have to check the guard initially
-
-        boolean guardSatInit = checkGuard(ctx.guard(), currentTree);
-        if (guardSatInit){
-            logger.debug("The Guard is satisfied initially, skip this flow.");
-            return null;
+        if (CHECKINGGUARD) {
+            boolean guardSatInit = checkGuard(ctx.guard(), currentTree);
+            if (guardSatInit) {
+                logger.debug("The Guard is satisfied initially, skip this flow.");
+                return null;
+            }
         }
+
 
 
         visit(ctx.equation());

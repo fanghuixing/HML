@@ -6,7 +6,6 @@ final float g=9.8;
 
 //球的高度和速度
 float height=10, velocity=0;
-float signal = -1;
 float clock = 0;
 float global = 0;
 
@@ -28,7 +27,6 @@ Main {
     while(true) {
         falling(height, velocity);
         velocity = -K * velocity;
-        signal = clock;
         bouncing(height, velocity)
     }
 }
