@@ -5,7 +5,6 @@ import IMP.Basic.VariableForSMT2;
 import IMP.Check.ExecSMT;
 import IMP.Infos.HML2SMTListener;
 import IMP.Infos.HSTErrorListener;
-import IMP.Merge.PathsMerge;
 import IMP.Scope.ScopeConstructor;
 import IMP.Infos.AbstractExpr;
 import IMP.Translate.*;
@@ -15,7 +14,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.PathMatcher;
 import java.util.*;
 
 
@@ -124,7 +122,7 @@ public class HML2SMT {
     }
 
 
-    public static List getVarListforSMT2(String prefix, String type, int depth){
+    public static List getVarListForSMT2(String prefix, String type, int depth){
         List<VariableForSMT2> list = new ArrayList<VariableForSMT2>();
         for (int i=0; i<= depth; i++) {
             list.add(new VariableForSMT2(prefix + "_" + i + "_0", type));
@@ -178,7 +176,7 @@ public class HML2SMT {
     private static void addVarsToSMT(int depth) {
         st.add("vars", varlist);
         for (VariableForSMT2 v : varlist) {
-            st.add("uvars", getVarListforSMT2(v.name, v.type, depth));
+            st.add("uvars", getVarListForSMT2(v.name, v.type, depth));
         }
         st.add("tvars", getTimeOrModeVarListforSMT2("time", "Real", depth));
         st.add("mvars", getTimeOrModeVarListforSMT2("mode", "Int", depth));
