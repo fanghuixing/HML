@@ -15,8 +15,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-
-
 import AntlrGen.*;
 import org.stringtemplate.v4.ST;
 import org.stringtemplate.v4.STGroup;
@@ -25,29 +23,49 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 
 /**
- *
+ *  The main class of the translation from HML model to SMT2 formulas
  */
 public class HML2SMT {
+
+    // The logger (log4j2) recording the infos, errors, traces...
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
+
+    // The max depth of the unrolling
     final static int depth = 20;
+
+    // The HML model file path
     private static String modelPath = "./source/src/bouncingBall.hml";
-    //若为true则选择基于SMT判定的深度优先展开，若为false则选择全展开的方式
+
+    //If deepApproach is true, the unrolling is based on SMT,
+    // otherwise, we try the full-unrolling
     private static boolean deepApproach = true;
+
+    // The abstract expr map
     static ParseTreeProperty<AbstractExpr> exprPtp;
+
+    // The guard map
     static ParseTreeProperty<AbstractExpr> guardPtp;
+
+    // The initialization map, from var name to the initial value
     static HashMap<String, AbstractExpr>  InitID2ExpMap;
+
+    // The list of vars
     static List<VariableForSMT2> varlist;
+
+    // The listener that collects information in the model
     private static HML2SMTListener hml2SMTListener = new HML2SMTListener();
+
+    // The parse tree for the HML model
     private static ParseTree  tree;
+
+    // StringTemplate group
     private static STGroup group = new STGroupFile("HML.stg");
+
+    // StringTemplate
     private static ST st = group.getInstanceOf("SMT2");
 
     public static void main(String[] args) throws Exception {
-        String inputFile = null;
-        if ( args.length>0 ) inputFile = args[0];
-        InputStream inputStream = System.in;
-        if ( inputFile!=null ) inputStream = new FileInputStream(inputFile);
-        inputStream = new FileInputStream(modelPath);
+        InputStream inputStream = new FileInputStream(modelPath);
         ANTLRInputStream input = new ANTLRInputStream(inputStream);
         HMLLexer lexer = new HMLLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -124,8 +142,8 @@ public class HML2SMT {
     /**
      *
      * @param prefix original var name
-     * @param type
-     * @param depth
+     * @param type The value can be "Bool", "Int" or "Real".
+     * @param depth The unrolling depth, specifying the current depth
      * @return Variable list for SMT2 formulas, the name with "0" is for the value
      * before the action is taken, and "t" is for the value after the action is executed.
      */
