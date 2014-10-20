@@ -121,7 +121,14 @@ public class HML2SMT {
         return ExecSMT.exec("0.0001", out.getPath());
     }
 
-
+    /**
+     *
+     * @param prefix original var name
+     * @param type
+     * @param depth
+     * @return Variable list for SMT2 formulas, the name with "0" is for the value
+     * before the action is taken, and "t" is for the value after the action is executed.
+     */
     public static List getVarListForSMT2(String prefix, String type, int depth){
         List<VariableForSMT2> list = new ArrayList<VariableForSMT2>();
         for (int i=0; i<= depth; i++) {
@@ -153,8 +160,8 @@ public class HML2SMT {
     }
 
     /**
-     * 该值由HML2SMTListener生成
-     * @return 变量列表
+     * The list is created by HML2SMTListener
+     * @return The list of Variables
      */
     public static List<VariableForSMT2> getVarlist() {
         return varlist;
