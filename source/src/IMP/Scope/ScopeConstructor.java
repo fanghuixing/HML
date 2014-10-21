@@ -53,7 +53,7 @@ public class ScopeConstructor extends HMLBaseListener {
     }
 
     public void exitTemplate(HMLParser.TemplateContext ctx) {
-        logger.debug(currentScope.toString());
+        logger.debug("Exit Template " + currentScope.toString());
         currentScope = currentScope.getEnclosingScope();
     }
 
@@ -67,7 +67,7 @@ public class ScopeConstructor extends HMLBaseListener {
     }
 
     public void exitProgram(HMLParser.ProgramContext ctx) {
-        logger.debug(currentScope.toString());
+        logger.debug("Exit Program " + currentScope.toString());
         currentScope = currentScope.getEnclosingScope();
     }
 

@@ -191,7 +191,7 @@ public class HML2SMT {
         hml2SMTListener.getInitializations();
 
         InitID2ExpMap = hml2SMTListener.getInitID2ExpMap();
-        //HMLProgram2SMTVisitor trans = new HMLProgram2SMTVisitor(scl.getScopes(),scl.getGlobals(), hml2SMTListener.getTmpMap(), depth);
+        
         trans.setCurrentVariableLink(hml2SMTListener.getFinalVariableLinks());
         trans.visit(tree);
         addVarsToSMT(depth);
