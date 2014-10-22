@@ -33,7 +33,7 @@ public class AbstractExpr {
     }
 
     public static enum Sort {
-        VAR, NVAR, GUARD, CONSTANT
+        VAR, NVAR, GUARD, CONSTANT, Signal
     }
 
     public AbstractExpr(String ID, Sort sort, AbstractExpr left, AbstractExpr right) {

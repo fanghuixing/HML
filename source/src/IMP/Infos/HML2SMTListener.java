@@ -241,7 +241,8 @@ public class HML2SMTListener extends HMLBaseListener {
     }
 
     public void exitSignalGuard(HMLParser.SignalGuardContext ctx) {
-        guardPtp.put(ctx, new AbstractExpr(ctx.signal().ID().getText(), AbstractExpr.Sort.GUARD, null, null));
+        AbstractExpr left = new AbstractExpr(ctx.signal().ID().getText(), AbstractExpr.Sort.Signal, null, null);
+        guardPtp.put(ctx, new AbstractExpr(">=", AbstractExpr.Sort.GUARD, left, new AbstractExpr("global", AbstractExpr.Sort.VAR)));
     }
 
     public void exitBoolGuard(HMLParser.BoolGuardContext ctx) {

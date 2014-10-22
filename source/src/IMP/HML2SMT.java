@@ -33,7 +33,7 @@ public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
 
     // The max depth of the unrolling
-    final static int depth = 100;
+    final static int depth = 1;
 
     // The HML model file path
     private static String modelPath = "./source/src/watertank.hml";
@@ -164,7 +164,7 @@ public class HML2SMT {
         smtPath = out.getPath();
     }
 
-    private static boolean check(String path){
+    private static boolean check(String path) {
         return ExecSMT.exec("0.0001", path);
     }
 

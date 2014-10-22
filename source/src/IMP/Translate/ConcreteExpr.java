@@ -88,6 +88,9 @@ public class ConcreteExpr {
             if (ID.equals("timeout")) sb.append(ID).append("_").append(depth);
             else sb.append(ID);
         }
+        else if (sort == AbstractExpr.Sort.Signal) {
+            sb.append(ID).append("_").append(depth);
+        }
         else
             sb.append(ID);
 
@@ -115,6 +118,9 @@ public class ConcreteExpr {
             if (ID.equals("timeout")) sb.append(ID).append("_").append(depth);
             else sb.append(ID);
         }
+        else if (sort == AbstractExpr.Sort.Signal) {
+            sb.append(ID).append("_").append(depth);
+        }
         else
             sb.append(ID);
 
@@ -130,6 +136,10 @@ public class ConcreteExpr {
         else
             sb.deleteCharAt(0);
         return sb.toString();
+    }
+
+    public String toStringForSignalInv(int depth){
+        return String.format("(%s %s %s)", ID, Left.ID + "_" + depth, Right.toString(depth));
     }
 
     public String toString(VariableLink cwvk) {
@@ -170,7 +180,9 @@ public class ConcreteExpr {
     }
 
     public void resolve(VariableLink variableLink){
-        if (this.sort== AbstractExpr.Sort.VAR && variableLink!=null) {
+
+
+        if ( (this.sort== AbstractExpr.Sort.VAR || this.sort == AbstractExpr.Sort.Signal) && variableLink!=null) {
 
             ID = variableLink.getRealVar(this.ID);
 
@@ -192,6 +204,16 @@ public class ConcreteExpr {
 
     }
 
+    public ConcreteExpr signalInv() {
+        ConcreteExpr res = new ConcreteExpr("<", AbstractExpr.Sort.GUARD, this, new ConcreteExpr("global", AbstractExpr.Sort.VAR));
+        return res;
+    }
+
+    public ConcreteExpr signalExit(){
+        this.sort = AbstractExpr.Sort.NVAR;
+        ConcreteExpr res = new ConcreteExpr(">=", AbstractExpr.Sort.GUARD, this, new ConcreteExpr("global", AbstractExpr.Sort.VAR));
+        return res;
+    }
 
     public List<String> getIDList() {
         if (IDlist!=null) return IDlist;

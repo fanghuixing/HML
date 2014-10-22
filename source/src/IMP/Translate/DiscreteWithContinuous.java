@@ -196,30 +196,36 @@ public class DiscreteWithContinuous implements Dynamic{
      * @param variableLink
      */
     private String guard2Invariant(HMLParser.GuardContext guard, VariableLink variableLink, int mode) {
-        if (guard instanceof HMLParser.SignalGuardContext) {
-            return  null;//need to do
+
+        while (guard instanceof HMLParser.ParGuardContext) {
+            guard = ((HMLParser.ParGuardContext) guard).guard();
         }
-        else  {
-            ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
-            ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
-            if (variableLink != null) concreteExpr.resolve(variableLink);
 
 
-            //连续变化过程中满足的条件，即不满足guard的情况
-            ConcreteExpr result = concreteExpr.negationForInv();
+        ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
+        ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
+        if (variableLink != null) concreteExpr.resolve(variableLink);
 
-            List<String> branches = result.guardBranches(depth);
-            String inv = mergeBranches(branches, mode, depth);
 
-            if (!guardCheckEnable) {
-                //如果没有启用guard检查，就需要处理瞬间返回的情况
-                String empty = String.format("(and %s %s)", emptyGuard.toString(depth), concreteExpr.toString(depth));
-                return String.format("(or %s %s)", empty, inv);
-                //因为是对当前的变量进行约束，所以使用当前depth
-            }
-            else  return inv;
-            //guardCheckEnable为真时候表示我们不需要再添加guard条件到公式中，因为我们已经判断过这个条件
+        //连续变化过程中满足的条件，即不满足guard的情况
+        ConcreteExpr result = concreteExpr.negationForInv();
+
+        List<String> branches = result.guardBranches(depth);
+        String inv = mergeBranches(branches, mode, depth);
+
+
+        String test = String.format("(=> %s %s)", concreteExpr.toStringForStartPoint(depth),
+                String.format("(forall_t %s [0 time_%s] %s)", mode,  depth, emptyGuard.toString(depth)));
+
+        if (!guardCheckEnable) {
+            //如果没有启用guard检查，就需要处理瞬间返回的情况
+            String empty = String.format("(and %s %s)", emptyGuard.toString(depth), concreteExpr.toString(depth));
+            return String.format("(or %s %s)", empty, inv);
+            //因为是对当前的变量进行约束，所以使用当前depth
         }
+        else  return String.format("(and %s %s)", test, inv);
+        //guardCheckEnable为真时候表示我们不需要再添加guard条件到公式中，因为我们已经判断过这个条件
+
     }
 
     private String mergeBranches(List<String> branches, int mode, int depth){
@@ -295,12 +301,18 @@ public class DiscreteWithContinuous implements Dynamic{
     }
 
     private void analyzeGuard(HMLParser.GuardContext guard, VariableLink variableLink) {
+        while (guard instanceof HMLParser.ParGuardContext) {
+            guard = ((HMLParser.ParGuardContext) guard).guard();
+        }
+
+
         ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
         ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
-        if (variableLink!=null) {
-            //variableLink.printAll();
-            concreteExpr.resolve(variableLink);
-        }
+        if (variableLink != null) concreteExpr.resolve(variableLink);
+
+
+
+
         refreshExpression(concreteExpr);
         // 因为Guard是没有副作用的，所以可以放入ID2ExpMap中
         // 在导出公式的时候需要处理这个特殊的ID

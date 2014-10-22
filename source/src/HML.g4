@@ -78,7 +78,7 @@ arrayInitializer
 
 program : 'Main ' '{' blockStatement '}';
 
-blockStatementH
+blockStatement
     :  atom                                                  #AtomPro   // Atomic
     |  blockStatement '|'  blockStatement                    #NonCh     // non-deterministrate choice
     |  blockStatement '||' blockStatement                    #ParaCom   // parallel composition
@@ -151,7 +151,7 @@ relation
 //waiting for s (single or multi-receiving), s[0], s[1][1]...
 guard
     : 'EMP'                             # EmptyGuard
-    | signal                            # SignalGuard
+    | 'SIG' '(' signal ')'              # SignalGuard
     | expr                              # BoolGuard
     | 'timeout' '(' expr ')'            # TimeOutGuard
     | guard '<and>' guard               # ConjunctGuard
