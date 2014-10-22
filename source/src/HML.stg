@@ -1,11 +1,12 @@
 group HML;
 
-SMT2(vars,uvars,tvars,formulas,mvars,constraints,flows) ::= <<
+SMT2(vars,uvars,tvars,formulas,mvars,svars,constraints,flows) ::= <<
 (set-logic QF_NRA_ODE)
 <vars: singleVar(); separator="\n">
 <uvars: singleVar(); separator="\n">
 <tvars: singleVar(); separator="\n">
 <mvars: singleVar(); separator="\n">
+<svars: singleVar(); separator="\n">
 <flows; separator="\n">
 <constraints: assertConstraint(); separator="\n">
 (assert (and   <formulas> ))

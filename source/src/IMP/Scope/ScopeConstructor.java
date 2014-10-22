@@ -86,6 +86,11 @@ public class ScopeConstructor extends HMLBaseListener {
         }
     }
 
+    public void exitSignalDeclaration(HMLParser.SignalDeclarationContext ctx) {
+        SignalSymbol sig = new SignalSymbol(ctx.ID().getSymbol().getText(), getType("Signal"));
+        currentScope.define(sig);
+    }
+
 
 
     void defineVar(HMLParser.TypeContext typeCtx, Token nameToken) {
@@ -99,6 +104,7 @@ public class ScopeConstructor extends HMLBaseListener {
         if (tokenType.equals("float"))   return Symbol.Type.Real;
         if (tokenType.equals("int"))    return Symbol.Type.Int;
         if (tokenType.equals("boolean"))  return Symbol.Type.Bool;
+        if (tokenType.equals("Signal")) return Symbol.Type.Signal;
 
         return Symbol.Type.NULL;
     }

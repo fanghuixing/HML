@@ -26,6 +26,7 @@ public class HML2SMTListener extends HMLBaseListener {
     private ParseTreeProperty<AbstractExpr> guardPtp = new ParseTreeProperty<AbstractExpr>();
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     private VariableLink finalVariableLinks = new VariableLink(null);
+    private List<String> signals = new ArrayList<String>();
 
 
     public VariableLink getFinalVariableLinks() {
@@ -224,6 +225,11 @@ public class HML2SMTListener extends HMLBaseListener {
         String leftEnd = ctx.leftEnd.getText();
         String rightEnd = ctx.rightEnd.getText();
         constrList.add(new Constraint(name, leftEnd, rightEnd));
+        if (name.equals("global")) {
+            for (String s : signals) {
+                constrList.add(new Constraint(s, "-1", rightEnd, "signal"));
+            }
+        }
     }
 
     public List<Constraint> getConstraintsList(){
@@ -261,7 +267,21 @@ public class HML2SMTListener extends HMLBaseListener {
         guardPtp.put(ctx, guardPtp.get(ctx.guard()));
     }
 
+    public void exitSignalDeclaration(HMLParser.SignalDeclarationContext ctx) {
+        logger.debug("Exit Signal Declaration " + ctx.ID());
+        signals.add(ctx.ID().getText());
+    }
+
+    public void exitSendSignal(HMLParser.SendSignalContext ctx) {
+        logger.debug("Exit SendSignal " + ctx.getText());
+
+    }
+
     public ParseTreeProperty<AbstractExpr> getGuardPtp() {
         return guardPtp;
+    }
+
+    public List<String> getSignals() {
+        return signals;
     }
 }

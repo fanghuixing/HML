@@ -41,7 +41,7 @@ primitiveType
     ;
 
 signalDeclaration
-    :   'Signal' ('[' size=INT ']')* ID (',' ID)* ';'
+    :   'Signal' ('[' size=INT ']')* ID ';'
     ;
 
 modifier
@@ -78,7 +78,7 @@ arrayInitializer
 
 program : 'Main ' '{' blockStatement '}';
 
-blockStatement
+blockStatementH
     :  atom                                                  #AtomPro   // Atomic
     |  blockStatement '|'  blockStatement                    #NonCh     // non-deterministrate choice
     |  blockStatement '||' blockStatement                    #ParaCom   // parallel composition

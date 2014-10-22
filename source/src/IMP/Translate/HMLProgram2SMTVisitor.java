@@ -262,6 +262,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
     }
 
 
+
     public static String getType(Symbol.Type type) {
         if (type.equals(Symbol.Type.Real))   return "float";
         if (type.equals(Symbol.Type.Int))    return "int";

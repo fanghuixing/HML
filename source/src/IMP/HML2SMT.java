@@ -34,7 +34,7 @@ public class HML2SMT {
     final static int depth = 20;
 
     // The HML model file path
-    private static String modelPath = "./source/src/bouncingBall.hml";
+    private static String modelPath = "./source/src/watertank.hml";
 
     //If deepApproach is true, the unrolling is based on SMT,
     // otherwise, we try the full-unrolling
@@ -51,6 +51,9 @@ public class HML2SMT {
 
     // The list of vars
     static List<VariableForSMT2> varlist;
+
+    // Signals
+    static List<String> signals;
 
     // The listener that collects information in the model
     private static HML2SMTListener hml2SMTListener = new HML2SMTListener();
@@ -72,11 +75,13 @@ public class HML2SMT {
         HMLParser parser = new HMLParser(tokens);
         parser.setBuildParseTree(true);
         tree = parser.hybridModel();
+
         ParseTreeWalker walker = new ParseTreeWalker();
 
         walker.walk(hml2SMTListener, tree);
         exprPtp = hml2SMTListener.getExprPtp();
         guardPtp = hml2SMTListener.getGuardPtp();
+        signals = hml2SMTListener.getSignals();
         ScopeConstructor scl = new ScopeConstructor();
         walker.walk(scl, tree);
 
@@ -205,6 +210,10 @@ public class HML2SMT {
         }
         st.add("tvars", getTimeOrModeVarListforSMT2("time", "Real", depth));
         st.add("mvars", getTimeOrModeVarListforSMT2("mode", "Int", depth));
+
+        for (String signal : signals) {
+            st.add("svars", getTimeOrModeVarListforSMT2(signal, "Real", depth));
+        }
     }
 
     private static void removeVarsInSMT() {
@@ -212,6 +221,7 @@ public class HML2SMT {
         st.remove("uvars");
         st.remove("tvars");
         st.remove("mvars");
+        st.remove("svars");
     }
 
     public static void addFlowsInSt(int depth){
@@ -235,6 +245,15 @@ public class HML2SMT {
         st.remove("constraints");
     }
 
+    public static boolean isSignal(String ID) {
+        if (signals==null) return false;
+        return signals.contains(ID);
+    }
+
+    public static List<String> getSignals(){
+        return signals;
+    }
+
     
     /*
     //获取符号xpath的子树，且子树的类型由Class c指定
@@ -246,5 +265,7 @@ public class HML2SMT {
         }
     }
     */
+
+
 
 }

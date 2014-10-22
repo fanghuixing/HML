@@ -5,7 +5,7 @@ package IMP.Scope;
  */
 public class Symbol {
     public static enum Type {
-        NULL, Real, Int, Bool
+        NULL, Real, Int, Bool, Signal
     }
 
     String name;      // All symbols at least have a name

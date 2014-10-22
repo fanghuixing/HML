@@ -8,11 +8,19 @@ public class Constraint {
     String name;
     String leftEnd;
     String rightEnd;
+    String type;
 
     public Constraint(String name, String leftEnd, String rightEnd) {
         this.name = name;
         this.leftEnd = leftEnd;
         this.rightEnd = rightEnd;
+    }
+
+    public Constraint(String name, String leftEnd, String rightEnd, String type) {
+        this.name = name;
+        this.leftEnd = leftEnd;
+        this.rightEnd = rightEnd;
+        this.type = type;
     }
 
     class NormalConstraint {
@@ -35,7 +43,12 @@ public class Constraint {
     public List getNormalConstraintList(int depth){
         List<NormalConstraint> l = new ArrayList<NormalConstraint>();
         for (int i=0; i<=depth; i++) {
-            if (this.name.equals("time") || this.name.equals("mode")) {
+            if (this.name.equals("time") || this.name.equals("mode") ) {
+                l.add(new NormalConstraint(this.leftEnd, this.name+"_"+i));
+                l.add(new NormalConstraint(this.name+"_"+i, this.rightEnd));
+            }
+            else if (this.type!=null && this.type.equals("signal")) {
+                //If this is a signal
                 l.add(new NormalConstraint(this.leftEnd, this.name+"_"+i));
                 l.add(new NormalConstraint(this.name+"_"+i, this.rightEnd));
             }

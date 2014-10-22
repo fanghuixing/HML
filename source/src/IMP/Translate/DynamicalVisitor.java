@@ -2,6 +2,7 @@ package IMP.Translate;
 
 import AntlrGen.HMLParser;
 import IMP.Basic.Template;
+import IMP.Basic.Variable;
 import IMP.HML2SMT;
 import IMP.Infos.AbstractExpr;
 import IMP.Scope.GlobalScope;
@@ -224,7 +225,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     public Void visitCallTem(HMLParser.CallTemContext ctx) {
 
         StringBuilder key = new StringBuilder();
-        List<String> cvars = new ArrayList<String>();
+        List<String> cvars = new ArrayList<String>(); // concrete vars
         key.append(ctx.ID().getText());
         if (ctx.exprList()!=null) {
             List<HMLParser.ExprContext> exprs = ctx.exprList().expr();
@@ -237,10 +238,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
                 key.append(getType(s.getType()));
             }
             Template template = tmpMap.get(key.toString());
-
-
-            List<String> fvars = template.getFormalVarNames();
-
+            List<String> fvars = template.getFormalVarNames(); //formal vars
             variableStack.push(currentVariableLink);
             VariableLink vlk = new VariableLink(currentVariableLink);
             int i = 0;
@@ -268,11 +266,23 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         return null;
     }
 
+    public Void visitSendSignal(HMLParser.SendSignalContext ctx) {
+        logger.debug("Visit Send Signal " + ctx.getText());
+        currentTree.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink));
+        return null;
+    }
 
+
+    /**
+     * @param type inner type
+     * This method returns types in original model text,
+     * this enables correct variable linking
+     */
     public static String getType(Symbol.Type type) {
         if (type.equals(Symbol.Type.Real))   return "float";
         if (type.equals(Symbol.Type.Int))    return "int";
         if (type.equals(Symbol.Type.Bool))  return "boolean";
+        if (type.equals(Symbol.Type.Signal)) return "Signal";
         return "NULL";
     }
 

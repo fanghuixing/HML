@@ -33,6 +33,7 @@ public class DiscreteWithContinuous implements Dynamic{
     private boolean guardCheckEnable = false;
     HashMap<String, ConcreteExpr>  ID2ExpMap;
 
+
     HashMap<ConcreteExpr, String>  TempOdesMap = new HashMap<ConcreteExpr, String>();
     private int guardIndex =0;
     private static HashMap<String, Integer> odeformula = new HashMap<String, Integer>();
@@ -56,6 +57,8 @@ public class DiscreteWithContinuous implements Dynamic{
     }
 
     private String addDepthFlagToVar(String v) {
+        if (HML2SMT.isSignal(v)) return String.format("%s_%s", v, depth);
+
         return String.format("%s_%s_0", v, depth);
     }
 
@@ -68,13 +71,19 @@ public class DiscreteWithContinuous implements Dynamic{
                 HMLParser.AssignmentContext ass = (HMLParser.AssignmentContext) r;
                 String ID = ass.ID().getText();
                 HMLParser.ExprContext eprc = ass.expr();
-                refeshAndSave(ID, eprc, c.getVrl());
+                refreshAndSave(ID, eprc, c.getVrl());
+            }
+            else if (r instanceof HMLParser.SendSignalContext) {
+                HMLParser.SendSignalContext sig = (HMLParser.SendSignalContext) r;
+                String ID = sig.signal().ID().getText();
+                AbstractExpr expr = new AbstractExpr("global", AbstractExpr.Sort.VAR);
+                refreshAndSave(ID, expr, c.getVrl());
             }
             else if (r instanceof HMLParser.EqWithInitContext) {
                 HMLParser.EqWithInitContext eqwi = (HMLParser.EqWithInitContext) r;
                 String ID = eqwi.relation().ID().getText();
                 HMLParser.ExprContext eprc = eqwi.expr();
-                refeshAndSave(ID, eprc, c.getVrl());
+                refreshAndSave(ID, eprc, c.getVrl());
             }
             else if (r instanceof  HMLParser.GuardContext) {
                 //连续行为退出条件
@@ -91,7 +100,7 @@ public class DiscreteWithContinuous implements Dynamic{
         ID2ExpMap.put("clock", new ConcreteExpr("0", AbstractExpr.Sort.CONSTANT));
     }
 
-    private void refeshAndSave(String ID, HMLParser.ExprContext eprc, VariableLink variableLink) {
+    private void refreshAndSave(String ID, HMLParser.ExprContext eprc, VariableLink variableLink) {
         ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
         AbstractExpr abstractExpr = exprs.get(eprc);
         ConcreteExpr concreteExpr = new ConcreteExpr(abstractExpr);
@@ -100,6 +109,16 @@ public class DiscreteWithContinuous implements Dynamic{
 
             ID = variableLink.getRealVar(ID);
 
+        }
+        refreshExpression(concreteExpr);
+        ID2ExpMap.put(ID, concreteExpr);
+    }
+
+    private void refreshAndSave(String ID, AbstractExpr expr, VariableLink variableLink) {
+        ConcreteExpr concreteExpr = new ConcreteExpr(expr);
+        if (variableLink!=null) {
+            concreteExpr.resolve(variableLink);
+            ID = variableLink.getRealVar(ID);
         }
         refreshExpression(concreteExpr);
         ID2ExpMap.put(ID, concreteExpr);
@@ -335,15 +354,36 @@ public class DiscreteWithContinuous implements Dynamic{
             for (Map.Entry idem : ID2ExpMap.entrySet()) {
                 logger.debug("The mapping in Initializations:" +idem.getKey());
             }
+
+            // for signals
+            List<String> signals = HML2SMT.getSignals();
+            for (String s : signals) {
+                ID2ExpMap.put(s, new ConcreteExpr("-1", AbstractExpr.Sort.CONSTANT, null, null));
+            }
+
         }
         else {
+            // simulate the skip statement
             List<VariableForSMT2> vars = HML2SMT.getVarlist();
             for (VariableForSMT2 v : vars) {
                 ID2ExpMap.put(v.getName(), new ConcreteExpr(v.getName(), AbstractExpr.Sort.VAR, null, null));
             }
+
+            // for signals
+            List<String> signals = HML2SMT.getSignals();
+            StringBuilder sb = new StringBuilder();
+            for (String s : signals) {
+                sb.append(s).append("_").append(depth-1);
+                ID2ExpMap.put(s, new ConcreteExpr(sb.toString(), AbstractExpr.Sort.CONSTANT, null, null));
+                sb.delete( 0, sb.length() );
+            }
         }
     }
 
+    /**
+     * Translate vars variants into SMT2 formulas
+     * @param sb
+     */
     private void transDisExprToSMT(StringBuilder sb){
         //show all the formulas for discrete actions
         for (Map.Entry<String, ConcreteExpr> abe : ID2ExpMap.entrySet()) {
