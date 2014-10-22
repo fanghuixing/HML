@@ -46,7 +46,7 @@ Main {
 
         // let water out
         // waterLevel = 5;
-        // ( skip < ~ (waterLevel == 5) > skip);
+        ( waterLevel=waterLevel+0.3 <  ((waterLevel == 5)) > skip);
         !off
         closed(waterLevel,decout,LowestwaterLevel,deta)
         // closed(waterLevel,decout,MaxwaterLevel,deta)

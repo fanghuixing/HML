@@ -389,7 +389,7 @@ public class DiscreteWithContinuous implements Dynamic{
         for (Map.Entry<String, ConcreteExpr> abe : ID2ExpMap.entrySet()) {
             String ID = abe.getKey();
             if (isGuard(ID)) //guard condition (ID.startsWith("@"))
-                sb.append(String.format("(%s)", abe.getValue().toString(depth-1)));
+                sb.append(String.format("%s", abe.getValue().toString(depth-1)));
             else
                 sb.append(String.format("(= %s %s)", addDepthFlagToVar(abe.getKey()), abe.getValue().toString(depth-1)));
         }

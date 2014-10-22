@@ -3,6 +3,7 @@ package IMP;
 import IMP.Basic.Constraint;
 import IMP.Basic.VariableForSMT2;
 import IMP.Check.ExecSMT;
+import IMP.Check.Util;
 import IMP.Exceptions.HMLException;
 import IMP.Infos.HML2SMTListener;
 import IMP.Infos.HSTErrorListener;
@@ -36,6 +37,12 @@ public class HML2SMT {
 
     // The HML model file path
     private static String modelPath = "./source/src/watertank.hml";
+
+    // The SMT2 formula path
+    private static String smtPath ;
+
+    // if the visualization argument is true, we will show the data in a browser
+    private static boolean visualize = true;
 
     //If deepApproach is true, the unrolling is based on SMT,
     // otherwise, we try the full-unrolling
@@ -94,8 +101,17 @@ public class HML2SMT {
             trans = new DynamicalVisitor(scl.getScopes(),scl.getGlobals(), hml2SMTListener.getTmpMap(), depth);
 
 
-        if(constructComponents(trans)) writeFormulas(trans);
+        if(constructComponents(trans)) {
+            writeFormulas(trans);
+            if (visualize) {
+                check(smtPath + " --visualize");
+                Util.viewDataInBrowser(smtPath);
+            }
+            else check(smtPath);
+        }
         else  logger.error("Exit on Error, please check your model ...");
+
+
 
 
         //PathsMerge PM = new PathsMerge();
@@ -113,14 +129,15 @@ public class HML2SMT {
         }
     }
 
-    public static boolean checkTempleFormulas(HMLProgram2SMTVisitor trans, String startPoint, int depth){
+    public static boolean checkTemporaryFormulas(HMLProgram2SMTVisitor trans, String startPoint, int depth){
         addFlowsInSt(depth);
         addVarsToSMT(depth);
         prepareMainFormulas(st, trans.getPaths().get(0));
         st.add("formulas", startPoint);
         boolean res = false;
         try {
-            res = writeToFile(st, System.currentTimeMillis(), "./source/src/dynamicChecking/HML_");
+            writeToFile(st, System.currentTimeMillis(), "./source/src/dynamicChecking/HML_");
+            res = check(smtPath);
         } catch (IOException e) {
             logger.error(e.getMessage());
         }
@@ -139,13 +156,22 @@ public class HML2SMT {
     }
 
 
-    public  static boolean writeToFile(ST st, long pathId, String prefix) throws IOException {
+    public  static void writeToFile(ST st, long pathId, String prefix) throws IOException {
         File out = new File(prefix + depth + "_" + pathId + ".smt2");
         if (out.createNewFile())  logger.debug("File successfully created");
         else                      logger.debug("File already exits.");
         st.write(out, new HSTErrorListener());
-        return ExecSMT.exec("0.0001", out.getPath());
+        smtPath = out.getPath();
     }
+
+    private static boolean check(String path){
+        return ExecSMT.exec("0.0001", path);
+    }
+
+
+
+
+
 
     /**
      *

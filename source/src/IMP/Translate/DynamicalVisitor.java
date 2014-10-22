@@ -2,7 +2,6 @@ package IMP.Translate;
 
 import AntlrGen.HMLParser;
 import IMP.Basic.Template;
-import IMP.Basic.Variable;
 import IMP.HML2SMT;
 import IMP.Infos.AbstractExpr;
 import IMP.Scope.GlobalScope;
@@ -81,8 +80,10 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     public Void visitConChoice(HMLParser.ConChoiceContext ctx) {
 
         HMLParser.ExprContext condition =  ctx.expr();
+        boolean condSatInit;
 
-        boolean condSatInit = checkChoice(condition, currentTree);
+
+        condSatInit = checkChoice(condition, currentTree);
 
         //条件满足的情况
         if (condSatInit) {
@@ -128,6 +129,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         else if (boolCondition instanceof HMLParser.ConstantFalseContext) return null;
         else {
             HMLParser.ExprContext condition = ctx.parExpression().expr();
+
             boolean condSatInit = checkChoice(condition, currentTree);
             while (condSatInit && !isMaxDepth()) {
                 visit(ctx.parStatement().blockStatement());
@@ -178,9 +180,22 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     }
 
     private boolean checkChoice(HMLParser.ExprContext condition, VisitTree visitTree) {
+        while (condition instanceof HMLParser.ParExprContext) {
+            condition = ((HMLParser.ParExprContext) condition).parExpression().expr();
+        }
+
+        boolean needReverse = false;
+        if (condition instanceof HMLParser.NegationExprContext) {
+            condition = ((HMLParser.NegationExprContext) condition).expr();
+            needReverse = true;
+        }
+
         ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
         ConcreteExpr concreteExpr = new ConcreteExpr(exprs.get(condition));
-        return checkExpr(concreteExpr, visitTree);
+        // If the inner part is satisfied, we chose the right branch, so we do the negation (!)
+        boolean res = checkExpr(concreteExpr, visitTree);
+        if (needReverse) return !res;
+        else return res;
     }
 
     private boolean checkExpr(ConcreteExpr concreteExpr, VisitTree visitTree) {
@@ -192,7 +207,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         String conditionStr =  curDy.getPartialResult(concreteExpr, currentVariableLink);
         logger.debug("Condition: " + conditionStr);
 
-        return HML2SMT.checkTempleFormulas(this, conditionStr, curDepth);
+        return HML2SMT.checkTemporaryFormulas(this, conditionStr, curDepth);
     }
 
 

@@ -7,7 +7,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class ExecSMTTest {
-
+    private String path = "./source/src/HML_20_0.smt2" ;
+    private String args = " --visualize";
     @Before
     public void setUp() throws Exception {
 
@@ -15,12 +16,12 @@ public class ExecSMTTest {
 
     @After
     public void tearDown() throws Exception {
-
+        Util.viewDataInBrowser(path);
     }
 
     @Test
     public void testExec() throws Exception {
-        boolean ret = ExecSMT.exec("0.0001", "./source/src/HML_20_0.smt2 --visualize");
+        boolean ret = ExecSMT.exec("0.0001", path + args);
         assertEquals(ret, true);
     }
 }
