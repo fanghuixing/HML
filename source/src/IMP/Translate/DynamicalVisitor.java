@@ -185,9 +185,9 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         }
 
         boolean needReverse = false;
-        if (condition instanceof HMLParser.NegationExprContext) {
+        while (condition instanceof HMLParser.NegationExprContext) {
             condition = ((HMLParser.NegationExprContext) condition).expr();
-            needReverse = true;
+            needReverse = !needReverse;
         }
 
         ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
