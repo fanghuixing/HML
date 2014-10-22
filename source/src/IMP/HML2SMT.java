@@ -3,6 +3,7 @@ package IMP;
 import IMP.Basic.Constraint;
 import IMP.Basic.VariableForSMT2;
 import IMP.Check.ExecSMT;
+import IMP.Exceptions.HMLException;
 import IMP.Infos.HML2SMTListener;
 import IMP.Infos.HSTErrorListener;
 import IMP.Scope.ScopeConstructor;
@@ -92,8 +93,10 @@ public class HML2SMT {
         else
             trans = new DynamicalVisitor(scl.getScopes(),scl.getGlobals(), hml2SMTListener.getTmpMap(), depth);
 
-        constructComponents(trans);
-        writeFormulas(trans);
+
+        if(constructComponents(trans)) writeFormulas(trans);
+        else  logger.error("Exit on Error, please check your model ...");
+
 
         //PathsMerge PM = new PathsMerge();
         //PM.mergePaths(paths);
@@ -190,17 +193,27 @@ public class HML2SMT {
         return varlist;
     }
 
-
-    public static void constructComponents(HMLProgram2SMTVisitor trans){
+    /**
+     *
+     * @param trans visitor
+     * @return true for success, false for fail
+     */
+    public static boolean constructComponents(HMLProgram2SMTVisitor trans){
 
         hml2SMTListener.getInitializations();
 
         InitID2ExpMap = hml2SMTListener.getInitID2ExpMap();
         
         trans.setCurrentVariableLink(hml2SMTListener.getFinalVariableLinks());
-        trans.visit(tree);
+        try {
+            trans.visit(tree);
+        }catch (HMLException exp) {
+            logger.error(exp.getMessage());
+            return false;
+        }
         addVarsToSMT(depth);
         addFlowsInSt(depth);
+        return true;
     }
 
     private static void addVarsToSMT(int depth) {

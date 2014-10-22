@@ -17,7 +17,7 @@ import java.util.Stack;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
+import IMP.Exceptions.TemplateNotDefinedException;
 /**
  * This is the visitor that does the main work for
  * unrolling (translation) from HML model to SMT2 formulas
@@ -238,7 +238,15 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
                 key.append(getType(s.getType()));
             }
             Template template = tmpMap.get(key.toString());
+            if (template == null) {
+                String msg = "No template defined for " + ctx.getText();
+                logger.error(msg);
+                throw new TemplateNotDefinedException(msg);
+            }
+
+
             List<String> fvars = template.getFormalVarNames(); //formal vars
+
             variableStack.push(currentVariableLink);
             VariableLink vlk = new VariableLink(currentVariableLink);
             int i = 0;
@@ -267,7 +275,8 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     }
 
     public Void visitSendSignal(HMLParser.SendSignalContext ctx) {
-        logger.debug("Visit Send Signal " + ctx.getText());
+        logger.debug(String.format("Visit Send Signal %s -> %s ",  ctx.getText(), currentVariableLink.getRealVar(ctx.signal().ID().getText())));
+
         currentTree.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink));
         return null;
     }
