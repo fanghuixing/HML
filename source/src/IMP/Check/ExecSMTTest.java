@@ -7,8 +7,8 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class ExecSMTTest {
-    private String path = "./source/src/HML_3_0.smt2" ;
-    private String args = " --visualize";
+    private String path = "./source/src/HML_10_0.smt2" ;
+    private String args = " --visualize --ode_grid=1024";
     @Before
     public void setUp() throws Exception {
 

@@ -10,7 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class ExecSMT {
-    private static String dReal = "/home/fofo/work/dReal/bin/dReal";
+    private static String dReal = "/home/fofo/dReal21408/bin/dReal";
     private static Logger logger = LogManager.getLogger(ExecSMT.class.getName());
     public static boolean exec(String precision, String modelFilePath){
         StringBuffer sb = new StringBuffer();
