@@ -42,12 +42,13 @@ Main {
         // waterLevel = waterLevel+1;
         !on;
         // let water in
+        (dot waterLevel = accin) until (@(on));
         open(waterLevel,accin,MaxwaterLevel,deta);
 
         // let water out
         // waterLevel = 5;
         // ( waterLevel=waterLevel+0.3 <  ((waterLevel == 5)) > skip);
-        suspend(1);
+        //suspend(1);
 
 
 

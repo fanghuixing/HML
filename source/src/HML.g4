@@ -160,19 +160,23 @@ guard
     ;
 
 
-
 signal
     : ID ('[' expr ']')*;
 
 
-
-
 guardedchoice
-    :  guard '->'  blockStatement
-    |  guardedchoice '[]' guardedchoice
-    |  '(' guardedchoice ')'
+    :  singleGuardedChoice
+    |  multiGuardedChoice
     ;
 
+singleGuardedChoice
+    : guard '->'  blockStatement
+    | '(' guard '->'  blockStatement ')'
+    ;
+
+multiGuardedChoice
+    : singleGuardedChoice (',' singleGuardedChoice)*
+    ;
 
 COMOP
     : '>='
