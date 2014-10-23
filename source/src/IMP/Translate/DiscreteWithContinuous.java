@@ -34,6 +34,8 @@ public class DiscreteWithContinuous implements Dynamic{
     HashMap<String, ConcreteExpr>  ID2ExpMap;
 
 
+
+
     HashMap<ConcreteExpr, String>  TempOdesMap = new HashMap<ConcreteExpr, String>();
     private int guardIndex =0;
     private static HashMap<String, Integer> odeformula = new HashMap<String, Integer>();
@@ -56,10 +58,10 @@ public class DiscreteWithContinuous implements Dynamic{
         continuous = bsc;
     }
 
-    private String addDepthFlagToVar(String v) {
+    private String addDepthFlagToVar(String v, String surfix) {
         if (HML2SMT.isSignal(v)) return String.format("%s_%s", v, depth);
 
-        return String.format("%s_%s_0", v, depth);
+        return String.format("%s_%s_%s", v, depth, surfix);
     }
 
     private void renderDisFormulas(){
@@ -94,6 +96,9 @@ public class DiscreteWithContinuous implements Dynamic{
                 //条件选择语句中的条件表达式
                 analyzeCondition((HMLParser.ExprContext) r, c.getVrl(), c.negation);
 
+            }
+            else if (r instanceof HMLParser.SuspendContext) {
+                analyzeGuard(r, c.getVrl());
             }
         }
         //reset clock, after the guard has been analyzed.
@@ -144,7 +149,11 @@ public class DiscreteWithContinuous implements Dynamic{
             //如果是方程
             HMLParser.EquationContext equ = ((HMLParser.OdeContext) r.getPrc()).equation();
             analyzeEquaiton(equ, r);
+        } else if (r.getPrc() instanceof HMLParser.SuspendContext) {
+            HMLParser.EquationContext equ = null;
+            analyzeEquaiton(equ, r);
         }
+
         StringBuilder result = new StringBuilder();
         List<String> vars = new ArrayList<String>();
         List<Map.Entry<ConcreteExpr,String>> tempOdesList = new ArrayList<Map.Entry<ConcreteExpr, String>>();
@@ -190,40 +199,42 @@ public class DiscreteWithContinuous implements Dynamic{
     }
 
 
+    private ConcreteExpr fromGuardToConcreteExpr(ParserRuleContext guard){
+        ParseTreeProperty<AbstractExpr> guardPtp = null;
+        if (guard instanceof HMLParser.GuardContext) {
+            while (guard instanceof HMLParser.ParGuardContext) {
+                guard = ((HMLParser.ParGuardContext) guard).guard();
+            }
+            guardPtp = HML2SMT.getGuardPtp();
+        }
+        else if (guard instanceof HMLParser.SuspendContext) {
+            guardPtp = HML2SMT.getExprPtp();
+        }
+        return new ConcreteExpr(guardPtp.get(guard));
+    }
+
     /**
      * 将　guard　转成　invariant
      * @param guard
      * @param variableLink
      */
-    private String guard2Invariant(HMLParser.GuardContext guard, VariableLink variableLink, int mode) {
-
-        while (guard instanceof HMLParser.ParGuardContext) {
-            guard = ((HMLParser.ParGuardContext) guard).guard();
-        }
-
-
-        ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
-        ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
+    private String guard2Invariant(ParserRuleContext guard, VariableLink variableLink, int mode) {
+        ConcreteExpr concreteExpr = fromGuardToConcreteExpr(guard);
         if (variableLink != null) concreteExpr.resolve(variableLink);
-
-
         //连续变化过程中满足的条件，即不满足guard的情况
         ConcreteExpr result = concreteExpr.negationForInv();
-
         List<String> branches = result.guardBranches(depth);
         String inv = mergeBranches(branches, mode, depth);
-
-
-        String test = String.format("(=> %s %s)", concreteExpr.toStringForStartPoint(depth),
-                String.format("(forall_t %s [0 time_%s] %s)", mode,  depth, emptyGuard.toString(depth)));
-
         if (!guardCheckEnable) {
             //如果没有启用guard检查，就需要处理瞬间返回的情况
-            String empty = String.format("(and %s %s)", emptyGuard.toString(depth), concreteExpr.toString(depth));
-            return String.format("(or %s %s)", empty, inv);
+            //String empty = String.format("(and %s %s)", emptyGuard.toString(depth), concreteExpr.toString(depth));
+            //return String.format("(or %s %s)", empty, inv);
+            String test = String.format("(=> %s %s)", concreteExpr.toStringForStartPoint(depth),
+                    String.format("(forall_t %s [0 time_%s] %s)", mode,  depth, emptyGuard.toString(depth)));
+            return String.format("(and %s %s)", test, inv);
             //因为是对当前的变量进行约束，所以使用当前depth
         }
-        else  return String.format("(and %s %s)", test, inv);
+        else  return inv;
         //guardCheckEnable为真时候表示我们不需要再添加guard条件到公式中，因为我们已经判断过这个条件
 
     }
@@ -260,7 +271,10 @@ public class DiscreteWithContinuous implements Dynamic{
     }
 
     private void analyzeEquaiton(HMLParser.EquationContext equ, ContextWithVarLink r){
-        if (equ instanceof HMLParser.EqWithNoInitContext) {
+        if (equ == null) {
+            analyzeRelation(null, r);
+        }
+        else if (equ instanceof HMLParser.EqWithNoInitContext) {
             //如果方程不带初值
             HMLParser.RelationContext relation  = ((HMLParser.EqWithNoInitContext) equ).relation();
             analyzeRelation(relation, r);
@@ -289,6 +303,7 @@ public class DiscreteWithContinuous implements Dynamic{
     }
 
     private AbstractExpr resolveRelation(HMLParser.RelationContext relation) {
+        if (relation == null) return new AbstractExpr("", null, null );
         String varName = relation.ID().getText();
         ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
         AbstractExpr left = new AbstractExpr("d/dt", new AbstractExpr(varName, AbstractExpr.Sort.VAR),null);
@@ -300,19 +315,12 @@ public class DiscreteWithContinuous implements Dynamic{
         return odeMap;
     }
 
-    private void analyzeGuard(HMLParser.GuardContext guard, VariableLink variableLink) {
-        while (guard instanceof HMLParser.ParGuardContext) {
-            guard = ((HMLParser.ParGuardContext) guard).guard();
-        }
+    private void analyzeGuard(ParserRuleContext guard, VariableLink variableLink) {
+        ConcreteExpr concreteExpr =  fromGuardToConcreteExpr(guard);
 
 
-        ParseTreeProperty<AbstractExpr> guardPtp = HML2SMT.getGuardPtp();
-        ConcreteExpr concreteExpr = new ConcreteExpr(guardPtp.get(guard));
+
         if (variableLink != null) concreteExpr.resolve(variableLink);
-
-
-
-
         refreshExpression(concreteExpr);
         // 因为Guard是没有副作用的，所以可以放入ID2ExpMap中
         // 在导出公式的时候需要处理这个特殊的ID
@@ -402,14 +410,27 @@ public class DiscreteWithContinuous implements Dynamic{
             String ID = abe.getKey();
             if (isGuard(ID)) //guard condition (ID.startsWith("@"))
                 sb.append(String.format("%s", abe.getValue().toString(depth-1)));
-            else
-                sb.append(String.format("(= %s %s)", addDepthFlagToVar(abe.getKey()), abe.getValue().toString(depth-1)));
+            else {
+                sb.append(String.format("(= %s %s)", addDepthFlagToVar(abe.getKey(),"0"), abe.getValue().toString(depth - 1)));
+                String name = abe.getKey();
+                if (continuous.getPrc() instanceof HMLParser.SuspendContext && !name.equals("clock")
+                        && !name.equals("global") && !HML2SMT.isSignal(name)) {
+                    sb.append(String.format(" (= %s %s) ", addDepthFlagToVar(abe.getKey(),"t"), addDepthFlagToVar(abe.getKey(),"0")));
+                }
+            }
         }
         sb.append("\n");
     }
 
     private void renderGuard(StringBuilder sb){
-        HMLParser.GuardContext guard = ((HMLParser.OdeContext) continuous.getPrc()).guard();
+        ParserRuleContext guard = null;
+        if (continuous.getPrc() instanceof HMLParser.OdeContext) {
+            guard = ((HMLParser.OdeContext) continuous.getPrc()).guard();
+
+        }
+        else if (continuous.getPrc() instanceof HMLParser.SuspendContext) {
+            guard = continuous.getPrc();
+        }
         invariant = guard2Invariant(guard, continuous.getVrl(), mode);
         sb.append(invariant);
     }

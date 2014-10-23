@@ -21,9 +21,9 @@ global in [0, 200];
 //this time is for each continuous evolution
 
 //Templates
-Template open(float h, float a, int H, float e, Signal sig){
+Template open(float h, float a, int H, float e){
     //h = h + 2;
-    (dot h = a) until (SIG(sig))
+    (dot h = a) until (h >= H - e)
     //closed(h,a,H,e)
 }
 
@@ -42,11 +42,15 @@ Main {
         // waterLevel = waterLevel+1;
         !on;
         // let water in
-        open(waterLevel,accin,MaxwaterLevel,deta, on);
+        open(waterLevel,accin,MaxwaterLevel,deta);
 
         // let water out
         // waterLevel = 5;
-        ( waterLevel=waterLevel+0.3 <  ((waterLevel == 5)) > skip);
+        // ( waterLevel=waterLevel+0.3 <  ((waterLevel == 5)) > skip);
+        suspend(1);
+
+
+
         !off
         closed(waterLevel,decout,LowestwaterLevel,deta)
         // closed(waterLevel,decout,MaxwaterLevel,deta)

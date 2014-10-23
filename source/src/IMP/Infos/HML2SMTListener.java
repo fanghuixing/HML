@@ -278,6 +278,12 @@ public class HML2SMTListener extends HMLBaseListener {
 
     }
 
+    public void exitSuspend(HMLParser.SuspendContext ctx) {
+        logger.debug("Exit Suspend " + ctx.getText());
+        exprPtp.put(ctx, new AbstractExpr(">=", new AbstractExpr("clock", AbstractExpr.Sort.VAR), exprPtp.get(ctx.expr())));
+    }
+
+
     public ParseTreeProperty<AbstractExpr> getGuardPtp() {
         return guardPtp;
     }

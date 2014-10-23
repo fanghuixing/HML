@@ -151,7 +151,7 @@ relation
 //waiting for s (single or multi-receiving), s[0], s[1][1]...
 guard
     : 'EMP'                             # EmptyGuard
-    | 'SIG' '(' signal ')'              # SignalGuard
+    | '@' '(' signal ')'                # SignalGuard
     | expr                              # BoolGuard
     | 'timeout' '(' expr ')'            # TimeOutGuard
     | guard '<and>' guard               # ConjunctGuard

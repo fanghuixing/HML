@@ -7,6 +7,7 @@ import IMP.Infos.AbstractExpr;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 
 import java.util.ArrayList;
@@ -152,9 +153,6 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
                 return null;
             }
         }
-
-
-
         visit(ctx.equation());
         if (currentTree.getCurrentDepth()>depth) return null;
 
@@ -294,6 +292,34 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
 
         currentTree.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink));
         return null;
+    }
+
+
+    public Void visitSuspend(HMLParser.SuspendContext ctx) {
+        logger.debug("Visit Suspend " + ctx.getText());
+        try {
+            Integer time = Integer.valueOf(ctx.time.getText());
+            if (time<=0) return null;
+        }catch (NumberFormatException e) {
+            logger.info("Can not transfer to integer for suspend time.");
+        }
+        commonContinuousAnalysis(ctx, ctx);
+        return null;
+
+    }
+
+    private void commonContinuousAnalysis(ParserRuleContext ctx, ParserRuleContext guard){
+        currentTree.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
+        currentTree.getCurrentDynamics().setGuardCheckEnable(true);
+        currentTree.getCurrentDynamics().setDepth(currentTree.getCurrentDepth());
+        currentTree.addDynamics(currentTree.getCurrentDynamics());
+        currentTree.getCurrentDynamics().toString();
+        if (currentTree.getCurrentDepth() < depth+1) {
+            Dynamic dy = new DiscreteWithContinuous();
+            dy.addDiscrete(new ContextWithVarLink(guard, currentVariableLink));
+            currentTree.setCurrentDynamics(dy);
+        }
+        else  finishOnePath(currentTree);
     }
 
 
