@@ -25,25 +25,15 @@ import IMP.Exceptions.TemplateNotDefinedException;
  */
 public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     private static Logger logger = LogManager.getLogger(DynamicalVisitor.class.getName());
-    ParseTreeProperty<Scope> scopes;
-    GlobalScope globals;
-    Scope currentScope; // resolve symbols starting in this scope
+    private ParseTreeProperty<Scope> scopes;
+    private GlobalScope globals;
+    private Scope currentScope; // resolve symbols starting in this scope
     private static boolean CHECKINGGUARD = false;
     private int depth;
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     private VariableLink currentVariableLink;
     private Stack<VariableLink> variableStack = new Stack<VariableLink>();
     private VisitTree currentTree = new VisitTree(null,  new DiscreteWithContinuous(), new ArrayList<Dynamic>());
-
-
-
-
-    /**
-     * All the paths that represent running of the model
-     * Each path contains (size=depth) dynamics which contains both discrete and continuous behaviors
-     */
-    private List<List<Dynamic>> paths = new ArrayList<List<Dynamic>>();
-    int odenumering = 0;
 
 
     public DynamicalVisitor(ParseTreeProperty<Scope> scopes, GlobalScope globals, HashMap<String, Template> tmpMap, int depth) {
@@ -104,13 +94,11 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
 
 
     public Void visitAtomPro(HMLParser.AtomProContext ctx) {
-
         visit(ctx.atom());
         return null;
     }
 
     public Void visitAssignment(HMLParser.AssignmentContext ctx) {
-
         currentTree.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink));
         return null;
     }
@@ -301,13 +289,23 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
             Integer time = Integer.valueOf(ctx.time.getText());
             if (time<=0) return null;
         }catch (NumberFormatException e) {
-            logger.info("Can not transfer to integer for suspend time.");
+            logger.info("Cannot transfer to integer for suspend time.");
         }
         commonContinuousAnalysis(ctx, ctx);
         return null;
 
     }
 
+    public Void visitWhenPro(HMLParser.WhenProContext ctx) {
+        commonContinuousAnalysis(ctx, ctx.guardedChoice());
+        return null;
+    }
+
+    /**
+     * Add continuous statements and its exit condition into dynamics objects
+     * @param ctx   The parse rule context
+     * @param guard The exit condition
+     */
     private void commonContinuousAnalysis(ParserRuleContext ctx, ParserRuleContext guard){
         currentTree.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
         currentTree.getCurrentDynamics().setGuardCheckEnable(true);
@@ -316,8 +314,23 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         currentTree.getCurrentDynamics().toString();
         if (currentTree.getCurrentDepth() < depth+1) {
             Dynamic dy = new DiscreteWithContinuous();
-            dy.addDiscrete(new ContextWithVarLink(guard, currentVariableLink));
-            currentTree.setCurrentDynamics(dy);
+            if (guard instanceof HMLParser.GuardedChoiceContext) {
+                List<HMLParser.SingleGuardedChoiceContext> gcList;
+                gcList = ((HMLParser.GuardedChoiceContext) guard).singleGuardedChoice();
+                for (HMLParser.SingleGuardedChoiceContext sgc : gcList) {
+                    boolean sat = checkGuard(sgc.guard(), currentTree);
+                    if (sat) {
+                        // if one of the guardedChoice is satisfiable
+                        dy.addDiscrete(new ContextWithVarLink(sgc.guard(), currentVariableLink));
+                        currentTree.setCurrentDynamics(dy);
+                        visit(sgc.blockStatement());
+                        break;
+                    }
+                }
+            } else {
+                dy.addDiscrete(new ContextWithVarLink(guard, currentVariableLink));
+                currentTree.setCurrentDynamics(dy);
+            }
         }
         else  finishOnePath(currentTree);
     }
@@ -344,7 +357,6 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     private boolean isMaxDepth(){
        if (currentTree.getCurrentDepth()<depth+1) return false;
        return true;
-
     }
 
     public Void visit(ParseTree tree){

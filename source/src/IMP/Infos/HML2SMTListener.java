@@ -283,6 +283,25 @@ public class HML2SMTListener extends HMLBaseListener {
         exprPtp.put(ctx, new AbstractExpr(">=", new AbstractExpr("clock", AbstractExpr.Sort.VAR), exprPtp.get(ctx.expr())));
     }
 
+    public void exitWhenPro(HMLParser.WhenProContext ctx) {
+        logger.debug("Exit When Statement " + ctx.getText());
+        HMLParser.GuardedChoiceContext guardedChoice = ctx.guardedChoice();
+        List<HMLParser.SingleGuardedChoiceContext> gcList = guardedChoice.singleGuardedChoice();
+        AbstractExpr res;
+        if (gcList.size()>1) {
+            // more than one guarded choice
+            res = new AbstractExpr("or", AbstractExpr.Sort.GUARD, null, null);
+            for (HMLParser.SingleGuardedChoiceContext sgc : gcList) {
+                AbstractExpr abe = guardPtp.get(sgc.guard());
+                res = res.addGuardedChoice(abe, "or");
+            }
+        } else {
+            // only one guarded choice
+            res = guardPtp.get(gcList.get(0).guard());
+        }
+        guardPtp.put(ctx, res);
+
+    }
 
     public ParseTreeProperty<AbstractExpr> getGuardPtp() {
         return guardPtp;

@@ -85,7 +85,7 @@ blockStatement
     |  blockStatement ';'?  blockStatement                   #SeqCom    // sequential composition
     |  '(' blockStatement '<' expr '>' blockStatement ')'    #ConChoice     // conditional choice
     |  equation 'until' guard                                #Ode       // differential equation
-    |  'when' '{' guardedchoice '}'                          #WhenPro   // when program
+    |  'when' '{' guardedChoice '}'                          #WhenPro   // when program
     |  'while' parExpression parStatement                    #LoopPro   // loop
     |  'if' parExpression parStatement
        ( 'else' parStatement )?                              #IfPro     // if statement
@@ -115,7 +115,7 @@ expr
     : ID                                                        # IDExpr
     | INT                                                       # INTExpr
     | FLOAT                                                     # FLOATExpr
-    | 'true'                                                     # ConstantTrue
+    | 'true'                                                    # ConstantTrue
     | 'false'                                                   # ConstantFalse
     | prefix=('-' | '~') expr                                   # NegationExpr
     | left=expr op=('*'|'/'|'mod') right=expr                   # MExpr
@@ -164,28 +164,14 @@ signal
     : ID ('[' expr ']')*;
 
 
-guardedchoice
-    :  singleGuardedChoice
-    |  multiGuardedChoice
+guardedChoice
+    :  singleGuardedChoice (',' singleGuardedChoice)*
     ;
 
 singleGuardedChoice
-    : guard '->'  blockStatement
-    | '(' guard '->'  blockStatement ')'
+    : '(' guard 'then'  blockStatement ')'
     ;
 
-multiGuardedChoice
-    : singleGuardedChoice (',' singleGuardedChoice)*
-    ;
-
-COMOP
-    : '>='
-    | '>'
-    | '=='
-    | '<'
-    | '<='
-    | '!='
-    ;
 
 ID  :    (LETTER | '_')  (LETTER|DIGIT|'_')*
     ;

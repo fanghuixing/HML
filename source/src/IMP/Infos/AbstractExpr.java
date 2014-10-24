@@ -64,6 +64,18 @@ public class AbstractExpr {
         return renderStr;
     }
 
-
+    public AbstractExpr addGuardedChoice(AbstractExpr child, String op){
+        if (Left == null) {
+            Left = child;
+            return this;
+        }
+        else if (Right == null) {
+            Right = child;
+            return this;
+        }
+        else {
+            return new AbstractExpr(op, Sort.GUARD, child, this);
+        }
+    }
 
 }

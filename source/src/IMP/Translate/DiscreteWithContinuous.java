@@ -152,6 +152,9 @@ public class DiscreteWithContinuous implements Dynamic{
         } else if (r.getPrc() instanceof HMLParser.SuspendContext) {
             HMLParser.EquationContext equ = null;
             analyzeEquaiton(equ, r);
+        } else if (r.getPrc() instanceof HMLParser.WhenProContext) {
+            HMLParser.EquationContext equ = null;
+            analyzeEquaiton(equ, r);
         }
 
         StringBuilder result = new StringBuilder();
@@ -206,10 +209,12 @@ public class DiscreteWithContinuous implements Dynamic{
                 guard = ((HMLParser.ParGuardContext) guard).guard();
             }
             guardPtp = HML2SMT.getGuardPtp();
-        }
-        else if (guard instanceof HMLParser.SuspendContext) {
+        } else if (guard instanceof HMLParser.SuspendContext) {
             guardPtp = HML2SMT.getExprPtp();
+        } else if (guard instanceof HMLParser.WhenProContext) {
+            guardPtp = HML2SMT.getGuardPtp();
         }
+
         return new ConcreteExpr(guardPtp.get(guard));
     }
 
@@ -413,8 +418,8 @@ public class DiscreteWithContinuous implements Dynamic{
             else {
                 sb.append(String.format("(= %s %s)", addDepthFlagToVar(abe.getKey(),"0"), abe.getValue().toString(depth - 1)));
                 String name = abe.getKey();
-                if (continuous.getPrc() instanceof HMLParser.SuspendContext && !name.equals("clock")
-                        && !name.equals("global") && !HML2SMT.isSignal(name)) {
+                if ((continuous.getPrc() instanceof HMLParser.SuspendContext || continuous.getPrc() instanceof HMLParser.WhenProContext)
+                        && !name.equals("clock") && !name.equals("global") && !HML2SMT.isSignal(name)) {
                     sb.append(String.format(" (= %s %s) ", addDepthFlagToVar(abe.getKey(),"t"), addDepthFlagToVar(abe.getKey(),"0")));
                 }
             }
@@ -424,13 +429,17 @@ public class DiscreteWithContinuous implements Dynamic{
 
     private void renderGuard(StringBuilder sb){
         ParserRuleContext guard = null;
-        if (continuous.getPrc() instanceof HMLParser.OdeContext) {
-            guard = ((HMLParser.OdeContext) continuous.getPrc()).guard();
+        ParserRuleContext parserRuleContext = continuous.getPrc();
+        if (parserRuleContext instanceof HMLParser.OdeContext) {
+            guard = ((HMLParser.OdeContext) parserRuleContext).guard();
+        } else if (parserRuleContext instanceof HMLParser.SuspendContext) {
+            guard = parserRuleContext;
+        } else if (parserRuleContext instanceof HMLParser.WhenProContext) {
+            guard = parserRuleContext;
+        }
 
-        }
-        else if (continuous.getPrc() instanceof HMLParser.SuspendContext) {
-            guard = continuous.getPrc();
-        }
+
+
         invariant = guard2Invariant(guard, continuous.getVrl(), mode);
         sb.append(invariant);
     }
