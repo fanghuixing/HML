@@ -317,6 +317,12 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
             if (guard instanceof HMLParser.GuardedChoiceContext) {
                 List<HMLParser.SingleGuardedChoiceContext> gcList;
                 gcList = ((HMLParser.GuardedChoiceContext) guard).singleGuardedChoice();
+                if (gcList.size()==1)  {
+                    dy.addDiscrete(new ContextWithVarLink(gcList.get(0).guard(), currentVariableLink));
+                    currentTree.setCurrentDynamics(dy);
+                    visit(gcList.get(0).blockStatement());
+                    return;
+                }
                 for (HMLParser.SingleGuardedChoiceContext sgc : gcList) {
                     boolean sat = checkGuard(sgc.guard(), currentTree);
                     if (sat) {
@@ -324,7 +330,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
                         dy.addDiscrete(new ContextWithVarLink(sgc.guard(), currentVariableLink));
                         currentTree.setCurrentDynamics(dy);
                         visit(sgc.blockStatement());
-                        break;
+                        return;
                     }
                 }
             } else {
