@@ -297,6 +297,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     }
 
     public Void visitWhenPro(HMLParser.WhenProContext ctx) {
+        // for sequential program we can check the guard at the beginning
         commonContinuousAnalysis(ctx, ctx.guardedChoice());
         return null;
     }
@@ -317,22 +318,19 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
             if (guard instanceof HMLParser.GuardedChoiceContext) {
                 List<HMLParser.SingleGuardedChoiceContext> gcList;
                 gcList = ((HMLParser.GuardedChoiceContext) guard).singleGuardedChoice();
-                if (gcList.size()==1)  {
-                    dy.addDiscrete(new ContextWithVarLink(gcList.get(0).guard(), currentVariableLink));
-                    currentTree.setCurrentDynamics(dy);
-                    visit(gcList.get(0).blockStatement());
-                    return;
-                }
                 for (HMLParser.SingleGuardedChoiceContext sgc : gcList) {
                     boolean sat = checkGuard(sgc.guard(), currentTree);
                     if (sat) {
-                        // if one of the guardedChoice is satisfiable
+                        // if one of the guardedChoice is satisfiable, we can add the dynamics and return
                         dy.addDiscrete(new ContextWithVarLink(sgc.guard(), currentVariableLink));
                         currentTree.setCurrentDynamics(dy);
                         visit(sgc.blockStatement());
                         return;
                     }
                 }
+                //if no guardedChoice can be satisfied, we have to wait
+                currentTree.setCurrentDynamics(dy);
+                visit(ctx);
             } else {
                 dy.addDiscrete(new ContextWithVarLink(guard, currentVariableLink));
                 currentTree.setCurrentDynamics(dy);
