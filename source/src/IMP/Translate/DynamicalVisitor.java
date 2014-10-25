@@ -339,6 +339,11 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         else  finishOnePath(currentTree);
     }
 
+    public Void visitNonCh(HMLParser.NonChContext ctx) {
+        // TODO
+
+        return null;
+    }
 
     /**
      * @param type inner type

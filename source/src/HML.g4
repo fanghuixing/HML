@@ -80,7 +80,7 @@ program : 'Main ' '{' blockStatement '}';
 
 blockStatement
     :  atom                                                  #AtomPro   // Atomic
-    |  blockStatement '|'  blockStatement                    #NonCh     // non-deterministrate choice
+    |  blockStatement '|'  blockStatement                    #NonCh     // non-deterministrate choice　TODO
     |  blockStatement '||' blockStatement                    #ParaCom   // parallel composition
     |  blockStatement ';'?  blockStatement                   #SeqCom    // sequential composition
     |  '(' blockStatement '<' expr '>' blockStatement ')'    #ConChoice     // conditional choice

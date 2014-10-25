@@ -13,8 +13,8 @@ float global = 0;
 
 //Constraints
 waterLevel in [5,  10];
-time in [0, 5];
-clock in [0, 5];
+time in [0, 100];
+clock in [0, 100];
 global in [0, 200];
 
 
