@@ -4,7 +4,8 @@ import org.stringtemplate.v4.STErrorListener;
 import org.stringtemplate.v4.misc.STMessage;
 
 /**
- * Created by fofo on 2014/9/29.
+ * HML IMP.Infos
+ * Created by Huixing Fang (fang.huixing@gmail.com) on 2014/9/29.
  */
 public class HSTErrorListener implements STErrorListener {
 

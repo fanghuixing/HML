@@ -1,7 +1,7 @@
 package IMP.Infos;
 
 /**
- * Created by fofo on 2014/10/1.
+ * Created by Huixing Fang (fang.huixing@gmail.com) on 2014/10/1.
  * 在对程序进行展开过程中，不能对该类的对象进行修改，
  * 否则会破坏原始程序结构
  */
