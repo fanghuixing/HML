@@ -3,7 +3,7 @@ package DataSet;
 
 
 import org.jfree.data.xy.XYSeries;
-
+import org.jfree.data.xy.YIntervalSeries;
 
 
 /**
@@ -14,9 +14,9 @@ public class VariableWithData {
     String name;
     int mode;
     int depth;
-    XYSeries values;
+    YIntervalSeries values;
 
-    public VariableWithData(String name, int mode , int depth,  XYSeries values) {
+    public VariableWithData(String name, int mode , int depth,  YIntervalSeries values) {
         this.name = name;
         this.values = values;
         this.depth = depth;

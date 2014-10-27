@@ -3,6 +3,7 @@ package DataSet;
 import AntlrGen.JSONBaseVisitor;
 import AntlrGen.JSONParser;
 import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.YIntervalSeries;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,23 +48,36 @@ public class CollectData extends JSONBaseVisitor{
         variables.add(name);
         int depth = Integer.parseInt(key[1]);
         int mode = Integer.parseInt(ctx.mod().INT().getText());
-        XYSeries values = new XYSeries(name);
+        YIntervalSeries  values = new YIntervalSeries(name);
         List<JSONParser.MappingContext> mappings = ctx.values().mapping();
         for (JSONParser.MappingContext mapping : mappings) {
             List<JSONParser.NumberContext> time = mapping.time().interval().number();
             List<JSONParser.NumberContext> value = mapping.value().interval().number();
-            for (int i =0 ; i< time.size();  i++) {
-                if (name.equals("global")) {
-                    Double v = Double.parseDouble(value.get(i).getText());
-                    values.add(v, v);
-                }
-                else {
-                    Double t = Double.parseDouble(time.get(i).getText());
-                    Double v = Double.parseDouble(value.get(i).getText());
-                    values.add(t, v);
+            if (name.equals("global") || name.equals("clock")) {
+                Double v = Double.parseDouble(value.get(0).getText());
+                values.add(v, v, v, v);
+
+                v = Double.parseDouble(value.get(1).getText());
+                values.add(v, v, v, v);
+            } else {
+                double t0 = Double.parseDouble(time.get(0).getText());
+                double t1 = Double.parseDouble(time.get(1).getText());
+
+                double v0 = Double.parseDouble(value.get(0).getText());
+                double v1 = Double.parseDouble(value.get(1).getText());
+
+
+                //values.add(t0, v0);
+                if(v0<=v1) {
+                    values.add((t0 + t1) / 2, (v0 + v1) / 2, v0 , v1);
+                } else {
+                    values.add((t0 + t1) / 2, (v0 + v1) / 2, v1, v0);
                 }
 
+                //values.add(t1, v1);
             }
+
+
         }
         dataHashMap.put(ctx.key().ID().getText(), new VariableWithData(name, mode, depth, values));
         return null;

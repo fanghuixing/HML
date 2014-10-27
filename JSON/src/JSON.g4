@@ -61,7 +61,7 @@ data :
               '[' number ',' number ']'
           ;
  number :
-        INT | FLOAT
+        ('+' | '-')? (INT | FLOAT)
         ;
 
 
