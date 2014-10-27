@@ -1,13 +1,13 @@
 package IMP.Check;
 
+import DataSet.ParseJSONData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.awt.*;
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
+
 
 /**
  * HML IMP.Check
@@ -29,5 +29,13 @@ public class Util {
         }
 
     }
+
+    public static void viewDataInWindow(String path) throws Exception {
+
+        ParseJSONData.showData(path+".json");
+
+
+    }
+
 
 }

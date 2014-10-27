@@ -36,7 +36,7 @@ public class HML2SMT {
     final static int depth = 5;
 
     // The HML model file path
-    private static String modelPath = "./source/src/watertank.hml";
+    private static String modelPath = "./source/src/bouncingBall.hml";
 
     // The SMT2 formula path
     private static String smtPath ;
@@ -105,7 +105,7 @@ public class HML2SMT {
             writeFormulas(trans);
             if (visualize) {
                 check(smtPath + " --visualize");
-                Util.viewDataInBrowser(smtPath);
+                Util.viewDataInWindow(smtPath);
             }
             else check(smtPath);
         }

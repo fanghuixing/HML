@@ -16,12 +16,16 @@ public class ExecSMTTest {
 
     @After
     public void tearDown() throws Exception {
-        Util.viewDataInBrowser(path);
+
     }
 
     @Test
     public void testExec() throws Exception {
         boolean ret = ExecSMT.exec("0.0001", path + args);
+
         assertEquals(ret, true);
+
+
+
     }
 }
