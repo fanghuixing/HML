@@ -55,6 +55,8 @@ public class ParseJSONData extends ApplicationFrame {
     int maxDepth;
     //List<XYSeries> seriesList = new ArrayList<XYSeries>();
     List<YIntervalSeries> seriesList = new ArrayList<YIntervalSeries>();
+    List<YIntervalSeriesCollection> seriesCollectionList = new ArrayList<YIntervalSeriesCollection>();
+
 
     public ParseJSONData(String title, List<String> variables, HashMap<String, VariableWithData> dataHashMap) {
         super(title);
@@ -63,11 +65,8 @@ public class ParseJSONData extends ApplicationFrame {
         CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis("Global Time"));
         plot.setGap(10.0);
 
-        for (YIntervalSeries series : seriesList) {
-            YIntervalSeriesCollection data = new YIntervalSeriesCollection();
-            data.addSeries(series);
-
-            String des = series.getKey().toString();
+        for (YIntervalSeriesCollection data : seriesCollectionList) {
+            String des = data.getSeries(0).getKey().toString();
             subplot(des, data, plot);
         }
         subplot("ALL", dataSet, plot);
@@ -76,26 +75,31 @@ public class ParseJSONData extends ApplicationFrame {
         List<Color> colors = new ArrayList<Color>();
         colors.add(Color.black);
         colors.add(Color.blue);
-        colors.add(Color.green);
+        //colors.add(Color.green);
         colors.add(Color.red);
-        colors.add(Color.darkGray);
+        //colors.add(Color.darkGray);
+        //colors.add(Color.cyan);
 
         List<XYPlot> subplots = (List<XYPlot>) plot.getSubplots();
         int index = 0;
         for (XYPlot sp : subplots) {
 
-            if(sp.getSeriesCount()>1) continue;
-            sp.getRenderer().setSeriesPaint(0, colors.get(index));
-            sp.getRenderer().setSeriesStroke(0, new BasicStroke( 1.5f ));
+            for (int i = 0; i<sp.getSeriesCount(); i++) {
+                Paint color = colors.get(index);
+                sp.getRenderer().setSeriesPaint(i, color);
+                sp.getRenderer().setSeriesStroke(i, new BasicStroke(2F, 1, 1));
+                index = (index +1 ) % colors.size();
 
-            index = (index +1 ) % colors.size();
+            }
+
         }
 
         JFreeChart chart = new JFreeChart("HML Data Chart",JFreeChart.DEFAULT_TITLE_FONT, plot, true);
-
+        chart.removeLegend();
         ChartPanel chartPanel = new ChartPanel(chart);
-
-        chartPanel.setPreferredSize(new java.awt.Dimension(1024, 768));
+        int width = Toolkit.getDefaultToolkit().getScreenSize().width;
+        int height = Toolkit.getDefaultToolkit().getScreenSize().height;
+        chartPanel.setPreferredSize(new java.awt.Dimension(width, height));
         setContentPane(chartPanel);
 
 
@@ -104,22 +108,25 @@ public class ParseJSONData extends ApplicationFrame {
     private void subplot(String des, XYDataset data, CombinedDomainXYPlot plot ){
         //StandardXYItemRenderer renderer = new StandardXYItemRenderer();
         DeviationRenderer deviationrenderer = new DeviationRenderer(true, false);
-        deviationrenderer.setSeriesStroke(0, new BasicStroke(3F, 1, 1));
-        //deviationrenderer.setSeriesStroke(1, new BasicStroke(3F, 1, 1));
-        //deviationrenderer.setSeriesStroke(2, new BasicStroke(3F, 1, 1));
-        deviationrenderer.setSeriesFillPaint(0, new Color(100, 100, 255));
+        for (int i=0; i<data.getSeriesCount(); i++) {
+            deviationrenderer.setSeriesFillPaint(i, new Color(100, 100, 255));
+        }
+
+        //deviationrenderer.setSeriesFillPaint(0, new Color(100, 100, 255));
         //deviationrenderer.setSeriesFillPaint(1, new Color(200, 200, 255));
+
 
 
         NumberAxis rangeAxis = new NumberAxis(des);
         XYPlot subplot = new XYPlot(data, null, rangeAxis, deviationrenderer);
+
+
         //subplot.setInsets(new RectangleInsets(5D, 5D, 5D, 5D));
         subplot.setInsets(new RectangleInsets(5D, 5D, 5D, 20D));
         subplot.setRangeAxisLocation(AxisLocation.BOTTOM_OR_LEFT);
 
 
         //subplot.setWeight(10);
-
 
         plot.add(subplot, 1);
     }
@@ -137,6 +144,8 @@ public class ParseJSONData extends ApplicationFrame {
     private void createDataSetForOneVariable(String name, YIntervalSeriesCollection dataSet, HashMap<String, VariableWithData> dataHashMap){
         int depth = 0;
         //XYSeries series = null;
+        YIntervalSeriesCollection seriesCollection = new YIntervalSeriesCollection();
+        seriesCollectionList.add(seriesCollection);
         YIntervalSeries series = null;
         double old_value = 0;
         while (true) {
@@ -147,14 +156,10 @@ public class ParseJSONData extends ApplicationFrame {
                 if (depth>maxDepth) break;
                 else {
                     VariableWithData clock = dataHashMap.get("clock"+ "_" + depth + "_0");
-                    /*
-                    List<XYDataItem> items = (List<XYDataItem>) clock.values.getItems();
-
-                    for (XYDataItem item : items) {
-                        series.add(new XYDataItem(item.getX().doubleValue() + globalTime.get(depth - 1), old_value));
-                    }
-                    */
                     int itemCount = clock.values.getItemCount();
+                    series = new YIntervalSeries(name+depth, false, true);
+                    dataSet.addSeries(series);
+                    seriesCollection.addSeries(series);
                     for (int i=0; i<itemCount; i++) {
                         series.add(clock.values.getX(i).doubleValue() + globalTime.get(depth - 1),
                                 old_value, old_value, old_value);
@@ -166,14 +171,12 @@ public class ParseJSONData extends ApplicationFrame {
                     series = variableWithData.values;
                     dataSet.addSeries(series);
                     seriesList.add(series);
+                    seriesCollection.addSeries(series);
                 } else {
-                    /*
-                    List<XYDataItem> items = (List<XYDataItem>) variableWithData.values.getItems();
-                    for (XYDataItem item : items) {
-                            series.add(new XYDataItem(item.getX().doubleValue() + globalTime.get(depth - 1), item.getY()));
+                    series = new YIntervalSeries(name+depth, false, true);
+                    dataSet.addSeries(series);
+                    seriesCollection.addSeries(series);
 
-                    }
-                    */
                     int itemCount = variableWithData.values.getItemCount();
                     for (int i=0; i<itemCount; i++) {
                         if (i==0) {
@@ -183,7 +186,6 @@ public class ParseJSONData extends ApplicationFrame {
                                         variableWithData.values.getYLowValue(i),
                                         variableWithData.values.getYHighValue(i));
                             }catch (SeriesException e) {}
-
 
                         } else {
                             series.add(variableWithData.values.getX(i).doubleValue() + globalTime.get(depth - 1),
@@ -205,6 +207,8 @@ public class ParseJSONData extends ApplicationFrame {
     private void golobalTimeVar(YIntervalSeriesCollection dataSet, HashMap<String, VariableWithData> dataHashMap){
         int depth = 0;
         //XYSeries series = null;
+        YIntervalSeriesCollection seriesCollection = new YIntervalSeriesCollection();
+        seriesCollectionList.add(seriesCollection);
         YIntervalSeries series = null;
         while (true) {
             String key = "global" + "_" + depth + "_0";
@@ -218,8 +222,12 @@ public class ParseJSONData extends ApplicationFrame {
                 series = variableWithData.values;
                 dataSet.addSeries(series);
                 seriesList.add(series);
+                seriesCollection.addSeries(series);
             } else {
                 int itemCount = variableWithData.values.getItemCount();
+                series = new YIntervalSeries("global"+depth, false, true);
+                dataSet.addSeries(series);
+                seriesCollection.addSeries(series);
                 for (int i=0; i<itemCount; i++) {
                     try {
                         series.add(variableWithData.values.getX(i).doubleValue(),
