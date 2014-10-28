@@ -41,20 +41,20 @@ import java.util.List;
 
 
 /**
- * HML DataSet
+ * HML DataSet, Show different color and line shape for different modes
  * Created by Huixing Fang (fang.huixing@gmail.com) on 14-10-27.
  */
 public class ParseJSONData extends ApplicationFrame {
 
 
     private static ParseTree tree;
+    private float[][] pattern = {{10.0f},{7.0f,2.0f},{7.0f,2.0f,3.0f,7.0f},{1.0f,2.0f}};
     // The HML model file path
     private static String modelPath = "./JSON/src/data.json";
 
     List<Double> globalTime = new ArrayList<Double>();
     int maxDepth;
-    //List<XYSeries> seriesList = new ArrayList<XYSeries>();
-    List<YIntervalSeries> seriesList = new ArrayList<YIntervalSeries>();
+
     List<YIntervalSeriesCollection> seriesCollectionList = new ArrayList<YIntervalSeriesCollection>();
 
 
@@ -75,21 +75,25 @@ public class ParseJSONData extends ApplicationFrame {
         List<Color> colors = new ArrayList<Color>();
         colors.add(Color.black);
         colors.add(Color.blue);
-        //colors.add(Color.green);
-        colors.add(Color.red);
-        //colors.add(Color.darkGray);
-        //colors.add(Color.cyan);
+        colors.add(Color.green);
+
 
         List<XYPlot> subplots = (List<XYPlot>) plot.getSubplots();
+
         int index = 0;
         for (XYPlot sp : subplots) {
 
             for (int i = 0; i<sp.getSeriesCount(); i++) {
+                if (i % (maxDepth+1) == 0) index = 0;
                 Paint color = colors.get(index);
+                // From one mode to another, we will change the color
                 sp.getRenderer().setSeriesPaint(i, color);
-                sp.getRenderer().setSeriesStroke(i, new BasicStroke(2F, 1, 1));
+                // The shape of the line is solid or dashed
+                if (index % 2 ==0)
+                    sp.getRenderer().setSeriesStroke(i, getStroke(3F, "solid"));
+                else
+                    sp.getRenderer().setSeriesStroke(i, getStroke(3F, "dashed"));
                 index = (index +1 ) % colors.size();
-
             }
 
         }
@@ -106,27 +110,16 @@ public class ParseJSONData extends ApplicationFrame {
     }
 
     private void subplot(String des, XYDataset data, CombinedDomainXYPlot plot ){
-        //StandardXYItemRenderer renderer = new StandardXYItemRenderer();
         DeviationRenderer deviationrenderer = new DeviationRenderer(true, false);
         for (int i=0; i<data.getSeriesCount(); i++) {
             deviationrenderer.setSeriesFillPaint(i, new Color(100, 100, 255));
         }
-
-        //deviationrenderer.setSeriesFillPaint(0, new Color(100, 100, 255));
-        //deviationrenderer.setSeriesFillPaint(1, new Color(200, 200, 255));
-
-
-
         NumberAxis rangeAxis = new NumberAxis(des);
         XYPlot subplot = new XYPlot(data, null, rangeAxis, deviationrenderer);
-
 
         //subplot.setInsets(new RectangleInsets(5D, 5D, 5D, 5D));
         subplot.setInsets(new RectangleInsets(5D, 5D, 5D, 20D));
         subplot.setRangeAxisLocation(AxisLocation.BOTTOM_OR_LEFT);
-
-
-        //subplot.setWeight(10);
 
         plot.add(subplot, 1);
     }
@@ -161,16 +154,15 @@ public class ParseJSONData extends ApplicationFrame {
                     dataSet.addSeries(series);
                     seriesCollection.addSeries(series);
                     for (int i=0; i<itemCount; i++) {
-                        series.add(clock.values.getX(i).doubleValue() + globalTime.get(depth - 1),
-                                old_value, old_value, old_value);
+                        series.add(clock.values.getX(i).doubleValue() + globalTime.get(depth - 1), old_value, old_value, old_value);
                     }
-
                 }
-            } else {
+            }
+            else {
                 if (depth == 0) {
                     series = variableWithData.values;
                     dataSet.addSeries(series);
-                    seriesList.add(series);
+
                     seriesCollection.addSeries(series);
                 } else {
                     series = new YIntervalSeries(name+depth, false, true);
@@ -179,20 +171,7 @@ public class ParseJSONData extends ApplicationFrame {
 
                     int itemCount = variableWithData.values.getItemCount();
                     for (int i=0; i<itemCount; i++) {
-                        if (i==0) {
-                            try {
-                                series.add(variableWithData.values.getX(i).doubleValue() + globalTime.get(depth - 1),
-                                        variableWithData.values.getYValue(i),
-                                        variableWithData.values.getYLowValue(i),
-                                        variableWithData.values.getYHighValue(i));
-                            }catch (SeriesException e) {}
-
-                        } else {
-                            series.add(variableWithData.values.getX(i).doubleValue() + globalTime.get(depth - 1),
-                                    variableWithData.values.getYValue(i),
-                                    variableWithData.values.getYLowValue(i),
-                                    variableWithData.values.getYHighValue(i));
-                        }
+                        addSeries(series, variableWithData, i, globalTime.get(depth - 1));
                     }
 
                 }
@@ -202,6 +181,14 @@ public class ParseJSONData extends ApplicationFrame {
             depth++;
 
         }
+    }
+
+    private void addSeries(YIntervalSeries series, VariableWithData variableWithData, int i, double base){
+
+        series.add(variableWithData.values.getX(i).doubleValue() + base,
+                variableWithData.values.getYValue(i),
+                variableWithData.values.getYLowValue(i),
+                variableWithData.values.getYHighValue(i));
     }
 
     private void golobalTimeVar(YIntervalSeriesCollection dataSet, HashMap<String, VariableWithData> dataHashMap){
@@ -221,7 +208,7 @@ public class ParseJSONData extends ApplicationFrame {
             if (depth == 0) {
                 series = variableWithData.values;
                 dataSet.addSeries(series);
-                seriesList.add(series);
+
                 seriesCollection.addSeries(series);
             } else {
                 int itemCount = variableWithData.values.getItemCount();
@@ -229,25 +216,17 @@ public class ParseJSONData extends ApplicationFrame {
                 dataSet.addSeries(series);
                 seriesCollection.addSeries(series);
                 for (int i=0; i<itemCount; i++) {
-                    try {
-                        series.add(variableWithData.values.getX(i).doubleValue(),
-                                variableWithData.values.getYValue(i),
-                                variableWithData.values.getYLowValue(i),
-                                variableWithData.values.getYHighValue(i));
-                    }catch (SeriesException e){}
+                    addSeries(series, variableWithData, i, 0);
                 }
-                /*
-                List<XYDataItem> items = (List<XYDataItem>) variableWithData.values.getItems();
-                for (XYDataItem item : items) {
-                    series.add(item);
-                }
-                */
+
             }
 
             globalTime.add(series.getYHighValue(series.getItemCount()-1));
             depth++;
         }
     }
+
+
 
 
     public static void showData(String modelPath) throws Exception {
@@ -275,5 +254,22 @@ public class ParseJSONData extends ApplicationFrame {
 
         ParseJSONData.showData("./JSON/src/data.json");
     }
+
+    private Stroke getStroke(float width, String type){
+        Stroke[] strokes = new Stroke[] {
+                new BasicStroke(width, BasicStroke.CAP_BUTT,  BasicStroke.JOIN_MITER, 10.0f                  ), // solid line
+                new BasicStroke(width, BasicStroke.CAP_BUTT,  BasicStroke.JOIN_MITER, 10.0f, pattern[1], 0.0f), // dashed line
+                new BasicStroke(width, BasicStroke.CAP_BUTT,  BasicStroke.JOIN_MITER, 10.0f, pattern[2], 0.0f), // dash-dotted line
+                new BasicStroke(width, BasicStroke.CAP_ROUND, BasicStroke.JOIN_MITER, 10.0f, pattern[3], 0.0f), // dotted line
+        };
+        if (type.equals("solid")) return strokes[0];
+        else if (type.equals("dashed")) return strokes[1];
+        else if (type.equals("dash-dotted")) return strokes[2];
+        else if (type.equals("dotted")) return strokes[3];
+        else return strokes[0];
+    }
+
+
+
 
 }
