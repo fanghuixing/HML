@@ -2,6 +2,7 @@ package DataSet;
 
 import AntlrGen.JSONBaseVisitor;
 import AntlrGen.JSONParser;
+import org.jfree.data.general.SeriesException;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.YIntervalSeries;
 
@@ -48,15 +49,17 @@ public class CollectData extends JSONBaseVisitor{
         variables.add(name);
         int depth = Integer.parseInt(key[1]);
         int mode = Integer.parseInt(ctx.mod().INT().getText());
-        YIntervalSeries  values = new YIntervalSeries(name);
+        YIntervalSeries  values = new YIntervalSeries(name, false, true);
         List<JSONParser.MappingContext> mappings = ctx.values().mapping();
+
+
+
         for (JSONParser.MappingContext mapping : mappings) {
             List<JSONParser.NumberContext> time = mapping.time().interval().number();
             List<JSONParser.NumberContext> value = mapping.value().interval().number();
             if (name.equals("global") || name.equals("clock")) {
                 Double v = Double.parseDouble(value.get(0).getText());
                 values.add(v, v, v, v);
-
                 v = Double.parseDouble(value.get(1).getText());
                 values.add(v, v, v, v);
             } else {
@@ -67,15 +70,20 @@ public class CollectData extends JSONBaseVisitor{
                 double v1 = Double.parseDouble(value.get(1).getText());
 
 
-                //values.add(t0, v0);
-                if(v0<=v1) {
-                    values.add((t0 + t1) / 2, (v0 + v1) / 2, v0 , v1);
-                } else {
-                    values.add((t0 + t1) / 2, (v0 + v1) / 2, v1, v0);
+                try {
+
+                    if (v0 <= v1) {
+                        values.add((t0 + t1) / 2, (v0 + v1) / 2, v0, v1);
+                    } else {
+                        values.add((t0 + t1) / 2, (v0 + v1) / 2, v1, v0);
+                    }
+                }catch (SeriesException e){
+
                 }
 
-                //values.add(t1, v1);
+
             }
+
 
 
         }

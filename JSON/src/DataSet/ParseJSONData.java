@@ -22,6 +22,7 @@ import org.jfree.chart.renderer.xy.DeviationRenderer;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.general.SeriesException;
 import org.jfree.data.xy.*;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RectangleInsets;
@@ -29,6 +30,7 @@ import org.jfree.ui.RefineryUtilities;
 
 import java.awt.*;
 
+import java.awt.geom.Arc2D;
 import java.io.FileInputStream;
 
 import java.io.InputStream;
@@ -105,12 +107,13 @@ public class ParseJSONData extends ApplicationFrame {
         deviationrenderer.setSeriesStroke(0, new BasicStroke(3F, 1, 1));
         //deviationrenderer.setSeriesStroke(1, new BasicStroke(3F, 1, 1));
         //deviationrenderer.setSeriesStroke(2, new BasicStroke(3F, 1, 1));
-        deviationrenderer.setSeriesFillPaint(0, new Color(200, 100, 255));
+        deviationrenderer.setSeriesFillPaint(0, new Color(100, 100, 255));
         //deviationrenderer.setSeriesFillPaint(1, new Color(200, 200, 255));
 
 
         NumberAxis rangeAxis = new NumberAxis(des);
         XYPlot subplot = new XYPlot(data, null, rangeAxis, deviationrenderer);
+        //subplot.setInsets(new RectangleInsets(5D, 5D, 5D, 5D));
         subplot.setInsets(new RectangleInsets(5D, 5D, 5D, 20D));
         subplot.setRangeAxisLocation(AxisLocation.BOTTOM_OR_LEFT);
 
@@ -173,10 +176,21 @@ public class ParseJSONData extends ApplicationFrame {
                     */
                     int itemCount = variableWithData.values.getItemCount();
                     for (int i=0; i<itemCount; i++) {
-                        series.add(variableWithData.values.getX(i).doubleValue() + globalTime.get(depth - 1),
-                                variableWithData.values.getYValue(i),
-                                variableWithData.values.getYLowValue(i),
-                                variableWithData.values.getYHighValue(i));
+                        if (i==0) {
+                            try {
+                                series.add(variableWithData.values.getX(i).doubleValue() + globalTime.get(depth - 1),
+                                        variableWithData.values.getYValue(i),
+                                        variableWithData.values.getYLowValue(i),
+                                        variableWithData.values.getYHighValue(i));
+                            }catch (SeriesException e) {}
+
+
+                        } else {
+                            series.add(variableWithData.values.getX(i).doubleValue() + globalTime.get(depth - 1),
+                                    variableWithData.values.getYValue(i),
+                                    variableWithData.values.getYLowValue(i),
+                                    variableWithData.values.getYHighValue(i));
+                        }
                     }
 
                 }
@@ -207,10 +221,12 @@ public class ParseJSONData extends ApplicationFrame {
             } else {
                 int itemCount = variableWithData.values.getItemCount();
                 for (int i=0; i<itemCount; i++) {
-                    series.add(variableWithData.values.getX(i).doubleValue(),
-                            variableWithData.values.getYValue(i),
-                            variableWithData.values.getYLowValue(i),
-                            variableWithData.values.getYHighValue(i));
+                    try {
+                        series.add(variableWithData.values.getX(i).doubleValue(),
+                                variableWithData.values.getYValue(i),
+                                variableWithData.values.getYLowValue(i),
+                                variableWithData.values.getYHighValue(i));
+                    }catch (SeriesException e){}
                 }
                 /*
                 List<XYDataItem> items = (List<XYDataItem>) variableWithData.values.getItems();
@@ -219,7 +235,8 @@ public class ParseJSONData extends ApplicationFrame {
                 }
                 */
             }
-            globalTime.add(series.getYValue(series.getItemCount()-1));
+
+            globalTime.add(series.getYHighValue(series.getItemCount()-1));
             depth++;
         }
     }
