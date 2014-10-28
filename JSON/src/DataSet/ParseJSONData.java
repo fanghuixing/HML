@@ -28,6 +28,7 @@ import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.RefineryUtilities;
 
+import javax.swing.text.NumberFormatter;
 import java.awt.*;
 
 import java.awt.geom.Arc2D;
@@ -35,6 +36,7 @@ import java.awt.geom.Rectangle2D;
 import java.io.FileInputStream;
 
 import java.io.InputStream;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 
 import java.util.HashMap;
@@ -55,6 +57,9 @@ public class ParseJSONData extends ApplicationFrame {
 
     List<Double> globalTime = new ArrayList<Double>();
     int maxDepth;
+    private NumberFormat numFormater = NumberFormat.getNumberInstance();
+
+
 
     List<YIntervalSeriesCollection> seriesCollectionList = new ArrayList<YIntervalSeriesCollection>();
 
@@ -83,9 +88,11 @@ public class ParseJSONData extends ApplicationFrame {
         List<XYPlot> subplots = (List<XYPlot>) plot.getSubplots();
 
         int index = 0;
-
+        numFormater.setMinimumFractionDigits(10);
         for (XYPlot sp : subplots) {
 
+            sp.getRenderer().setBaseToolTipGenerator(new StandardXYToolTipGenerator("{0}: {1} {2})",
+                    numFormater, numFormater));
             for (int i = 0; i<sp.getSeriesCount(); i++) {
 
 
@@ -119,13 +126,15 @@ public class ParseJSONData extends ApplicationFrame {
         Crosshair yCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0f));
         chartPanel.addChartMouseListener(new HMLChartMouseListener(xCrosshair, yCrosshair, chartPanel));
 
-        CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
+        CrosshairOverlay crosshairOverlay = new HMLCrosshairOverlay();
         xCrosshair.setLabelVisible(true);
-
+        yCrosshair.setLabelVisible(true);
         crosshairOverlay.addDomainCrosshair(xCrosshair);
+        crosshairOverlay.addRangeCrosshair(yCrosshair);
 
 
         chartPanel.addOverlay(crosshairOverlay);
+
 
 
 
@@ -190,6 +199,7 @@ public class ParseJSONData extends ApplicationFrame {
             else {
                 if (depth == 0) {
                     series = variableWithData.values;
+                    series.setKey(name+depth);
                     dataSet.addSeries(series);
 
                     seriesCollection.addSeries(series);
@@ -236,6 +246,7 @@ public class ParseJSONData extends ApplicationFrame {
             }
             if (depth == 0) {
                 series = variableWithData.values;
+                series.setKey("global"+depth);
                 dataSet.addSeries(series);
 
                 seriesCollection.addSeries(series);
@@ -274,9 +285,11 @@ public class ParseJSONData extends ApplicationFrame {
         HashMap<String, VariableWithData> dataHashMap = collectData.getDataHashMap();
 
         ParseJSONData demo = new ParseJSONData("Line Chart HML", variables, dataHashMap);
+
         demo.pack();
         RefineryUtilities.centerFrameOnScreen(demo);
         demo.setVisible(true);
+
     }
 
     public static void main(String[] args) throws Exception{

@@ -2,6 +2,8 @@ package DataSet;
 
 import org.jfree.chart.*;
 import org.jfree.chart.axis.ValueAxis;
+import org.jfree.chart.entity.ChartEntity;
+import org.jfree.chart.entity.PlotEntity;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.Crosshair;
 import org.jfree.chart.plot.XYPlot;
@@ -20,6 +22,9 @@ import java.util.List;
  * Created by Huixing Fang (fang.huixing@gmail.com) on 14-10-28.
  */
 public class HMLChartMouseListener implements ChartMouseListener {
+    public static Rectangle2D dataArea;
+    public static double yy;
+    public static ValueAxis yAxis;
     private Crosshair xCrosshair;
     private Crosshair yCrosshair;
     private ChartPanel chartPanel;
@@ -36,32 +41,36 @@ public class HMLChartMouseListener implements ChartMouseListener {
 
     @Override
     public void chartMouseMoved(ChartMouseEvent chartMouseEvent) {
-        Rectangle2D dataArea = chartPanel.getScreenDataArea();
+        int xc = chartMouseEvent.getTrigger().getX();
+        int yc = chartMouseEvent.getTrigger().getY();
+        dataArea = chartPanel.getScreenDataArea(xc, yc);
+
         JFreeChart chart = chartMouseEvent.getChart();
         CombinedDomainXYPlot plot = (CombinedDomainXYPlot) chart.getPlot();
         ValueAxis xAxis = plot.getDomainAxis();
 
-        double x = xAxis.java2DToValue(chartMouseEvent.getTrigger().getX(), dataArea,
-                RectangleEdge.BOTTOM);
-        xCrosshair.setValue(x);
+        Point2D point = chartPanel.translateScreenToJava2D(new Point(xc, yc));
+        XYPlot sub =  plot.findSubplot(chartPanel.getChartRenderingInfo().getPlotInfo(), point);
+        try {
+            double x = xAxis.java2DToValue(xc, dataArea,
+                    RectangleEdge.BOTTOM);
+            xCrosshair.setValue(x);
 
-        int xPos = chartMouseEvent.getTrigger().getX();
-        int yPos = chartMouseEvent.getTrigger().getY();
+            yAxis = sub.getRangeAxis();
 
-        System.out.println("x = " + xPos + ", y = " + yPos);
 
-        Point2D point2D = chartPanel.translateScreenToJava2D(new Point(xPos, yPos));
-        ChartRenderingInfo chartRenderingInfo = chartPanel.getChartRenderingInfo();
-        Rectangle2D rectangle2D = chartRenderingInfo.getPlotInfo().getDataArea();
-        XYPlot sub = (XYPlot) plot.getSubplots().get(0);
+            double y = yAxis.java2DToValue(yc, dataArea,
+                     RectangleEdge.LEFT);
 
-        ValueAxis yAxis = sub.getRangeAxis();
 
-        RectangleEdge rectangleEdge1 = sub.getDomainAxisEdge();
-        RectangleEdge rectangleEdge2 = sub.getRangeAxisEdge();
-        double d1 = xAxis.java2DToValue(point2D.getX(), rectangle2D, rectangleEdge1);
-        double d2 = yAxis.java2DToValue(point2D.getY(), rectangle2D, rectangleEdge2);
+            yCrosshair.setValue(y);
+         }catch (NullPointerException e){
+            yCrosshair.setValue(0);
+        }
 
-        System.out.println(d1 + " " + d2);
+
+
+
+
     }
 }
