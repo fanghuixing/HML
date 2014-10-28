@@ -5,32 +5,33 @@ import AntlrGen.JSONParser;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
+import org.jfree.chart.*;
 import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.Axis;
 import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.CombinedDomainXYPlot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.labels.StandardXYToolTipGenerator;
+import org.jfree.chart.labels.XYToolTipGenerator;
+import org.jfree.chart.panel.CrosshairOverlay;
+import org.jfree.chart.plot.*;
 import org.jfree.chart.renderer.AbstractRenderer;
 import org.jfree.chart.renderer.xy.DeviationRenderer;
 import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.general.DatasetUtilities;
 import org.jfree.data.general.SeriesException;
 import org.jfree.data.xy.*;
 import org.jfree.ui.ApplicationFrame;
+import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.RefineryUtilities;
 
 import java.awt.*;
 
 import java.awt.geom.Arc2D;
+import java.awt.geom.Rectangle2D;
 import java.io.FileInputStream;
 
 import java.io.InputStream;
@@ -63,6 +64,7 @@ public class ParseJSONData extends ApplicationFrame {
         XYDataset dataSet = createDataSet(variables, dataHashMap);
 
         CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis("Global Time"));
+
         plot.setGap(10.0);
 
         for (YIntervalSeriesCollection data : seriesCollectionList) {
@@ -81,15 +83,19 @@ public class ParseJSONData extends ApplicationFrame {
         List<XYPlot> subplots = (List<XYPlot>) plot.getSubplots();
 
         int index = 0;
+
         for (XYPlot sp : subplots) {
 
             for (int i = 0; i<sp.getSeriesCount(); i++) {
+
+
                 if (i % (maxDepth+1) == 0) index = 0;
                 Paint color = colors.get(index);
                 // From one mode to another, we will change the color
                 sp.getRenderer().setSeriesPaint(i, color);
                 // The shape of the line is solid or dashed
-                if (index % 2 ==0)
+
+                if (i % 2 == 0 || i % (maxDepth+1) == 0)
                     sp.getRenderer().setSeriesStroke(i, getStroke(3F, "solid"));
                 else
                     sp.getRenderer().setSeriesStroke(i, getStroke(3F, "dashed"));
@@ -98,19 +104,42 @@ public class ParseJSONData extends ApplicationFrame {
 
         }
 
-        JFreeChart chart = new JFreeChart("HML Data Chart",JFreeChart.DEFAULT_TITLE_FONT, plot, true);
-        chart.removeLegend();
-        ChartPanel chartPanel = new ChartPanel(chart);
+        JFreeChart chart = new JFreeChart("HML Data Chart",JFreeChart.DEFAULT_TITLE_FONT, plot, false);
+        //chart.removeLegend();
+
+        final ChartPanel chartPanel = new ChartPanel(chart, true,true,true,true, true);
         int width = Toolkit.getDefaultToolkit().getScreenSize().width;
         int height = Toolkit.getDefaultToolkit().getScreenSize().height;
         chartPanel.setPreferredSize(new java.awt.Dimension(width, height));
+        chartPanel.setMouseZoomable(true, false);
+        chartPanel.setDisplayToolTips(true);
+
+
+        Crosshair xCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0f));
+        Crosshair yCrosshair = new Crosshair(Double.NaN, Color.GRAY, new BasicStroke(0f));
+        chartPanel.addChartMouseListener(new HMLChartMouseListener(xCrosshair, yCrosshair, chartPanel));
+
+        CrosshairOverlay crosshairOverlay = new CrosshairOverlay();
+        xCrosshair.setLabelVisible(true);
+
+        crosshairOverlay.addDomainCrosshair(xCrosshair);
+
+
+        chartPanel.addOverlay(crosshairOverlay);
+
+
+
+
         setContentPane(chartPanel);
+
+
 
 
     }
 
     private void subplot(String des, XYDataset data, CombinedDomainXYPlot plot ){
         DeviationRenderer deviationrenderer = new DeviationRenderer(true, false);
+
         for (int i=0; i<data.getSeriesCount(); i++) {
             deviationrenderer.setSeriesFillPaint(i, new Color(100, 100, 255));
         }
