@@ -100,9 +100,9 @@ public class ParseJSONData extends ApplicationFrame {
                 // The shape of the line is solid or dashed
 
                 if (i % 2 == 0 || i % (maxDepth+1) == 0)
-                    sp.getRenderer().setSeriesStroke(i, getStroke(3F, "solid"));
+                    sp.getRenderer().setSeriesStroke(i, getStroke(1.5F, "solid"));
                 else
-                    sp.getRenderer().setSeriesStroke(i, getStroke(3F, "dashed"));
+                    sp.getRenderer().setSeriesStroke(i, getStroke(1.5F, "dashed"));
                 index = (index +1 ) % colors.size();
             }
 
