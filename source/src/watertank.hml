@@ -44,9 +44,7 @@ Main {
         // let water in
         //(dot waterLevel = accin) until @(on);
         open(waterLevel,accin,MaxwaterLevel,deta);
-        when{
-            (waterLevel < 9 then skip)
-        };
+        //when{(waterLevel < 9 then skip)};
         // let water out
         // waterLevel = 5;
         // ( waterLevel=waterLevel+0.3 <  ((waterLevel == 5)) > skip);
