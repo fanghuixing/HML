@@ -189,8 +189,9 @@ public class SavePDFActionListener implements ActionListener {
         Document document = new Document(pagesize, 50, 50, 50, 50);
         try {
             PdfWriter writer = PdfWriter.getInstance(document, out);
-            document.addAuthor("JFreeChart");
-            document.addSubject("Demonstration");
+            document.addAuthor("Huixing Fang");
+            document.addSubject("HML");
+            document.addCreator("Huixing Fang");
             document.open();
             PdfContentByte cb = writer.getDirectContent();
             PdfTemplate tp = cb.createTemplate(width, height);

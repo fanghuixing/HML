@@ -2,50 +2,34 @@ package DataSet;
 
 import AntlrGen.JSONLexer;
 import AntlrGen.JSONParser;
-import com.lowagie.text.*;
-import com.lowagie.text.pdf.*;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.jfree.chart.*;
-import org.jfree.chart.annotations.XYTextAnnotation;
-import org.jfree.chart.axis.Axis;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.AxisLocation;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.labels.StandardXYToolTipGenerator;
-import org.jfree.chart.labels.XYToolTipGenerator;
 import org.jfree.chart.panel.CrosshairOverlay;
-import org.jfree.chart.plot.*;
-import org.jfree.chart.renderer.AbstractRenderer;
+import org.jfree.chart.plot.CombinedDomainXYPlot;
+import org.jfree.chart.plot.Crosshair;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.DeviationRenderer;
-import org.jfree.chart.renderer.xy.StandardXYItemRenderer;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.general.DatasetUtilities;
-import org.jfree.data.general.SeriesException;
-import org.jfree.data.xy.*;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.YIntervalSeries;
+import org.jfree.data.xy.YIntervalSeriesCollection;
 import org.jfree.ui.ApplicationFrame;
-import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.RefineryUtilities;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.filechooser.FileFilter;
-import javax.swing.text.NumberFormatter;
 import java.awt.*;
-
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.geom.Arc2D;
-import java.awt.geom.Rectangle2D;
-import java.io.*;
-
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-
 import java.util.HashMap;
 import java.util.List;
 
@@ -161,9 +145,20 @@ public class ParseJSONData extends ApplicationFrame {
         JMenuItem exportToPDF = new JMenuItem("PDF...");
         exportToPDF.setActionCommand("EXPORT_TO_PDF");
         exportToPDF.addActionListener(listener);
+
+        //Add the export menu into right-click pop-menu
+        JMenuItem exportToEPS = new JMenuItem("EPS...");
+        exportToEPS.setActionCommand("EXPORT_TO_EPS");
+        exportToEPS.addActionListener(new SaveEPSActionListener(this, chartPanel));
+
+
+
+
         JPopupMenu popupMenu = chartPanel.getPopupMenu();
         JMenu subcom = (JMenu) popupMenu.getComponent(3);
         subcom.add(exportToPDF);
+        subcom.add(exportToEPS);
+
 
 
 
