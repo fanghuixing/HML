@@ -2,6 +2,8 @@ package DataSet;
 
 import AntlrGen.JSONLexer;
 import AntlrGen.JSONParser;
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.*;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -28,14 +30,19 @@ import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RectangleInsets;
 import org.jfree.ui.RefineryUtilities;
 
+import javax.swing.*;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.text.NumberFormatter;
 import java.awt.*;
 
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.geom.Arc2D;
 import java.awt.geom.Rectangle2D;
-import java.io.FileInputStream;
+import java.io.*;
 
-import java.io.InputStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 
@@ -51,6 +58,11 @@ public class ParseJSONData extends ApplicationFrame {
 
 
     private static ParseTree tree;
+    /** Exit action command. */
+    public static final String EXIT_COMMAND = "EXIT";
+
+    private  ChartPanel chartPanel;
+    private ActionListener listener;
     private float[][] pattern = {{10.0f},{7.0f,2.0f},{7.0f,2.0f,3.0f,7.0f},{1.0f,2.0f}};
     // The HML model file path
     private static String modelPath = "./JSON/src/data.json";
@@ -82,7 +94,7 @@ public class ParseJSONData extends ApplicationFrame {
         List<Color> colors = new ArrayList<Color>();
         colors.add(Color.black);
         colors.add(Color.blue);
-        colors.add(Color.green);
+        //colors.add(Color.green);
 
 
         List<XYPlot> subplots = (List<XYPlot>) plot.getSubplots();
@@ -91,7 +103,8 @@ public class ParseJSONData extends ApplicationFrame {
         numFormater.setMinimumFractionDigits(10);
         for (XYPlot sp : subplots) {
 
-            sp.getRenderer().setBaseToolTipGenerator(new StandardXYToolTipGenerator("{0}: {1} {2})",
+            sp.getRenderer().setBaseToolTipGenerator(
+                    new StandardXYToolTipGenerator("{0} : [ {1},  {2}]",
                     numFormater, numFormater));
             for (int i = 0; i<sp.getSeriesCount(); i++) {
 
@@ -114,7 +127,8 @@ public class ParseJSONData extends ApplicationFrame {
         JFreeChart chart = new JFreeChart("HML Data Chart",JFreeChart.DEFAULT_TITLE_FONT, plot, false);
         //chart.removeLegend();
 
-        final ChartPanel chartPanel = new ChartPanel(chart, true,true,true,true, true);
+
+        chartPanel = new ChartPanel(chart, true,true,true,true, true);
         int width = Toolkit.getDefaultToolkit().getScreenSize().width;
         int height = Toolkit.getDefaultToolkit().getScreenSize().height;
         chartPanel.setPreferredSize(new java.awt.Dimension(width, height));
@@ -139,11 +153,50 @@ public class ParseJSONData extends ApplicationFrame {
 
 
 
+        //Set menu of exporting image to PDF, in the file menu
+        listener = new SavePDFActionListener(this, chartPanel);
+        setJMenuBar(createMenuBar());
+
+        //Add the export menu into right-click pop-menu
+        JMenuItem exportToPDF = new JMenuItem("PDF...");
+        exportToPDF.setActionCommand("EXPORT_TO_PDF");
+        exportToPDF.addActionListener(listener);
+        JPopupMenu popupMenu = chartPanel.getPopupMenu();
+        JMenu subcom = (JMenu) popupMenu.getComponent(3);
+        subcom.add(exportToPDF);
+
+
+
         setContentPane(chartPanel);
 
 
 
+    }
 
+    private JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+
+        // first the file menu
+        JMenu fileMenu = new JMenu("File", true);
+        fileMenu.setMnemonic('F');
+
+        JMenuItem exportToPDF = new JMenuItem("Export to PDF...", 'p');
+        exportToPDF.setActionCommand("EXPORT_TO_PDF");
+
+        exportToPDF.addActionListener(listener);
+        fileMenu.add(exportToPDF);
+
+        fileMenu.addSeparator();
+
+        JMenuItem exitItem = new JMenuItem("Exit", 'x');
+        exitItem.setActionCommand(EXIT_COMMAND);
+        exitItem.addActionListener(listener);
+        fileMenu.add(exitItem);
+
+        // finally, glue together the menu and return it
+        menuBar.add(fileMenu);
+
+        return menuBar;
     }
 
     private void subplot(String des, XYDataset data, CombinedDomainXYPlot plot ){
@@ -199,7 +252,7 @@ public class ParseJSONData extends ApplicationFrame {
             else {
                 if (depth == 0) {
                     series = variableWithData.values;
-                    series.setKey(name+depth);
+                    series.setKey(name);
                     dataSet.addSeries(series);
 
                     seriesCollection.addSeries(series);
@@ -246,7 +299,7 @@ public class ParseJSONData extends ApplicationFrame {
             }
             if (depth == 0) {
                 series = variableWithData.values;
-                series.setKey("global"+depth);
+                series.setKey("global");
                 dataSet.addSeries(series);
 
                 seriesCollection.addSeries(series);
@@ -310,7 +363,6 @@ public class ParseJSONData extends ApplicationFrame {
         else if (type.equals("dotted")) return strokes[3];
         else return strokes[0];
     }
-
 
 
 
