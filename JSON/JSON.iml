@@ -73,6 +73,28 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="org.freehep:freehep-graphicsio-ps:2.4" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/LIB/batik-dom-1.7.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/LIB/batik-svggen-1.7.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="batik:batik-awt-util:1.6" level="project" />
+    <orderEntry type="library" name="batik:batik-util:1.6" level="project" />
+    <orderEntry type="library" name="xml-apis:xml-apis:1.4.01" level="project" />
+    <orderEntry type="library" name="batik:batik-xml:1.7" level="project" />
   </component>
 </module>
 

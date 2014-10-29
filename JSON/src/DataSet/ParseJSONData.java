@@ -138,19 +138,27 @@ public class ParseJSONData extends ApplicationFrame {
 
 
         //Set menu of exporting image to PDF, in the file menu
-        listener = new SavePDFActionListener(this, chartPanel);
-        setJMenuBar(createMenuBar());
+        listener = new UnifiedActionListener(this, chartPanel);
+        JMenuBar menuBar = createMenuBar();
+        setJMenuBar(menuBar);
 
-        //Add the export menu into right-click pop-menu
+        //Add the export menu (PDF) into right-click pop-menu
         JMenuItem exportToPDF = new JMenuItem("PDF...");
         exportToPDF.setActionCommand("EXPORT_TO_PDF");
         exportToPDF.addActionListener(listener);
 
-        //Add the export menu into right-click pop-menu
+
+        //Add the export menu (EPS) into right-click pop-menu
         JMenuItem exportToEPS = new JMenuItem("EPS...");
         exportToEPS.setActionCommand("EXPORT_TO_EPS");
-        exportToEPS.addActionListener(new SaveEPSActionListener(this, chartPanel));
+        exportToEPS.addActionListener(listener);
 
+
+
+        //Add the export menu (SVG) into right-click pop-menu
+        JMenuItem exportToSVG = new JMenuItem("SVG...");
+        exportToSVG.setActionCommand("EXPORT_TO_SVG");
+        exportToSVG.addActionListener(listener);
 
 
 
@@ -158,6 +166,10 @@ public class ParseJSONData extends ApplicationFrame {
         JMenu subcom = (JMenu) popupMenu.getComponent(3);
         subcom.add(exportToPDF);
         subcom.add(exportToEPS);
+        subcom.add(exportToSVG);
+
+
+
 
 
 
@@ -182,6 +194,23 @@ public class ParseJSONData extends ApplicationFrame {
         fileMenu.add(exportToPDF);
 
         fileMenu.addSeparator();
+
+
+        JMenuItem exportToEPS = new JMenuItem("Export to EPS...", 'e');
+        exportToEPS.setActionCommand("EXPORT_TO_EPS");
+        exportToEPS.addActionListener(listener);
+        fileMenu.add(exportToEPS);
+
+        fileMenu.addSeparator();
+
+
+        JMenuItem exportToSVG = new JMenuItem("Export to SVG...", 's');
+        exportToSVG.setActionCommand("EXPORT_TO_SVG");
+        exportToSVG.addActionListener(listener);
+        fileMenu.add(exportToSVG);
+
+        fileMenu.addSeparator();
+
 
         JMenuItem exitItem = new JMenuItem("Exit", 'x');
         exitItem.setActionCommand(EXIT_COMMAND);

@@ -46,7 +46,7 @@ public class SaveEPSActionListener  implements ActionListener {
 
     /**
      * Opens a "Save As..." dialog, inviting the user to save the selected
-     * chart to a file in PDF format.
+     * chart to a file in EPS format.
      */
     private void exportToEPS() {
         Component c = chartPanel;
@@ -82,7 +82,7 @@ public class SaveEPSActionListener  implements ActionListener {
             message += "at the expected location in the component hierarchy\n";
             message += "(future versions of the demo may include code to ";
             message += "handle these special cases).";
-            JOptionPane.showMessageDialog(applicationFrame, message, "PDF Export",
+            JOptionPane.showMessageDialog(applicationFrame, message, "EPS Export",
                     JOptionPane.INFORMATION_MESSAGE);
         }
     }
@@ -98,7 +98,6 @@ public class SaveEPSActionListener  implements ActionListener {
         }
 
         OutputStream out = new java.io.FileOutputStream(outfile);
-        //EPSDocumentGraphics2D g2d = new EPSDocumentGraphics2D(false);
         EPSGraphics2D g2d = new EPSGraphics2D(out, new Dimension(width, height));
         Properties p = new Properties();
         p.setProperty("PageSize","A4");

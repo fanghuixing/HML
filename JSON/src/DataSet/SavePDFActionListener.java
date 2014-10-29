@@ -138,8 +138,7 @@ public class SavePDFActionListener implements ActionListener {
 
         public void run() {
             try {
-                saveChartAsPDF(this.file, chart, width, height,
-                        new DefaultFontMapper());
+                saveChartAsPDF(this.file, chart, width, height, new DefaultFontMapper());
             }
             catch (IOException e) {
                 e.printStackTrace();
