@@ -52,17 +52,10 @@ public class HMLChartMouseListener implements ChartMouseListener {
         Point2D point = chartPanel.translateScreenToJava2D(new Point(xc, yc));
         XYPlot sub =  plot.findSubplot(chartPanel.getChartRenderingInfo().getPlotInfo(), point);
         try {
-            double x = xAxis.java2DToValue(xc, dataArea,
-                    RectangleEdge.BOTTOM);
+            double x = xAxis.java2DToValue(xc, dataArea, RectangleEdge.BOTTOM);
             xCrosshair.setValue(x);
-
             yAxis = sub.getRangeAxis();
-
-
-            double y = yAxis.java2DToValue(yc, dataArea,
-                     RectangleEdge.LEFT);
-
-
+            double y = yAxis.java2DToValue(yc, dataArea, RectangleEdge.LEFT);
             yCrosshair.setValue(y);
          }catch (NullPointerException e){
             yCrosshair.setValue(0);
