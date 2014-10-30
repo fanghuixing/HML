@@ -1,6 +1,5 @@
 package IMP.Translate;
 
-import AntlrGen.HMLParser;
 import IMP.Infos.AbstractExpr;
 
 import java.util.ArrayList;

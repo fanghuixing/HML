@@ -28,7 +28,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     private ParseTreeProperty<Scope> scopes;
     private GlobalScope globals;
     private Scope currentScope; // resolve symbols starting in this scope
-    private static boolean CHECKINGGUARD = false;
+    private static boolean CHECKINGGUARD = false; // if the guard is always satisfied, then the divergence is present
     private int depth;
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
     private VariableLink currentVariableLink;
@@ -73,7 +73,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         HMLParser.ExprContext condition =  ctx.expr();
         boolean condSatInit;
 
-
+        currentTree.getCurrentDynamics().setGuardCheckEnable(true);
         condSatInit = checkChoice(condition, currentTree);
 
         //条件满足的情况
@@ -133,14 +133,18 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
 
     public Void visitOde(HMLParser.OdeContext ctx) {
 
-        //maybe we don't have to check the guard initially
+        //As we cannot control the divergence, maybe we don't have to check the guard initially
         if (CHECKINGGUARD) {
+            currentTree.getCurrentDynamics().setGuardCheckEnable(true);
             boolean guardSatInit = checkGuard(ctx.guard(), currentTree);
             if (guardSatInit) {
+                currentTree.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
                 logger.debug("The Guard is satisfied initially, skip this flow.");
                 return null;
             }
         }
+
+        //if the guard is not satisfied initially or we did not check this
         visit(ctx.equation());
         if (currentTree.getCurrentDepth()>depth) return null;
 
@@ -151,8 +155,14 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         currentTree.getCurrentDynamics().toString();
         if (currentTree.getCurrentDepth() < depth+1) {
             Dynamic dy = new DiscreteWithContinuous();
-            dy.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
             currentTree.setCurrentDynamics(dy);
+            if (CHECKINGGUARD) {
+                // if we open the check guard, but the guard is not satisfied
+                // we have to visit this eq again
+                visit(ctx);
+                return null; //do not forget this return statement
+            }
+            dy.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
         }
         else  finishOnePath(currentTree);
 
@@ -313,11 +323,12 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
             List<HMLParser.SingleGuardedChoiceContext> gcList;
             gcList = ((HMLParser.GuardedChoiceContext) guard).singleGuardedChoice();
             for (HMLParser.SingleGuardedChoiceContext sgc : gcList) {
-                boolean sat = checkGuard(sgc.guard(), currentTree);
-                if (sat) {
+                //boolean sat = checkGuard(sgc.guard(), currentTree);
+                currentTree.getCurrentDynamics().setGuardCheckEnable(true);
+                if (checkGuard(sgc.guard(), currentTree)) {
                     // if one of the guardedChoice is satisfiable at the begging
                     visit(sgc.blockStatement());
-                    return;
+                    return; // do not forget this return
                 }
             }
             //if no guardedChoice can be satisfied, we have to wait
