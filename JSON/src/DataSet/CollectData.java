@@ -83,13 +83,7 @@ public class CollectData extends JSONBaseVisitor{
                     } catch (SeriesException e) {
 
                     }
-
-
-
             }
-
-
-
         }
         dataHashMap.put(ctx.key().ID().getText(), new VariableWithData(name, mode, depth, values));
         return null;

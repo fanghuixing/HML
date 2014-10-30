@@ -5,6 +5,8 @@ import AntlrGen.JSONParser;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.AxisLocation;
@@ -32,14 +34,12 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-
 /**
  * HML DataSet, Show different color and line shape for different modes
  * Created by Huixing Fang (fang.huixing@gmail.com) on 14-10-27.
  */
 public class ParseJSONData extends ApplicationFrame {
-
+    private static Logger  logger = LogManager.getLogger(ParseJSONData.class);
 
     private static ParseTree tree;
     /** Exit action command. */
@@ -47,7 +47,7 @@ public class ParseJSONData extends ApplicationFrame {
 
     private  ChartPanel chartPanel;
     private ActionListener listener;
-    private float[][] pattern = {{10.0f},{7.0f,2.0f},{7.0f,2.0f,3.0f,7.0f},{1.0f,2.0f}};
+    private float[][] pattern = {{10.0f},{4.0f,1.0f},{7.0f,2.0f,3.0f,7.0f},{1.0f,2.0f}};
     // The HML model file path
     private static String modelPath = "./JSON/src/data.json";
 
@@ -406,7 +406,7 @@ public class ParseJSONData extends ApplicationFrame {
             try {
                 showData(path);
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error(e.getMessage());
             }
         }
     }
