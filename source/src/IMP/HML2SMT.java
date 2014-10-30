@@ -44,10 +44,10 @@ public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
 
     // The max depth of the unrolling
-    final static int depth = 15;
+    final static int depth = 5;
 
     // The HML model file path
-    private static String modelPath = "./source/src/bouncingBall.hml";
+    private static String modelPath = "./source/src/watertank.hml";
 
     // The SMT2 formula path
     private static String smtPath ;

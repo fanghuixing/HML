@@ -89,7 +89,7 @@ public class DiscreteWithContinuous implements Dynamic{
             }
             else if (r instanceof  HMLParser.GuardContext) {
                 //连续行为退出条件
-                analyzeGuard((HMLParser.GuardContext) r, c.getVrl());
+                analyzeGuard( r, c.getVrl());
 
             }
             else if (r instanceof HMLParser.ExprContext) {
@@ -98,6 +98,10 @@ public class DiscreteWithContinuous implements Dynamic{
 
             }
             else if (r instanceof HMLParser.SuspendContext) {
+                analyzeGuard(r, c.getVrl());
+            } else if (r instanceof HMLParser.WhenProContext) {
+                // if you need to add the when guard to the starting point
+                // we don't need this usually
                 analyzeGuard(r, c.getVrl());
             }
         }
@@ -418,7 +422,10 @@ public class DiscreteWithContinuous implements Dynamic{
             else {
                 sb.append(String.format("(= %s %s)", addDepthFlagToVar(abe.getKey(),"0"), abe.getValue().toString(depth - 1)));
                 String name = abe.getKey();
-                if ((continuous.getPrc() instanceof HMLParser.SuspendContext || continuous.getPrc() instanceof HMLParser.WhenProContext)
+
+               // for vars that are not changed during the flow(suspend and when do not change vars)
+                if (continuous!=null && (continuous.getPrc() instanceof HMLParser.SuspendContext ||
+                     continuous.getPrc() instanceof HMLParser.WhenProContext)
                         && !name.equals("clock") && !name.equals("global") && !HML2SMT.isSignal(name)) {
                     sb.append(String.format(" (= %s %s) ", addDepthFlagToVar(abe.getKey(),"t"), addDepthFlagToVar(abe.getKey(),"0")));
                 }

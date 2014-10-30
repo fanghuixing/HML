@@ -2,17 +2,16 @@ package IMP.Merge;
 
 
 import IMP.Translate.Dynamic;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 
 /**
  * HML-IMP.Merge
- * Created by fofo on 2014/10/7.
+ * Created by Huixing Fang (fang.huixing@gmail.com) on 2014/10/7.
  */
 public class PathsMerge {
 

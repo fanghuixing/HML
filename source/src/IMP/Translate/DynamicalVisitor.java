@@ -2,22 +2,22 @@ package IMP.Translate;
 
 import AntlrGen.HMLParser;
 import IMP.Basic.Template;
+import IMP.Exceptions.TemplateNotDefinedException;
 import IMP.HML2SMT;
 import IMP.Infos.AbstractExpr;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import IMP.Exceptions.TemplateNotDefinedException;
 /**
  * This is the visitor that does the main work for
  * unrolling (translation) from HML model to SMT2 formulas
@@ -308,35 +308,50 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
      * @param guard The exit condition
      */
     private void commonContinuousAnalysis(ParserRuleContext ctx, ParserRuleContext guard){
-        currentTree.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
-        currentTree.getCurrentDynamics().setGuardCheckEnable(true);
-        currentTree.getCurrentDynamics().setDepth(currentTree.getCurrentDepth());
-        currentTree.addDynamics(currentTree.getCurrentDynamics());
-        currentTree.getCurrentDynamics().toString();
-        if (currentTree.getCurrentDepth() < depth+1) {
-            Dynamic dy = new DiscreteWithContinuous();
-            if (guard instanceof HMLParser.GuardedChoiceContext) {
-                List<HMLParser.SingleGuardedChoiceContext> gcList;
-                gcList = ((HMLParser.GuardedChoiceContext) guard).singleGuardedChoice();
-                for (HMLParser.SingleGuardedChoiceContext sgc : gcList) {
-                    boolean sat = checkGuard(sgc.guard(), currentTree);
-                    if (sat) {
-                        // if one of the guardedChoice is satisfiable, we can add the dynamics and return
-                        dy.addDiscrete(new ContextWithVarLink(sgc.guard(), currentVariableLink));
-                        currentTree.setCurrentDynamics(dy);
-                        visit(sgc.blockStatement());
-                        return;
-                    }
+
+        if (guard instanceof HMLParser.GuardedChoiceContext) {
+            List<HMLParser.SingleGuardedChoiceContext> gcList;
+            gcList = ((HMLParser.GuardedChoiceContext) guard).singleGuardedChoice();
+            for (HMLParser.SingleGuardedChoiceContext sgc : gcList) {
+                boolean sat = checkGuard(sgc.guard(), currentTree);
+                if (sat) {
+                    // if one of the guardedChoice is satisfiable at the begging
+                    visit(sgc.blockStatement());
+                    return;
                 }
-                //if no guardedChoice can be satisfied, we have to wait
+            }
+            //if no guardedChoice can be satisfied, we have to wait
+            {//add continuous
+                currentTree.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
+                currentTree.getCurrentDynamics().setGuardCheckEnable(true);
+                currentTree.getCurrentDynamics().setDepth(currentTree.getCurrentDepth());
+                currentTree.addDynamics(currentTree.getCurrentDynamics());
+                currentTree.getCurrentDynamics().toString();
+            }
+            if (currentTree.getCurrentDepth() < depth+1) {
+                Dynamic dy = new DiscreteWithContinuous();
                 currentTree.setCurrentDynamics(dy);
                 visit(ctx);
             } else {
+                finishOnePath(currentTree);
+            }
+
+        } else {
+            //add continuous
+                currentTree.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
+                currentTree.getCurrentDynamics().setGuardCheckEnable(true);
+                currentTree.getCurrentDynamics().setDepth(currentTree.getCurrentDepth());
+                currentTree.addDynamics(currentTree.getCurrentDynamics());
+                currentTree.getCurrentDynamics().toString();
+            if (currentTree.getCurrentDepth() < depth+1) {
+                Dynamic dy = new DiscreteWithContinuous();
                 dy.addDiscrete(new ContextWithVarLink(guard, currentVariableLink));
                 currentTree.setCurrentDynamics(dy);
+            } else {
+                finishOnePath(currentTree);
             }
+
         }
-        else  finishOnePath(currentTree);
     }
 
     public Void visitNonCh(HMLParser.NonChContext ctx) {
