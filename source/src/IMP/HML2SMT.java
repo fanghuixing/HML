@@ -1,28 +1,39 @@
 package IMP;
 
+import AntlrGen.HMLLexer;
+import AntlrGen.HMLParser;
 import IMP.Basic.Constraint;
 import IMP.Basic.VariableForSMT2;
 import IMP.Check.ExecSMT;
 import IMP.Check.Util;
 import IMP.Exceptions.HMLException;
+import IMP.Infos.AbstractExpr;
 import IMP.Infos.HML2SMTListener;
 import IMP.Infos.HSTErrorListener;
 import IMP.Scope.ScopeConstructor;
-import IMP.Infos.AbstractExpr;
-import IMP.Translate.*;
-import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.*;
+import IMP.Translate.DiscreteWithContinuous;
+import IMP.Translate.Dynamic;
+import IMP.Translate.DynamicalVisitor;
+import IMP.Translate.HMLProgram2SMTVisitor;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.antlr.v4.runtime.tree.ParseTreeWalker;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroup;
+import org.stringtemplate.v4.STGroupFile;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-import AntlrGen.*;
-import org.stringtemplate.v4.ST;
-import org.stringtemplate.v4.STGroup;
-import org.stringtemplate.v4.STGroupFile;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  *  The main class of the translation from HML model to SMT2 formulas
@@ -33,10 +44,10 @@ public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
 
     // The max depth of the unrolling
-    final static int depth = 5;
+    final static int depth = 6;
 
     // The HML model file path
-    private static String modelPath = "./source/src/bouncingBall.hml";
+    private static String modelPath = "./source/src/watertank.hml";
 
     // The SMT2 formula path
     private static String smtPath ;

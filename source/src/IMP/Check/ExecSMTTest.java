@@ -4,7 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class ExecSMTTest {
     private String path = "./source/src/HML_5_0.smt2" ;
@@ -23,9 +23,8 @@ public class ExecSMTTest {
     public void testExec() throws Exception {
         boolean ret = ExecSMT.exec("0.0001", path + args);
 
+
+
         assertEquals(ret, true);
-
-
-
     }
 }
