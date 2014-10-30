@@ -346,8 +346,8 @@ public class ParseJSONData extends ApplicationFrame {
 
 
 
-    public static void showData(String modelPath) throws Exception {
-        InputStream inputStream = new FileInputStream(modelPath);
+    public static void showData(String dataPath) throws Exception {
+        InputStream inputStream = new FileInputStream(dataPath);
         ANTLRInputStream input = new ANTLRInputStream(inputStream);
         JSONLexer lexer = new JSONLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
@@ -369,6 +369,11 @@ public class ParseJSONData extends ApplicationFrame {
 
     }
 
+    public static void start(String path){
+        DrawTask dt = new DrawTask(path);
+        SwingUtilities.invokeLater(dt);
+    }
+
     public static void main(String[] args) throws Exception{
 
         ParseJSONData.showData("./JSON/src/data.json");
@@ -388,6 +393,23 @@ public class ParseJSONData extends ApplicationFrame {
         else return strokes[0];
     }
 
+
+    static class DrawTask implements Runnable{
+        private String path;
+
+        public DrawTask(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public void run() {
+            try {
+                showData(path);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 
 }

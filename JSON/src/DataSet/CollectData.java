@@ -3,7 +3,6 @@ package DataSet;
 import AntlrGen.JSONBaseVisitor;
 import AntlrGen.JSONParser;
 import org.jfree.data.general.SeriesException;
-import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.YIntervalSeries;
 
 import java.util.ArrayList;
@@ -16,6 +15,7 @@ import java.util.List;
  * Created by Huixing Fang (fang.huixing@gmail.com) on 14-10-27.
  */
 public class CollectData extends JSONBaseVisitor{
+
 
     HashSet<String> variables = new HashSet<String>();
     List<JSONParser.FlowContext> flows;
@@ -69,17 +69,21 @@ public class CollectData extends JSONBaseVisitor{
                 double v0 = Double.parseDouble(value.get(0).getText());
                 double v1 = Double.parseDouble(value.get(1).getText());
 
+                //Skip the dirty or too coarse data
+                if (Math.abs(t0-t1)>2) continue;
 
-                try {
+                //If the data is clean
+                    try {
 
-                    if (v0 <= v1) {
-                        values.add((t0 + t1) / 2, (v0 + v1) / 2, v0, v1);
-                    } else {
-                        values.add((t0 + t1) / 2, (v0 + v1) / 2, v1, v0);
+                        if (v0 <= v1) {
+                            values.add((t0 + t1) / 2, (v0 + v1) / 2, v0, v1);
+                        } else {
+                            values.add((t0 + t1) / 2, (v0 + v1) / 2, v1, v0);
+                        }
+                    } catch (SeriesException e) {
+
                     }
-                }catch (SeriesException e){
 
-                }
 
 
             }
