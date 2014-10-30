@@ -66,7 +66,7 @@ public class ParseJSONData extends ApplicationFrame {
 
         CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis("Global Time"));
 
-        plot.setGap(10.0);
+        plot.setGap(5.0);
 
         for (YIntervalSeriesCollection data : seriesCollectionList) {
             String des = data.getSeries(0).getKey().toString();
@@ -86,10 +86,8 @@ public class ParseJSONData extends ApplicationFrame {
         int index = 0;
         numFormater.setMinimumFractionDigits(10);
         for (XYPlot sp : subplots) {
-
-            sp.getRenderer().setBaseToolTipGenerator(
-                    new StandardXYToolTipGenerator("{0} : [ {1},  {2}]",
-                    numFormater, numFormater));
+            sp.getRenderer().setBaseToolTipGenerator(new StandardXYToolTipGenerator());
+            //new StandardXYToolTipGenerator("{0} : [ {1},  {2}]", numFormater, numFormater);
             for (int i = 0; i<sp.getSeriesCount(); i++) {
 
 
@@ -100,9 +98,9 @@ public class ParseJSONData extends ApplicationFrame {
                 // The shape of the line is solid or dashed
 
                 if (i % 2 == 0 || i % (maxDepth+1) == 0)
-                    sp.getRenderer().setSeriesStroke(i, getStroke(1.5F, "solid"));
+                    sp.getRenderer().setSeriesStroke(i, getStroke(2F, "solid"));
                 else
-                    sp.getRenderer().setSeriesStroke(i, getStroke(1.5F, "dashed"));
+                    sp.getRenderer().setSeriesStroke(i, getStroke(2F, "dashed"));
                 index = (index +1 ) % colors.size();
             }
 
@@ -179,6 +177,7 @@ public class ParseJSONData extends ApplicationFrame {
 
 
     }
+
 
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
