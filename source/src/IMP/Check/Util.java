@@ -11,7 +11,7 @@ import java.net.URI;
 
 /**
  * HML IMP.Check
- * Created by fofo on 14-10-22.
+ * Created by Huixing Fang (fang.huixing@gmail.com) on 14-10-22.
  */
 public class Util {
     private static Logger logger = LogManager.getLogger(Util.class.getName());
