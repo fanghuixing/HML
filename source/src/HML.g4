@@ -118,7 +118,7 @@ expr
     | 'true'                                                    # ConstantTrue
     | 'false'                                                   # ConstantFalse
     | prefix=('-' | '~') expr                                   # NegationExpr
-    | left=expr op=('*'|'/'|'mod') right=expr                   # MExpr
+    | left=expr op=('*'|'/'|'mod' | '^') right=expr                   # MExpr
     | left=expr op=('+'|'-') right=expr                         # AExpr
     | left=expr op=('>=' | '>' | '==' | '<' | '<=') right=expr  # CompExpr
     | left=expr op='and' right=expr                             # LogicalAndExpr
