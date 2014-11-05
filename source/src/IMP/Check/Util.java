@@ -31,8 +31,8 @@ public class Util {
     }
 
     public static void viewDataInWindow(String path) throws Exception {
-
-        ParseJSONData.showData(path+".json");
+        //ParseJSONData.start(path+".json");
+        ParseJSONData.showData(path + ".json");
 
 
 

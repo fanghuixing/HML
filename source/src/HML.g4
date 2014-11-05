@@ -118,16 +118,19 @@ expr
     | 'true'                                                    # ConstantTrue
     | 'false'                                                   # ConstantFalse
     | prefix=('-' | '~') expr                                   # NegationExpr
-    | left=expr op=('*'|'/'|'mod' | '^') right=expr                   # MExpr
+    | left=expr op=('*'|'/'|'%' | '^') right=expr               # MExpr
     | left=expr op=('+'|'-') right=expr                         # AExpr
     | left=expr op=('>=' | '>' | '==' | '<' | '<=') right=expr  # CompExpr
     | left=expr op='and' right=expr                             # LogicalAndExpr
     | left=expr op='or' right=expr                              # LogicalOrExpr
     | left=expr op='xor' right=expr                             # LogicalXorExpr
-    | 'floor' '(' expr ')'                                      # FloorExpr
-    | 'ceil' '(' expr ')'                                       # CeilExpr
+    | fun=('sin' | 'cos' | 'floor' | 'ceil' | 'exp' | 'tan'
+           | 'asin' | 'acos' | 'atan' | 'sinh' | 'cosh'
+           | 'tanh' | 'abs' | 'log' ) '(' expr ')'              # BuiltInFunc
     | parExpression                                             # ParExpr
     ;
+
+
 
 parExpression
     :   '(' expr ')'

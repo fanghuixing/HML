@@ -1,14 +1,17 @@
 package IMP.Infos;
-import IMP.Basic.*;
-import IMP.Translate.VariableLink;
-import org.antlr.v4.runtime.Token;
 import AntlrGen.HMLBaseListener;
 import AntlrGen.HMLParser;
+import IMP.Basic.Constraint;
+import IMP.Basic.Template;
+import IMP.Basic.Variable;
+import IMP.Basic.VariableForSMT2;
+import IMP.Translate.VariableLink;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 /**
  * Created by Huixing Fang on 2014/9/25.
  *
@@ -188,12 +191,10 @@ public class HML2SMTListener extends HMLBaseListener {
         exprPtp.put(ctx,  new AbstractExpr(op, left, right));
     }
 
-    public void exitFloorExpr(HMLParser.FloorExprContext ctx) {
-        exprPtp.put(ctx,new AbstractExpr("floor", exprPtp.get(ctx.expr()), null));
-    }
 
-    public void exitCeilExpr(HMLParser.CeilExprContext ctx) {
-        exprPtp.put(ctx,new AbstractExpr("ceil", exprPtp.get(ctx.expr()), null));
+
+    public void exitBuiltInFunc(HMLParser.BuiltInFuncContext ctx) {
+        exprPtp.put(ctx, new AbstractExpr(ctx.fun.getText(), exprPtp.get(ctx.expr()), null));
     }
 
     public void exitParExpr(HMLParser.ParExprContext ctx) {
