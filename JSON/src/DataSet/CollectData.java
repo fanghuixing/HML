@@ -70,7 +70,9 @@ public class CollectData extends JSONBaseVisitor{
                 double v1 = Double.parseDouble(value.get(1).getText());
 
                 //Skip the dirty or too coarse data
-                if (Math.abs(t0-t1)>2) continue;
+                if (Math.abs(t0-t1)>2) {
+                    continue;
+                }
 
                 //If the data is clean
                     try {
