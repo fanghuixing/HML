@@ -5,6 +5,7 @@ import IMP.Basic.Template;
 import IMP.Exceptions.TemplateNotDefinedException;
 import IMP.HML2SMT;
 import IMP.Infos.AbstractExpr;
+import IMP.Parallel.IncrementalVisitor;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
@@ -25,15 +26,18 @@ import java.util.Stack;
  */
 public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     private static Logger logger = LogManager.getLogger(DynamicalVisitor.class.getName());
-    private ParseTreeProperty<Scope> scopes;
+    private static ParseTreeProperty<Scope> scopes;
     private GlobalScope globals;
-    private Scope currentScope; // resolve symbols starting in this scope
+    private static Scope currentScope; // resolve symbols starting in this scope
     private static boolean CHECKINGGUARD = false; // if the guard is always satisfied, then the divergence is present
     private int depth;
     private HashMap<String, Template> tmpMap = new HashMap<String, Template>();
-    private VariableLink currentVariableLink;
-    private Stack<VariableLink> variableStack = new Stack<VariableLink>();
+    private static VariableLink currentVariableLink;
+    private static Stack<VariableLink> variableStack = new Stack<VariableLink>();
     private VisitTree currentTree = new VisitTree(null,  new DiscreteWithContinuous(), new ArrayList<Dynamic>());
+
+
+
 
 
     public DynamicalVisitor(ParseTreeProperty<Scope> scopes, GlobalScope globals, HashMap<String, Template> tmpMap, int depth) {
@@ -98,10 +102,184 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         return null;
     }
 
+
+
     public Void visitAssignment(HMLParser.AssignmentContext ctx) {
         currentTree.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink));
         return null;
     }
+
+
+
+    public Void visitParaCom(HMLParser.ParaComContext ctx) {
+        List<HMLParser.BlockStatementContext> subPros = ctx.blockStatement();
+        HashMap<HMLParser.BlockStatementContext, Stack<IncrementalVisitor>> pro2Visitor = new HashMap<HMLParser.BlockStatementContext, Stack<IncrementalVisitor>>();
+        for (HMLParser.BlockStatementContext sub : subPros) {
+            Stack<IncrementalVisitor> stack = new Stack<IncrementalVisitor>();
+            IncrementalVisitor incrementalVisitor = new IncrementalVisitor(sub);
+            stack.push(incrementalVisitor);
+            pro2Visitor.put(sub, stack);
+            Thread t = new Thread(incrementalVisitor);
+            incrementalVisitor.setThread(t);
+            t.start();
+        }
+
+        boolean[] flag = new boolean[subPros.size()];
+        List<ParserRuleContext> continuous = new ArrayList<ParserRuleContext>();
+        for (int i = 0; i < flag.length; i++) {
+            if (flag[i] == false) {
+                IncrementalVisitor iv = pro2Visitor.get(subPros.get(i)).peek();
+                while (iv.getThread().isAlive() == false) {
+                    pro2Visitor.get(subPros.get(i)).pop();
+                    iv = pro2Visitor.get(subPros.get(i)).peek();
+                }
+                //if this sub program is empty
+                if (iv == null) {
+                    continue;
+                    flag[i] = true;
+                }
+                ParserRuleContext context = iv.getCurrentCtx();
+                if (context == null) continue;
+                iv.setCurrentCtx(null);
+                Stack<IncrementalVisitor> stack = pro2Visitor.get(subPros.get(i));
+                iv = checkSubProgram(context, stack, continuous,iv);
+
+                //if this is a continuous program, stop unrolling for this sub pro
+                if (context instanceof HMLParser.SuspendContext ||
+                    context instanceof HMLParser.OdeContext)
+                    flag[i] = true;
+
+                iv.getThread().interrupt();//let the thread run again
+
+            } else flag[i] = true;
+
+        }
+        return null;
+    }
+
+
+
+
+
+    private IncrementalVisitor checkSubProgram(ParserRuleContext context, Stack<IncrementalVisitor> stack, List<ParserRuleContext> continuous, IncrementalVisitor iv){
+        //continuous behaviors
+        if (context instanceof HMLParser.SuspendContext ||
+            context instanceof HMLParser.OdeContext ||
+            context instanceof HMLParser.WhenProContext ){
+            continuous.add(context);
+            return iv;
+        }
+
+
+        if (context instanceof HMLParser.AtomContext) {
+            visit(context);
+            return iv;
+        } else if (context instanceof HMLParser.ConChoiceContext) {
+            HMLParser.ExprContext condition =((HMLParser.ConChoiceContext) context).expr();
+            boolean condSatInit;
+
+            currentTree.getCurrentDynamics().setGuardCheckEnable(true);
+            condSatInit = checkChoice(condition, currentTree);
+            HMLParser.BlockStatementContext sub;
+            if (condSatInit) {
+                sub = ((HMLParser.ConChoiceContext) context).blockStatement(0);
+            }
+            else {
+                sub = ((HMLParser.ConChoiceContext) context).blockStatement(1);
+            }
+
+            IncrementalVisitor incrementalVisitor = new IncrementalVisitor(sub);
+            stack.push(incrementalVisitor);
+            Thread t = new Thread(incrementalVisitor);
+            incrementalVisitor.setThread(t);
+            t.start();
+            return incrementalVisitor;
+        } else if (context instanceof HMLParser.LoopProContext) {
+            HMLParser.ExprContext boolCondition = ((HMLParser.LoopProContext) context).parExpression().expr();
+            if (boolCondition instanceof HMLParser.ConstantTrueContext) {
+                IncrementalVisitor incrementalVisitor = new IncrementalVisitor(((HMLParser.LoopProContext) context).parStatement());
+                stack.push(incrementalVisitor);
+                Thread t = new Thread(incrementalVisitor);
+                incrementalVisitor.setThread(t);
+                t.start();
+                return incrementalVisitor;
+            }
+            else if (boolCondition instanceof HMLParser.ConstantFalseContext) {
+                iv.setCondition(false);
+                return iv;
+            }
+            else {
+                boolean condSatInit = checkChoice(boolCondition, currentTree);
+
+                if (condSatInit) {
+                    iv.setCondition(true);
+                    return createIncrementalVisitor(stack, ((HMLParser.LoopProContext) context).parStatement());
+                } else {
+                    iv.setCondition(false);
+                    return iv;
+                }
+
+            }
+        } else if (context instanceof HMLParser.CallTemContext) {
+            StringBuilder key = new StringBuilder();
+            List<String> cvars = new ArrayList<String>(); // concrete vars
+            HMLParser.CallTemContext ctx =  (HMLParser.CallTemContext) context;
+            key.append(ctx.ID().getText());
+            if (ctx.exprList()!=null) {
+                List<HMLParser.ExprContext> exprs = ctx.exprList().expr();
+                for (HMLParser.ExprContext e : exprs) {
+                    //模板调用时候传入的参数类型
+                    Symbol s = currentScope.resolve(e.getText());
+
+                    cvars.add(e.getText());
+
+                    key.append(getType(s.getType()));
+                }
+                Template template = tmpMap.get(key.toString());
+                if (template == null) {
+                    String msg = "No template defined for " + ctx.getText();
+                    logger.error(msg);
+                    throw new TemplateNotDefinedException(msg);
+                }
+
+
+                List<String> fvars = template.getFormalVarNames(); //formal vars
+
+                variableStack.push(currentVariableLink);
+                VariableLink vlk = new VariableLink(currentVariableLink);
+                int i = 0;
+                for (String fv : fvars) {
+                    vlk.setRealVar(fv, getRealVarName(cvars.get(i)));
+                    i++;
+                }
+                currentVariableLink = vlk;
+
+                return createIncrementalVisitor(stack, template.getTemplateContext());
+            }
+
+            return null;
+        }
+        return iv;
+    }
+
+
+
+    public static void PopVariableStack(){
+        currentVariableLink = variableStack.pop();
+    }
+
+
+    private IncrementalVisitor createIncrementalVisitor(Stack<IncrementalVisitor> stack, ParserRuleContext ctx){
+        IncrementalVisitor incrementalVisitor = new IncrementalVisitor(ctx);
+        stack.push(incrementalVisitor);
+        Thread t = new Thread(incrementalVisitor);
+        incrementalVisitor.setThread(t);
+        t.start();
+        return incrementalVisitor;
+    }
+
+
+
 
     /**
      * 需要加条件不成立的分支
@@ -417,5 +595,9 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         List<List<Dynamic>> res  = new ArrayList<List<Dynamic>>();
         res.add(currentTree.getCurrentDynamicList());
         return res;
+    }
+
+    public static void setCurrentScope(ParserRuleContext ctx){
+        currentScope = scopes.get(ctx);
     }
 }
