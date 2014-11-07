@@ -1,9 +1,6 @@
 package IMP.Parallel;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-
-import java.util.ArrayList;
-import java.util.List;
+import IMP.Translate.ContextWithVarLink;
 
 /**
  * HML IMP.Parallel
@@ -11,22 +8,43 @@ import java.util.List;
  */
 public class DynamicsContext {
 
-    private List<ParserRuleContext> discreteList = new ArrayList<ParserRuleContext>();
-    private List<ParserRuleContext> continuousList = new ArrayList<ParserRuleContext>();
+    private IncrementalVisitor incrementalVisitor;
+    private ContextWithVarLink continous;
+    private Thread thread;
 
-    public void addDiscrete(ParserRuleContext ctx) {
-        discreteList.add(ctx);
+
+    public DynamicsContext(IncrementalVisitor incrementalVisitor) {
+        this.incrementalVisitor = incrementalVisitor;
     }
 
-    public void addContinuous(ParserRuleContext ctx) {
-        continuousList.add(ctx);
+    public DynamicsContext(IncrementalVisitor incrementalVisitor, ContextWithVarLink continous, Thread thread) {
+        this.incrementalVisitor = incrementalVisitor;
+        this.continous = continous;
+        this.thread = thread;
     }
 
-    public List<ParserRuleContext> getDiscreteList() {
-        return discreteList;
+    public IncrementalVisitor getIncrementalVisitor() {
+        return incrementalVisitor;
     }
 
-    public List<ParserRuleContext> getContinuousList() {
-        return continuousList;
+    public void setIncrementalVisitor(IncrementalVisitor incrementalVisitor) {
+        this.incrementalVisitor = incrementalVisitor;
+    }
+
+    public ContextWithVarLink getContinous() {
+        return continous;
+    }
+
+    public void setContinous(ContextWithVarLink continous) {
+        this.continous = continous;
+    }
+
+
+    public Thread getThread() {
+        return thread;
+    }
+
+    public void setThread(Thread thread) {
+        this.thread = thread;
     }
 }

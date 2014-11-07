@@ -5,6 +5,7 @@ import IMP.Basic.Template;
 import IMP.Exceptions.TemplateNotDefinedException;
 import IMP.HML2SMT;
 import IMP.Infos.AbstractExpr;
+import IMP.Parallel.DynamicsContext;
 import IMP.Parallel.IncrementalVisitor;
 import IMP.Scope.GlobalScope;
 import IMP.Scope.Scope;
@@ -15,10 +16,8 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
+
 /**
  * This is the visitor that does the main work for
  * unrolling (translation) from HML model to SMT2 formulas
@@ -110,180 +109,86 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     }
 
 
+    private Stack<VariableLink> cloneVariableStack(){
+        Stack<VariableLink> res = new Stack<VariableLink>();
+        for (VariableLink v : variableStack) {
+            res.add(v);
+        }
+        return res;
+    }
+
+    private ContextWithVarLink waitingForSubPro(DynamicsContext dynamicsContext){
+        if (dynamicsContext.getThread()==null) {
+            Thread thread = new Thread(dynamicsContext.getIncrementalVisitor());
+            dynamicsContext.setThread(thread);
+            thread.start();
+        } else dynamicsContext.getThread().interrupt();
+        while (true) {
+            try {
+                Thread.sleep(1000000);
+            } catch (InterruptedException e) {
+                logger.info(e.getMessage());
+                return dynamicsContext.getIncrementalVisitor().getContinous();
+            }
+        }
+    }
 
     public Void visitParaCom(HMLParser.ParaComContext ctx) {
+
         List<HMLParser.BlockStatementContext> subPros = ctx.blockStatement();
-        HashMap<HMLParser.BlockStatementContext, Stack<IncrementalVisitor>> pro2Visitor = new HashMap<HMLParser.BlockStatementContext, Stack<IncrementalVisitor>>();
+        HashMap<HMLParser.BlockStatementContext, DynamicsContext> pro2DynamicCtx = new HashMap<HMLParser.BlockStatementContext, DynamicsContext>();
+        //prepare initial context
         for (HMLParser.BlockStatementContext sub : subPros) {
-            Stack<IncrementalVisitor> stack = new Stack<IncrementalVisitor>();
-            IncrementalVisitor incrementalVisitor = new IncrementalVisitor(sub);
-            stack.push(incrementalVisitor);
-            pro2Visitor.put(sub, stack);
-            Thread t = new Thread(incrementalVisitor);
-            incrementalVisitor.setThread(t);
-            t.start();
+            IncrementalVisitor incrementalVisitor = new IncrementalVisitor(sub,currentScope,cloneVariableStack(),currentVariableLink,currentTree,tmpMap,Thread.currentThread());
+            pro2DynamicCtx.put(sub, new DynamicsContext(incrementalVisitor));
         }
 
-        boolean[] flag = new boolean[subPros.size()];
-        List<ParserRuleContext> continuous = new ArrayList<ParserRuleContext>();
-        for (int i = 0; i < flag.length; i++) {
-            if (flag[i] == false) {
-                IncrementalVisitor iv = pro2Visitor.get(subPros.get(i)).peek();
-                while (iv.getThread().isAlive() == false) {
-                    pro2Visitor.get(subPros.get(i)).pop();
-                    iv = pro2Visitor.get(subPros.get(i)).peek();
-                }
-                //if this sub program is empty
-                if (iv == null) {
-                    continue;
-                    flag[i] = true;
-                }
-                ParserRuleContext context = iv.getCurrentCtx();
-                if (context == null) continue;
-                iv.setCurrentCtx(null);
-                Stack<IncrementalVisitor> stack = pro2Visitor.get(subPros.get(i));
-                iv = checkSubProgram(context, stack, continuous,iv);
+        while (true) {
+            List<HMLParser.BlockStatementContext> forDel = new ArrayList<HMLParser.BlockStatementContext>();
+            for (Map.Entry<HMLParser.BlockStatementContext, DynamicsContext> entry : pro2DynamicCtx.entrySet()) {
+                ContextWithVarLink continous = waitingForSubPro(entry.getValue());
+                entry.getValue().setContinous(continous);//store this continue dynamics
+                if (continous == null) {
+                    // if no continue dynamic for this sub program, we can remove it
+                    forDel.add(entry.getKey());
+                    logger.info("All statements for this sub-pro have been processed: " + entry.getKey().getText());
+                } else logger.debug(continous.getPrc().getText());
+            }
 
-                //if this is a continuous program, stop unrolling for this sub pro
-                if (context instanceof HMLParser.SuspendContext ||
-                    context instanceof HMLParser.OdeContext)
-                    flag[i] = true;
+            //remove the sub-pro when it is terminated now
+            for (HMLParser.BlockStatementContext bs : forDel) {
+                subPros.remove(bs);
+                pro2DynamicCtx.remove(bs);
+            }
 
-                iv.getThread().interrupt();//let the thread run again
-
-            } else flag[i] = true;
-
-        }
-        return null;
-    }
-
-
-
-
-
-    private IncrementalVisitor checkSubProgram(ParserRuleContext context, Stack<IncrementalVisitor> stack, List<ParserRuleContext> continuous, IncrementalVisitor iv){
-        //continuous behaviors
-        if (context instanceof HMLParser.SuspendContext ||
-            context instanceof HMLParser.OdeContext ||
-            context instanceof HMLParser.WhenProContext ){
-            continuous.add(context);
-            return iv;
-        }
-
-
-        if (context instanceof HMLParser.AtomContext) {
-            visit(context);
-            return iv;
-        } else if (context instanceof HMLParser.ConChoiceContext) {
-            HMLParser.ExprContext condition =((HMLParser.ConChoiceContext) context).expr();
-            boolean condSatInit;
-
-            currentTree.getCurrentDynamics().setGuardCheckEnable(true);
-            condSatInit = checkChoice(condition, currentTree);
-            HMLParser.BlockStatementContext sub;
-            if (condSatInit) {
-                sub = ((HMLParser.ConChoiceContext) context).blockStatement(0);
+            // if we do not have any sub-pros now, we can return
+            if (subPros.size()==0) {
+                logger.info("Exit current Parallel Composition: " + ctx.getText());
+                return null;
             }
             else {
-                sub = ((HMLParser.ConChoiceContext) context).blockStatement(1);
+                //we have to merge if we have sub-pros
+                //after one pass, we have all the continue dynamics, then we can merge them over
+                mergeContinousDynamics(subPros, pro2DynamicCtx);
             }
 
-            IncrementalVisitor incrementalVisitor = new IncrementalVisitor(sub);
-            stack.push(incrementalVisitor);
-            Thread t = new Thread(incrementalVisitor);
-            incrementalVisitor.setThread(t);
-            t.start();
-            return incrementalVisitor;
-        } else if (context instanceof HMLParser.LoopProContext) {
-            HMLParser.ExprContext boolCondition = ((HMLParser.LoopProContext) context).parExpression().expr();
-            if (boolCondition instanceof HMLParser.ConstantTrueContext) {
-                IncrementalVisitor incrementalVisitor = new IncrementalVisitor(((HMLParser.LoopProContext) context).parStatement());
-                stack.push(incrementalVisitor);
-                Thread t = new Thread(incrementalVisitor);
-                incrementalVisitor.setThread(t);
-                t.start();
-                return incrementalVisitor;
-            }
-            else if (boolCondition instanceof HMLParser.ConstantFalseContext) {
-                iv.setCondition(false);
-                return iv;
-            }
-            else {
-                boolean condSatInit = checkChoice(boolCondition, currentTree);
-
-                if (condSatInit) {
-                    iv.setCondition(true);
-                    return createIncrementalVisitor(stack, ((HMLParser.LoopProContext) context).parStatement());
-                } else {
-                    iv.setCondition(false);
-                    return iv;
-                }
-
-            }
-        } else if (context instanceof HMLParser.CallTemContext) {
-            StringBuilder key = new StringBuilder();
-            List<String> cvars = new ArrayList<String>(); // concrete vars
-            HMLParser.CallTemContext ctx =  (HMLParser.CallTemContext) context;
-            key.append(ctx.ID().getText());
-            if (ctx.exprList()!=null) {
-                List<HMLParser.ExprContext> exprs = ctx.exprList().expr();
-                for (HMLParser.ExprContext e : exprs) {
-                    //模板调用时候传入的参数类型
-                    Symbol s = currentScope.resolve(e.getText());
-
-                    cvars.add(e.getText());
-
-                    key.append(getType(s.getType()));
-                }
-                Template template = tmpMap.get(key.toString());
-                if (template == null) {
-                    String msg = "No template defined for " + ctx.getText();
-                    logger.error(msg);
-                    throw new TemplateNotDefinedException(msg);
-                }
-
-
-                List<String> fvars = template.getFormalVarNames(); //formal vars
-
-                variableStack.push(currentVariableLink);
-                VariableLink vlk = new VariableLink(currentVariableLink);
-                int i = 0;
-                for (String fv : fvars) {
-                    vlk.setRealVar(fv, getRealVarName(cvars.get(i)));
-                    i++;
-                }
-                currentVariableLink = vlk;
-
-                return createIncrementalVisitor(stack, template.getTemplateContext());
-            }
-
-            return null;
         }
-        return iv;
+
     }
 
+    private void mergeContinousDynamics(List<HMLParser.BlockStatementContext> subPros,  HashMap<HMLParser.BlockStatementContext, DynamicsContext> pro2DynamicCtx) {
+        for (HMLParser.BlockStatementContext sub : subPros) {
+            DynamicsContext  dynamicsContext = pro2DynamicCtx.get(sub);
 
 
-    public static void PopVariableStack(){
-        currentVariableLink = variableStack.pop();
+        }
     }
-
-
-    private IncrementalVisitor createIncrementalVisitor(Stack<IncrementalVisitor> stack, ParserRuleContext ctx){
-        IncrementalVisitor incrementalVisitor = new IncrementalVisitor(ctx);
-        stack.push(incrementalVisitor);
-        Thread t = new Thread(incrementalVisitor);
-        incrementalVisitor.setThread(t);
-        t.start();
-        return incrementalVisitor;
-    }
-
 
 
 
     /**
-     * 需要加条件不成立的分支
-     * @param ctx 循环
+     *
+     * @param ctx loop pro
      * @return null
      */
     public Void visitLoopPro(HMLParser.LoopProContext ctx) {

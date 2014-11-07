@@ -26,7 +26,8 @@ Template bouncing(float x, float v) {
 Main {
     while(true) {
         falling(height, velocity);
-        velocity = -K * velocity;
+        //velocity = -K * velocity;
+        suspend(1) || velocity = -K * velocity;
         bouncing(height, velocity)
     }
 }
