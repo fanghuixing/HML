@@ -8,8 +8,12 @@ import IMP.Translate.ContextWithVarLink;
  */
 public class DynamicsContext {
 
+
+    /*
+    The visitor
+     */
     private IncrementalVisitor incrementalVisitor;
-    private ContextWithVarLink continous;
+    private ContextWithVarLink continuous;
     private Thread thread;
 
 
@@ -17,9 +21,9 @@ public class DynamicsContext {
         this.incrementalVisitor = incrementalVisitor;
     }
 
-    public DynamicsContext(IncrementalVisitor incrementalVisitor, ContextWithVarLink continous, Thread thread) {
+    public DynamicsContext(IncrementalVisitor incrementalVisitor, ContextWithVarLink continuous, Thread thread) {
         this.incrementalVisitor = incrementalVisitor;
-        this.continous = continous;
+        this.continuous = continuous;
         this.thread = thread;
     }
 
@@ -31,12 +35,12 @@ public class DynamicsContext {
         this.incrementalVisitor = incrementalVisitor;
     }
 
-    public ContextWithVarLink getContinous() {
-        return continous;
+    public ContextWithVarLink getContinuous() {
+        return continuous;
     }
 
-    public void setContinous(ContextWithVarLink continous) {
-        this.continous = continous;
+    public void setContinuous(ContextWithVarLink continuous) {
+        this.continuous = continuous;
     }
 
 

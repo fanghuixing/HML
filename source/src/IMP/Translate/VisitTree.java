@@ -1,7 +1,6 @@
 package IMP.Translate;
 
 import IMP.Merge.PathsMerge;
-import com.sun.org.apache.xerces.internal.util.SynchronizedSymbolTable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -145,6 +144,7 @@ public class VisitTree {
     }
 
     public void setCurrentDynamics(Dynamic currentDynamics) {
+
         this.currentDynamics = currentDynamics;
     }
 

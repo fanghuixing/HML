@@ -28,6 +28,7 @@ Main {
         falling(height, velocity);
         velocity = -K * velocity;
         //suspend(1) || velocity = -K * velocity;
+
         bouncing(height, velocity)
     }
 }

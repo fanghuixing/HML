@@ -2,6 +2,9 @@ package IMP.Translate;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  */
@@ -10,6 +13,10 @@ public class ContextWithVarLink {
     ParserRuleContext prc;
     VariableLink vrl;
     boolean negation = false;//if negation = true, the condition has to be reversed.
+
+    List<ContextWithVarLink> parallel=null;
+
+    public ContextWithVarLink(List<ContextWithVarLink> parallel){ this.parallel = parallel;}
 
     public ContextWithVarLink(ParserRuleContext prc, VariableLink vrl ) {
         this.vrl = vrl;
@@ -44,4 +51,17 @@ public class ContextWithVarLink {
         return true;
     }
 
+    public List<ContextWithVarLink> getParallel() {
+        return parallel;
+    }
+
+    public void setParallel(List<ContextWithVarLink> parallel) {
+        this.parallel = parallel;
+    }
+
+    public void addContextWithlink(ContextWithVarLink contextWithVarLink){
+        if (parallel==null)
+            this.parallel = new ArrayList<ContextWithVarLink>();
+        this.parallel.add(contextWithVarLink);
+    }
 }

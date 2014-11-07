@@ -128,7 +128,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
                 Thread.sleep(1000000);
             } catch (InterruptedException e) {
                 logger.info(e.getMessage());
-                return dynamicsContext.getIncrementalVisitor().getContinous();
+                return dynamicsContext.getIncrementalVisitor().getContinuous();
             }
         }
     }
@@ -146,13 +146,13 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         while (true) {
             List<HMLParser.BlockStatementContext> forDel = new ArrayList<HMLParser.BlockStatementContext>();
             for (Map.Entry<HMLParser.BlockStatementContext, DynamicsContext> entry : pro2DynamicCtx.entrySet()) {
-                ContextWithVarLink continous = waitingForSubPro(entry.getValue());
-                entry.getValue().setContinous(continous);//store this continue dynamics
-                if (continous == null) {
+                ContextWithVarLink continuous = waitingForSubPro(entry.getValue());
+                entry.getValue().setContinuous(continuous);//store this continue dynamics
+                if (continuous == null) {
                     // if no continue dynamic for this sub program, we can remove it
                     forDel.add(entry.getKey());
                     logger.info("All statements for this sub-pro have been processed: " + entry.getKey().getText());
-                } else logger.debug(continous.getPrc().getText());
+                } else logger.debug(continuous.getPrc().getText());
             }
 
             //remove the sub-pro when it is terminated now
@@ -169,19 +169,35 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
             else {
                 //we have to merge if we have sub-pros
                 //after one pass, we have all the continue dynamics, then we can merge them over
-                mergeContinousDynamics(subPros, pro2DynamicCtx);
+                mergeContinuousDynamics(subPros, pro2DynamicCtx);
             }
 
         }
 
     }
 
-    private void mergeContinousDynamics(List<HMLParser.BlockStatementContext> subPros,  HashMap<HMLParser.BlockStatementContext, DynamicsContext> pro2DynamicCtx) {
+    private void mergeContinuousDynamics(List<HMLParser.BlockStatementContext> subPros, HashMap<HMLParser.BlockStatementContext, DynamicsContext> pro2DynamicCtx) {
+        //ODE + SUSPEND + WHEN
+        ContextWithVarLink res = new ContextWithVarLink(new ArrayList<ContextWithVarLink>());
         for (HMLParser.BlockStatementContext sub : subPros) {
             DynamicsContext  dynamicsContext = pro2DynamicCtx.get(sub);
+            res.addContextWithlink(dynamicsContext.getContinuous());
+        }
+        currentTree.addContinuous(res);
+        currentTree.getCurrentDynamics().setGuardCheckEnable(true);
+        currentTree.getCurrentDynamics().setDepth(currentTree.getCurrentDepth());
+        currentTree.addDynamics(currentTree.getCurrentDynamics());
+        currentTree.getCurrentDynamics().toString();
+
+        if (currentTree.getCurrentDepth() < depth+1) {
+            Dynamic dy = new DiscreteWithContinuous();
+            currentTree.setCurrentDynamics(dy);
+            //we only have to consider suspend
 
 
         }
+        else  finishOnePath(currentTree);
+
     }
 
 
@@ -215,7 +231,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
 
 
     public Void visitOde(HMLParser.OdeContext ctx) {
-
+        visit(ctx.equation());
         //As we cannot control the divergence, maybe we don't have to check the guard initially
         if (CHECKINGGUARD) {
             currentTree.getCurrentDynamics().setGuardCheckEnable(true);
@@ -228,7 +244,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         }
 
         //if the guard is not satisfied initially or we did not check this
-        visit(ctx.equation());
+
         if (currentTree.getCurrentDepth()>depth) return null;
 
         currentTree.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));

@@ -35,7 +35,7 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
     private Stack<VariableLink> variableStack;
     private VariableLink currentVariableLink;
     private VisitTree currentTree;
-    private ContextWithVarLink continous;
+    private ContextWithVarLink continuous;
     private HashMap<String, Template> tmpMap;
     private Thread mainThread;
 
@@ -104,12 +104,12 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
                     return; // do not forget this return
                 }
             }
-            continous = new ContextWithVarLink(ctx, currentVariableLink);
+            continuous = new ContextWithVarLink(ctx, currentVariableLink);
             finish();
             visit(ctx);
         } else {
             //set continuous
-            continous = new ContextWithVarLink(ctx, currentVariableLink);
+            continuous = new ContextWithVarLink(ctx, currentVariableLink);
             finish();
         }
     }
@@ -213,8 +213,19 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
     @Override
     public Void visitOde(@NotNull HMLParser.OdeContext ctx) {
         visit(ctx.equation());
-        continous = new ContextWithVarLink(ctx, currentVariableLink);
+
+        currentTree.getCurrentDynamics().setGuardCheckEnable(true);
+        boolean guardSatInit = checkGuard(ctx.guard(), currentTree);
+        if (guardSatInit) {
+            currentTree.addDiscrete(new ContextWithVarLink(ctx.guard(), currentVariableLink));
+            logger.debug("The Guard is satisfied initially, skip this flow.");
+            return null;
+        }
+
+
+        continuous = new ContextWithVarLink(ctx, currentVariableLink);
         finish();
+        visit(ctx);
         return null;
     }
 
@@ -308,9 +319,9 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
         return super.visit(tree);
     }
 
-    public ContextWithVarLink getContinous() {
-        ContextWithVarLink res = continous;
-        continous = null;
+    public ContextWithVarLink getContinuous() {
+        ContextWithVarLink res = continuous;
+        continuous = null;
         return res;
     }
 }
