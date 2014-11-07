@@ -426,6 +426,8 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
                 Dynamic dy = new DiscreteWithContinuous();
                 currentTree.setCurrentDynamics(dy);
                 visit(ctx);
+                //visit this again because we are not sure whether
+                // we can exit this when statement
             } else {
                 finishOnePath(currentTree);
             }

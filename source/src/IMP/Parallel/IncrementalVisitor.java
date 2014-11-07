@@ -104,6 +104,9 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
                     return; // do not forget this return
                 }
             }
+            continous = new ContextWithVarLink(ctx, currentVariableLink);
+            finish();
+            visit(ctx);
         } else {
             //set continuous
             continous = new ContextWithVarLink(ctx, currentVariableLink);
