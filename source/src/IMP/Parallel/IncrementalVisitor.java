@@ -90,6 +90,10 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
             HMLParser parser = new HMLParser(tokens);
             parser.setBuildParseTree(true);
             ParseTree tree = parser.atom();
+            //add the new suspend guard
+            exprs.put(tree, new AbstractExpr(">=", new AbstractExpr("clock", AbstractExpr.Sort.VAR),
+                    new AbstractExpr("-", AbstractExpr.Sort.NVAR, exprs.get(ctx.expr()),
+                            new AbstractExpr("clock", AbstractExpr.Sort.VAR))));
             visit(tree);
         }
         return null;
