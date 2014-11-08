@@ -192,12 +192,8 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         if (currentTree.getCurrentDepth() < depth+1) {
             Dynamic dy = new DiscreteWithContinuous();
             currentTree.setCurrentDynamics(dy);
-            //we only have to consider suspend
-
-
         }
         else  finishOnePath(currentTree);
-
     }
 
 

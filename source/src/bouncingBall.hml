@@ -9,6 +9,7 @@ float height=10, velocity=0;
 float clock = 0;
 float global = 0;
 
+
 height in [0, 15];
 velocity in [-18, 18];
 time in [0, 3];
@@ -28,7 +29,6 @@ Main {
         falling(height, velocity);
         velocity = -K * velocity;
         //suspend(1) || velocity = -K * velocity;
-
         bouncing(height, velocity)
     }
 }

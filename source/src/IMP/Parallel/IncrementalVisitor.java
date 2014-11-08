@@ -1,6 +1,7 @@
 package IMP.Parallel;
 
 
+import AntlrGen.HMLLexer;
 import AntlrGen.HMLParser;
 import IMP.Basic.Template;
 import IMP.Exceptions.TemplateNotDefinedException;
@@ -9,6 +10,8 @@ import IMP.Infos.AbstractExpr;
 import IMP.Scope.Scope;
 import IMP.Scope.Symbol;
 import IMP.Translate.*;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -73,6 +76,22 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
             logger.info("Cannot transfer to integer for suspend time.");
         }
         commonContinuousAnalysis(ctx, ctx);
+
+
+
+        //check whether the time is out
+        ParseTreeProperty<AbstractExpr> exprs = HML2SMT.getExprPtp();
+        ConcreteExpr concreteExpr = new ConcreteExpr(exprs.get(ctx));
+        boolean res = checkExpr(concreteExpr, currentTree);
+        if (!res) {
+            ANTLRInputStream input = new ANTLRInputStream(String.format("suspend(%s - %s)", ctx.time.getText(), "clock"));
+            HMLLexer lexer = new HMLLexer(input);
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            HMLParser parser = new HMLParser(tokens);
+            parser.setBuildParseTree(true);
+            ParseTree tree = parser.atom();
+            visit(tree);
+        }
         return null;
     }
 
@@ -108,6 +127,7 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
             finish();
             visit(ctx);
         } else {
+            // if suspend
             //set continuous
             continuous = new ContextWithVarLink(ctx, currentVariableLink);
             finish();
