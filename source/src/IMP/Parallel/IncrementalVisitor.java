@@ -19,10 +19,7 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * HML IMP.Parallel
@@ -34,6 +31,7 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
     private static Logger logger = LogManager.getLogger(IncrementalVisitor.class);
     private static int sleepTime = 1000000;
     private ParserRuleContext currentCtx;
+    private ParseTreeProperty<Scope> scopes;
     private Scope currentScope;
     private Stack<VariableLink> variableStack;
     private VariableLink currentVariableLink;
@@ -43,7 +41,7 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
     private Thread mainThread;
 
 
-    public IncrementalVisitor(ParserRuleContext currentCtx, Scope currentScope, Stack<VariableLink> variableStack, VariableLink currentVariableLink, VisitTree currentTree, HashMap<String, Template> tmpMap, Thread mainThread) {
+    public IncrementalVisitor(ParserRuleContext currentCtx, Scope currentScope, Stack<VariableLink> variableStack, VariableLink currentVariableLink, VisitTree currentTree, HashMap<String, Template> tmpMap, Thread mainThread, ParseTreeProperty<Scope> scopes) {
         this.currentCtx = currentCtx;
         this.currentScope = currentScope;
         this.variableStack = variableStack;
@@ -51,6 +49,7 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
         this.currentTree = currentTree;
         this.tmpMap = tmpMap;
         this.mainThread = mainThread;
+        this.scopes = scopes;
     }
 
     public Void visitAtomPro(HMLParser.AtomProContext ctx){
@@ -90,11 +89,16 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
             HMLParser parser = new HMLParser(tokens);
             parser.setBuildParseTree(true);
             ParseTree tree = parser.atom();
+
+
+            HMLParser.ExprContext nexpr = ((HMLParser.SuspendContext) tree).expr();
+            exprs.put(nexpr, new AbstractExpr("-", AbstractExpr.Sort.NVAR, exprs.get(ctx.expr()), new AbstractExpr("clock_" + (currentTree.getCurrentDepth()-1) + "_t", AbstractExpr.Sort.CONSTANT)));
             //add the new suspend guard
-            exprs.put(tree, new AbstractExpr(">=", new AbstractExpr("clock", AbstractExpr.Sort.VAR),
-                    new AbstractExpr("-", AbstractExpr.Sort.NVAR, exprs.get(ctx.expr()),
-                            new AbstractExpr("clock", AbstractExpr.Sort.VAR))));
+            exprs.put(tree, new AbstractExpr(">=", new AbstractExpr("clock", AbstractExpr.Sort.VAR), exprs.get(nexpr)));
             visit(tree);
+        }
+       else{
+            currentTree.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink));
         }
         return null;
     }
@@ -338,6 +342,13 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
         return null;
     }
 
+
+    public Void visitTemplate(HMLParser.TemplateContext ctx) {
+        currentScope = scopes.get(ctx);
+        visit(ctx.parStatement().blockStatement());
+        return null;
+    }
+
     @Override
     public Void visit(@NotNull ParseTree tree) {
         return super.visit(tree);
@@ -348,4 +359,19 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
         continuous = null;
         return res;
     }
+
+
+
+
+
+
+
+
+
+    public List<List<Dynamic>> getPaths() {
+        List<List<Dynamic>> res  = new ArrayList<List<Dynamic>>();
+        res.add(currentTree.getCurrentDynamicList());
+        return res;
+    }
+
 }

@@ -81,8 +81,10 @@ public class ConcreteExpr {
         StringBuilder sb  = new StringBuilder();
         sb.append("(");
 
-        if (sort== AbstractExpr.Sort.VAR) //对变量需要加下标
-            sb.append(ID).append("_").append(depth).append("_0");
+        if (sort== AbstractExpr.Sort.VAR) { //对变量需要加下标
+            if (ID.equals("clock")) sb.append(ID).append("_").append(depth-1).append("_t");
+            else sb.append(ID).append("_").append(depth).append("_0");
+        }
         else if (sort== AbstractExpr.Sort.GUARD) {
             if (ID.equals("timeout")) sb.append(ID).append("_").append(depth);
             else sb.append(ID);

@@ -12,8 +12,8 @@ float global = 0;
 
 height in [0, 15];
 velocity in [-18, 18];
-time in [0, 3];
-clock in [0, 3];
+time in [0, 20];
+clock in [0, 20];
 global in [0, 1000];
 
 Template falling(float x, float v) {
@@ -27,8 +27,11 @@ Template bouncing(float x, float v) {
 Main {
     while(true) {
         falling(height, velocity);
+
         velocity = -K * velocity;
-        //suspend(1) || velocity = -K * velocity;
+
+        //{ suspend(1) || suspend(0.5) || suspend(2) || velocity = -K * velocity};
+
         bouncing(height, velocity)
     }
 }

@@ -133,13 +133,15 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         }
     }
 
-    public Void visitParaCom(HMLParser.ParaComContext ctx) {
+    public  Void visitParaCom(HMLParser.ParaComContext ctx) {
 
         List<HMLParser.BlockStatementContext> subPros = ctx.blockStatement();
+
+
         HashMap<HMLParser.BlockStatementContext, DynamicsContext> pro2DynamicCtx = new HashMap<HMLParser.BlockStatementContext, DynamicsContext>();
         //prepare initial context
         for (HMLParser.BlockStatementContext sub : subPros) {
-            IncrementalVisitor incrementalVisitor = new IncrementalVisitor(sub,currentScope,cloneVariableStack(),currentVariableLink,currentTree,tmpMap,Thread.currentThread());
+            IncrementalVisitor incrementalVisitor = new IncrementalVisitor(sub,currentScope,cloneVariableStack(),currentVariableLink,currentTree,tmpMap,Thread.currentThread(), scopes);
             pro2DynamicCtx.put(sub, new DynamicsContext(incrementalVisitor));
         }
 
@@ -170,6 +172,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
                 //we have to merge if we have sub-pros
                 //after one pass, we have all the continue dynamics, then we can merge them over
                 mergeContinuousDynamics(subPros, pro2DynamicCtx);
+                if (currentTree.getCurrentDepth() >= depth+1) return null;
             }
 
         }
@@ -178,6 +181,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
 
     private void mergeContinuousDynamics(List<HMLParser.BlockStatementContext> subPros, HashMap<HMLParser.BlockStatementContext, DynamicsContext> pro2DynamicCtx) {
         //ODE + SUSPEND + WHEN
+        logger.debug("Merge Continuous Dynamics...");
         ContextWithVarLink res = new ContextWithVarLink(new ArrayList<ContextWithVarLink>());
         for (HMLParser.BlockStatementContext sub : subPros) {
             DynamicsContext  dynamicsContext = pro2DynamicCtx.get(sub);
@@ -189,11 +193,15 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
         currentTree.addDynamics(currentTree.getCurrentDynamics());
         currentTree.getCurrentDynamics().toString();
 
+
         if (currentTree.getCurrentDepth() < depth+1) {
+            logger.debug("Current Depth: " + currentTree.getCurrentDepth() );
             Dynamic dy = new DiscreteWithContinuous();
             currentTree.setCurrentDynamics(dy);
         }
-        else  finishOnePath(currentTree);
+        else  {
+            finishOnePath(currentTree);
+        }
     }
 
 

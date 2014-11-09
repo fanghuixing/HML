@@ -32,6 +32,7 @@ public class DiscreteWithContinuous implements Dynamic{
     private String continuousResult;
     private boolean guardCheckEnable = false;
     HashMap<String, ConcreteExpr>  ID2ExpMap;
+    private boolean odeFlag = false;
 
 
 
@@ -148,6 +149,8 @@ public class DiscreteWithContinuous implements Dynamic{
         StringBuilder flows = new StringBuilder();
         ContextWithVarLink r = continuous;
         if (r==null) return "";
+
+
 
         if (r.getPrc() instanceof  HMLParser.OdeContext) {
             //如果是方程
@@ -424,8 +427,9 @@ public class DiscreteWithContinuous implements Dynamic{
                 String name = abe.getKey();
 
                // for vars that are not changed during the flow(suspend and when do not change vars)
-                if (continuous!=null && (continuous.getPrc() instanceof HMLParser.SuspendContext ||
-                     continuous.getPrc() instanceof HMLParser.WhenProContext)
+                if (continuous!=null && ((continuous.getParallel()!=null && odeFlag==false) ||
+                        continuous.getPrc() instanceof HMLParser.SuspendContext ||
+                        continuous.getPrc() instanceof HMLParser.WhenProContext)
                         && !name.equals("clock") && !name.equals("global") && !HML2SMT.isSignal(name)) {
                     sb.append(String.format(" (= %s %s) ", addDepthFlagToVar(abe.getKey(),"t"), addDepthFlagToVar(abe.getKey(),"0")));
                 }
@@ -451,6 +455,15 @@ public class DiscreteWithContinuous implements Dynamic{
         sb.append(invariant);
     }
 
+
+    private void checkContinuousList(List<ContextWithVarLink> conList){
+        for (ContextWithVarLink con : conList) {
+            if (con.getPrc() instanceof HMLParser.OdeContext) {
+                odeFlag = true;
+            }
+        }
+    }
+
     @Override
     public String toString() {
 
@@ -459,9 +472,36 @@ public class DiscreteWithContinuous implements Dynamic{
         renderDisFormulas();
         StringBuilder sb = new StringBuilder();
         transDisExprToSMT(sb);
-        sb.append(renderConFormulas());
+        List<ContextWithVarLink> conList = continuous.getParallel();
+        if (conList!=null) {
+            checkContinuousList(conList);
+            if (odeFlag) {
+                for (ContextWithVarLink con : conList) {
+                    if (con.getPrc() instanceof HMLParser.OdeContext) {
+                        continuous = con;
+                        sb.append(renderConFormulas());
+                        break;
+                    }
+                }
+            }
+            else {
+                continuous = conList.get(0);
+                sb.append(renderConFormulas());
+            }
+
+        } else {
+            sb.append(renderConFormulas());
+        }
         sb.replace(0, 0, String.format("\n(= mode_%s %s)", depth, mode));
-        renderGuard(sb);
+
+        if (conList!=null) {
+            for (ContextWithVarLink con : conList) {
+                continuous = con;
+                renderGuard(sb);
+            }
+        } else {
+            renderGuard(sb);
+        }
         sb.append(String.format("(= mode_%s %s)", depth, mode));
         sb.append("\n");
         int sep = sb.indexOf("\n",1);

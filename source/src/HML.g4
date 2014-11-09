@@ -81,7 +81,7 @@ program : 'Main ' '{' blockStatement '}';
 blockStatement
     :  atom                                                  #AtomPro   // Atomic
     |  blockStatement '|'  blockStatement                    #NonCh     // non-deterministrate choice　TODO
-    |  blockStatement '||' blockStatement                    #ParaCom   // parallel composition
+    |  '{' blockStatement ('||' blockStatement)+ '}'         #ParaCom   // parallel composition
     |  blockStatement ';'?  blockStatement                   #SeqCom    // sequential composition
     |  '(' blockStatement '<' expr '>' blockStatement ')'    #ConChoice     // conditional choice
     |  equation 'until' guard                                #Ode       // differential equation
@@ -108,7 +108,7 @@ atom
     :  'skip'                                                   # Skip
     |  ID '=' expr                                              # Assignment
     |  '!' signal                                               # SendSignal
-    |  'suspend' '(' time=expr ')'                              # Suspend
+    |  ('suspend' | '#' | 'wait' | 'sleep') '(' time=expr ')'   # Suspend
     ;
 
 expr
