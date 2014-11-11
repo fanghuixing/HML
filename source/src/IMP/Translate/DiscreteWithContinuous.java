@@ -146,12 +146,8 @@ public class DiscreteWithContinuous implements Dynamic{
         }
     }
     private String renderConFormulas(){
-        StringBuilder flows = new StringBuilder();
         ContextWithVarLink r = continuous;
         if (r==null) return "";
-
-
-
         if (r.getPrc() instanceof  HMLParser.OdeContext) {
             //如果是方程
             HMLParser.EquationContext equ = ((HMLParser.OdeContext) r.getPrc()).equation();
@@ -163,9 +159,14 @@ public class DiscreteWithContinuous implements Dynamic{
             HMLParser.EquationContext equ = null;
             analyzeEquaiton(equ, r);
         }
-
         StringBuilder result = new StringBuilder();
         List<String> vars = new ArrayList<String>();
+        formatOdeAndVars(result,vars,r);
+        return checkAndAddOde(result, vars);
+    }
+
+
+    private void formatOdeAndVars(StringBuilder result,  List<String> vars, ContextWithVarLink r){
         List<Map.Entry<ConcreteExpr,String>> tempOdesList = new ArrayList<Map.Entry<ConcreteExpr, String>>();
         for (Map.Entry<ConcreteExpr, String>  e : TempOdesMap.entrySet()) {
             tempOdesList.add(e);
@@ -184,6 +185,10 @@ public class DiscreteWithContinuous implements Dynamic{
             result.append(e.getValue());
             addList(vars, e.getKey().getVarsList(r.getVrl())); // 获取方程中涉及的变量
         }
+    }
+
+    private String checkAndAddOde(StringBuilder result, List<String> vars){
+        StringBuilder flows = new StringBuilder();
         if (!odeformula.containsKey(result.toString())) {
             //如果是新的flow
             odeformula.put(result.toString(), odeIndex);
@@ -204,7 +209,6 @@ public class DiscreteWithContinuous implements Dynamic{
             mode = index;
             flows.append(odeInSMT2.toString());
         }
-
         return flows.toString();
     }
 
@@ -460,6 +464,7 @@ public class DiscreteWithContinuous implements Dynamic{
         for (ContextWithVarLink con : conList) {
             if (con.getPrc() instanceof HMLParser.OdeContext) {
                 odeFlag = true;
+                return;
             }
         }
     }
@@ -476,13 +481,7 @@ public class DiscreteWithContinuous implements Dynamic{
         if (conList!=null) {
             checkContinuousList(conList);
             if (odeFlag) {
-                for (ContextWithVarLink con : conList) {
-                    if (con.getPrc() instanceof HMLParser.OdeContext) {
-                        continuous = con;
-                        sb.append(renderConFormulas());
-                        break;
-                    }
-                }
+                sb.append(renderParaSubOdes(conList));
             }
             else {
                 continuous = conList.get(0);
@@ -509,6 +508,23 @@ public class DiscreteWithContinuous implements Dynamic{
         continuousResult = sb.substring(sep);//连续部分也包含了不变式
         resultFormula = sb.toString();
         return resultFormula;
+    }
+
+    // for the parallel composition of sub-pros that contains odes
+    private String renderParaSubOdes(List <ContextWithVarLink> conList) {
+        StringBuilder result = new StringBuilder();
+        List<String> vars = new ArrayList<String>();
+        for (ContextWithVarLink con : conList) {
+            if (con.getPrc() instanceof HMLParser.OdeContext) {
+                continuous = con;
+                HMLParser.EquationContext equ = ((HMLParser.OdeContext) continuous.getPrc()).equation();
+                analyzeEquaiton(equ, continuous);
+                formatOdeAndVars(result,vars,continuous);
+                //for each flow we need a new ode map
+                TempOdesMap = new HashMap<ConcreteExpr, String>();
+            }
+        }
+        return checkAndAddOde(result,vars);
     }
 
     /**
