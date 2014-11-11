@@ -257,18 +257,34 @@ public class ParseJSONData extends ApplicationFrame {
         double old_value = 0;
         while (true) {
             String key = name + "_" + depth + "_0";
+
             VariableWithData variableWithData = dataHashMap.get(key);
 
             if (variableWithData == null) {
                 if (depth>maxDepth) break;
                 else {
+                    //logger.debug("Get Old Data for Variable " + name);
                     VariableWithData clock = dataHashMap.get("clock"+ "_" + depth + "_0");
                     int itemCount = clock.values.getItemCount();
                     series = new YIntervalSeries(name+depth, false, true);
                     dataSet.addSeries(series);
                     seriesCollection.addSeries(series);
-                    for (int i=0; i<itemCount; i++) {
-                        series.add(clock.values.getX(i).doubleValue() + globalTime.get(depth - 1), old_value, old_value, old_value);
+                    if (depth==0) {
+                        for (int i = 1; i <= depth; i++) {
+                            String k = name + "_" + i + "_0";
+                            VariableWithData data = dataHashMap.get(k);
+                            if (variableWithData != null) {
+                                old_value = data.values.getYValue(0);
+                                break;
+                            }
+                        }
+                        for (int i = 0; i < itemCount; i++) {
+                            series.add(clock.values.getX(i).doubleValue(), old_value, old_value, old_value);
+                        }
+                    } else {
+                        for (int i = 0; i < itemCount; i++) {
+                            series.add(clock.values.getX(i).doubleValue() + globalTime.get(depth - 1), old_value, old_value, old_value);
+                        }
                     }
                 }
             }
