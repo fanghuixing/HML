@@ -346,9 +346,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
             for (HMLParser.ExprContext e : exprs) {
                 //模板调用时候传入的参数类型
                 Symbol s = currentScope.resolve(e.getText());
-
                 cvars.add(e.getText());
-
                 key.append(getType(s.getType()));
             }
             Template template = tmpMap.get(key.toString());
@@ -369,8 +367,10 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
                 i++;
             }
             currentVariableLink = vlk;
+            Scope oldScope = currentScope;
             visit(template.getTemplateContext());
             currentVariableLink = variableStack.pop();
+            currentScope = oldScope;
 
         }
 
@@ -383,6 +383,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     }
 
     public Void visitTemplate(HMLParser.TemplateContext ctx) {
+        //logger.debug("Visit Template : " + ctx.getText());
         currentScope = scopes.get(ctx);
         visit(ctx.parStatement().blockStatement());
         return null;

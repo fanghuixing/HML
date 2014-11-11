@@ -330,8 +330,10 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
                 i++;
             }
             currentVariableLink = vlk;
+            Scope oldScope = currentScope;
             visit(template.getTemplateContext());
             currentVariableLink = variableStack.pop();
+            currentScope = oldScope;
         }
         return null;
     }

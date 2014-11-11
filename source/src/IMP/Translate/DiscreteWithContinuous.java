@@ -33,7 +33,7 @@ public class DiscreteWithContinuous implements Dynamic{
     private boolean guardCheckEnable = false;
     HashMap<String, ConcreteExpr>  ID2ExpMap;
     private boolean odeFlag = false;
-
+    private List<String> continuousVariables;
 
 
 
@@ -188,6 +188,7 @@ public class DiscreteWithContinuous implements Dynamic{
     }
 
     private String checkAndAddOde(StringBuilder result, List<String> vars){
+        continuousVariables = vars;
         StringBuilder flows = new StringBuilder();
         if (!odeformula.containsKey(result.toString())) {
             //如果是新的flow
@@ -428,19 +429,39 @@ public class DiscreteWithContinuous implements Dynamic{
                 sb.append(String.format(" %s ", abe.getValue().toString(depth-1)));
             else {
                 sb.append(String.format(" (= %s %s) ", addDepthFlagToVar(abe.getKey(),"0"), abe.getValue().toString(depth - 1)));
-                String name = abe.getKey();
+                //String name = abe.getKey();
 
                // for vars that are not changed during the flow(suspend and when do not change vars)
-                if (continuous!=null && ((continuous.getParallel()!=null && odeFlag==false) ||
-                        continuous.getPrc() instanceof HMLParser.SuspendContext ||
-                        continuous.getPrc() instanceof HMLParser.WhenProContext)
-                        && !name.equals("clock") && !name.equals("global") && !HML2SMT.isSignal(name)) {
-                    sb.append(String.format(" (= %s %s) ", addDepthFlagToVar(abe.getKey(),"t"), addDepthFlagToVar(abe.getKey(),"0")));
-                }
+//                if (continuous!=null && ((continuous.getParallel()!=null && odeFlag==false) ||
+//                        continuous.getPrc() instanceof HMLParser.SuspendContext ||
+//                        continuous.getPrc() instanceof HMLParser.WhenProContext)
+//                        && !name.equals("clock") && !name.equals("global") && !HML2SMT.isSignal(name)) {
+//                    sb.append(String.format(" (= %s %s) ", addDepthFlagToVar(abe.getKey(),"t"), addDepthFlagToVar(abe.getKey(),"0")));
+//                }
             }
         }
         sb.append("\n");
     }
+
+
+    private StringBuilder setUnchangedVars(){
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, ConcreteExpr> abe : ID2ExpMap.entrySet()) {
+            String ID = abe.getKey();
+            if (!isGuard(ID)) {
+                String name = abe.getKey();
+                //logger.debug("Continuous Var : " + name);
+                // for vars that are not changed during the flow(suspend and when do not change vars)
+                if (continuous != null && !(continuousVariables.contains(name))
+                    && !name.equals("clock") && !name.equals("global") && !HML2SMT.isSignal(name)) {
+                    sb.append(String.format(" (= %s %s) ", addDepthFlagToVar(abe.getKey(), "t"), addDepthFlagToVar(abe.getKey(), "0")));
+                }
+            }
+        }
+        return sb;
+    }
+
+
 
     private void renderGuard(StringBuilder sb){
         ParserRuleContext guard = null;
@@ -504,6 +525,7 @@ public class DiscreteWithContinuous implements Dynamic{
         sb.append(String.format("(= mode_%s %s)", depth, mode));
         sb.append("\n");
         int sep = sb.indexOf("\n",1);
+        sb.insert(sep, setUnchangedVars());
         discreteResult = sb.substring(0, sep);
         continuousResult = sb.substring(sep);//连续部分也包含了不变式
         resultFormula = sb.toString();
@@ -538,6 +560,7 @@ public class DiscreteWithContinuous implements Dynamic{
         renderDisFormulas();
         StringBuilder sb = new StringBuilder();
         transDisExprToSMT(sb);
+        sb.append(setUnchangedVarsForPartial());//for vars that not changed
         if (variableLink != null) concreteExpr.resolve(variableLink);
         concreteExpr.checkEmptyGuard();
         String startPoint = concreteExpr.toStringForStartPoint(depth);
@@ -545,6 +568,23 @@ public class DiscreteWithContinuous implements Dynamic{
         sb.append(startPoint);
         return sb.toString();
     }
+
+    private StringBuilder setUnchangedVarsForPartial(){
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, ConcreteExpr> abe : ID2ExpMap.entrySet()) {
+            String ID = abe.getKey();
+            if (!isGuard(ID)) {
+                String name = abe.getKey();
+                //logger.debug("Continuous Var : " + name);
+                // for vars that are not changed during the flow(suspend and when do not change vars)
+                if (!name.equals("clock") && !name.equals("global") && !HML2SMT.isSignal(name)) {
+                    sb.append(String.format(" (= %s %s) ", addDepthFlagToVar(abe.getKey(), "t"), addDepthFlagToVar(abe.getKey(), "0")));
+                }
+            }
+        }
+        return sb;
+    }
+
 
     public HashMap<Integer, String> getOdeDefinitionMap(){
         return odeMap;

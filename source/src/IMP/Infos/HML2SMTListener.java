@@ -160,6 +160,10 @@ public class HML2SMTListener extends HMLBaseListener {
         setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);
     }
 
+    public void exitExpExpr(HMLParser.ExpExprContext ctx)  {
+        setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);
+    }
+
     public void exitAExpr(HMLParser.AExprContext ctx) {
 
         setExprPtpForTriple(ctx, ctx.left, ctx.op, ctx.right);

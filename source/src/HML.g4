@@ -38,6 +38,7 @@ primitiveType
     :   'boolean'   # BoolType
     |   'int'       # IntType
     |   'float'     # FloatType
+    |   'Signal'    # SignalType
     ;
 
 signalDeclaration
@@ -76,7 +77,7 @@ arrayInitializer
     |   'new' 'Array' ('[' INT ']')+
     ;
 
-program : 'Main ' '{' blockStatement '}';
+program : 'Main' '{' blockStatement '}';
 
 blockStatement
     :  atom                                                  #AtomPro   // Atomic
@@ -117,8 +118,9 @@ expr
     | FLOAT                                                     # FLOATExpr
     | 'true'                                                    # ConstantTrue
     | 'false'                                                   # ConstantFalse
+    | <assoc=right> left=expr op='^' right=expr                 # ExpExpr
     | prefix=('-' | '~') expr                                   # NegationExpr
-    | left=expr op=('*'|'/'|'%' | '^') right=expr               # MExpr
+    | left=expr op=('*'|'/'|'%') right=expr                     # MExpr
     | left=expr op=('+'|'-') right=expr                         # AExpr
     | left=expr op=('>=' | '>' | '==' | '<' | '<=') right=expr  # CompExpr
     | left=expr op='and' right=expr                             # LogicalAndExpr

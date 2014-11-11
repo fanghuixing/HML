@@ -1,0 +1,76 @@
+Signal ANearP;
+Signal ANearQ;
+Signal AStopP;
+Signal AStopQ;
+Signal ALeaveP;
+Signal ALeaveQ;
+Signal AUrStop; // urgent stop A
+Signal AUrStart; // urgent start A
+
+
+final float S1=3000, S2=7000, S3=1000, S4=14000, acc = 0.5, dec = -1.5, MaxVel = 20, AppDis = 500, DISTANCE = 800;
+final float StopTime = 50;
+
+
+int AIndex=0;
+float APosition = 0, AVelocity = 0, AFrontStation = 0, ADeceleration = 0;
+float AMax = 0, BMax = 0;
+
+float clock = 0;
+float global = 0;
+
+AIndex in [0, 4];
+APosition in [0, 14000];
+AVelocity in [0, 20];
+AFrontStation in [0, 14000];
+ADeceleration in [-1, 0];
+time in [0, 200];
+clock in [0, 200];
+global in [0, 2000];
+
+
+
+Template Acceleration(float p, float v){
+    (dot p = v) || (dot v  = acc) until (v>=MaxVel)
+}
+
+Template RunStable(float p, float v, float S, Signal urStop, Signal urStart, float decelerate, float max){
+    (dot p = v) || (dot v  = 0) until (p>=S-AppDis <or> @(urStop));
+    when{
+	      (p>=S-AppDis then { decelerate=-v^2/(2*(S-p)); Approaching(p, v, S, urStop, urStart, decelerate, max) }),
+	      (@(urStop) then UrgentDeceleration(p, v, urStart, max))
+    }
+}
+
+Template Approaching(float p, float v, float S, Signal urStop, Signal urStart, float decelerate, float max){
+  (dot p = v) || (dot v = decelerate) || (dot decelerate = 0) until (v<=0 <or> @(urStop));
+  when{ (p>=S then skip), (@(urStop) then  UrgentDeceleration(p, v, S, urStop, urStart, decelerate, max)) }
+}
+
+Template UrgentDeceleration(float p, float v, float S, Signal urStop, Signal urStart, float decelerate, float max){
+  (dot p = v) || (dot v = dec) until (v<=0);
+  when{ (@(urStart)  then
+  (RunStable(p,v,S,urStop,urStart,decelerate, max) < S-p>=DISTANCE > UrgentAcceleration(p,v,S, urStop, urStart, decelerate, max))) }
+}
+
+Template UrgentAcceleration(float p, float v, float S, Signal urStop, Signal urStart, float decelerate, float max){
+  max = 0.5*(p+S);
+  (dot p = v) || (dot v = acc) until (p>=max);
+  decelerate=-v^2/(2*(S-p));
+  Approaching(p, v, S, urStop, urStart, decelerate, max)
+}
+
+Template Train(float p, float v, float S, Signal urStop, Signal urStart, int index, float decelerate, float max){
+   while(true) {
+      (index=0  <index==4> skip);
+      suspend(StopTime);
+      (S=S1 <index==0> (S=S2 <index==1>  (S=S3 <index==2> (S=S4 <index==3> skip))));
+      Acceleration(p,v);
+      RunStable(p, v, S, urStop, urStart, decelerate, max);
+      index = index + 1
+   }
+}
+
+Main{
+	Train(APosition, AVelocity, AFrontStation, AUrStop, AUrStart, AIndex, ADeceleration, AMax)
+}
