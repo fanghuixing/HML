@@ -1,9 +1,3 @@
-Signal ANearP;
-Signal ANearQ;
-Signal AStopP;
-Signal AStopQ;
-Signal ALeaveP;
-Signal ALeaveQ;
 Signal AUrStop; // urgent stop A
 Signal AUrStart; // urgent start A
 

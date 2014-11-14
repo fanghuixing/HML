@@ -21,7 +21,10 @@ public class ExecSMT {
         if (modelFilePath!=null && modelFilePath.length()>0)
             sb.append(" ").append(modelFilePath);
 
-        //sb.append(" --ode_step=200");
+        sb.append(" --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=1024");
+        //--ode_parallel --ode_cache  --delta_heuristic --short_sat
+        //--precision=0.1 --visualize --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=1024
+
         logger.info("Exec " + sb.toString());
         Runtime runtime = Runtime.getRuntime();
         Process proc = null;
