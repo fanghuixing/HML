@@ -242,16 +242,17 @@ public class DiscreteWithContinuous implements Dynamic{
         ConcreteExpr result = concreteExpr.negationForInv();
         List<String> branches = result.guardBranches(depth);
         String inv = mergeBranches(branches, mode, depth);
-        if (!guardCheckEnable) {
-            //如果没有启用guard检查，就需要处理瞬间返回的情况
-            //String empty = String.format("(and %s %s)", emptyGuard.toString(depth), concreteExpr.toString(depth));
-            //return String.format("(or %s %s)", empty, inv);
-            String test = String.format("(=> %s %s)", concreteExpr.toStringForStartPoint(depth),
-                    String.format("(forall_t %s [0 time_%s] %s)", mode,  depth, emptyGuard.toString(depth)));
-            return String.format("(and %s %s)", test, inv);
-            //因为是对当前的变量进行约束，所以使用当前depth
-        }
-        else  return inv;
+//        if (!guardCheckEnable) {
+//            //如果没有启用guard检查，就需要处理瞬间返回的情况
+//            //String empty = String.format("(and %s %s)", emptyGuard.toString(depth), concreteExpr.toString(depth));
+//            //return String.format("(or %s %s)", empty, inv);
+//            String test = String.format("(=> %s %s)", concreteExpr.toStringForStartPoint(depth),
+//                    String.format("(forall_t %s [0 time_%s] %s)", mode,  depth, emptyGuard.toString(depth)));
+//            return String.format("(and %s %s)", test, inv);
+//            //因为是对当前的变量进行约束，所以使用当前depth
+//        }
+//        else
+        return inv;
         //guardCheckEnable为真时候表示我们不需要再添加guard条件到公式中，因为我们已经判断过这个条件
 
     }

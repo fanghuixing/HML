@@ -89,13 +89,25 @@ public class PathsMerge {
     }
 
     public static String mergeDynamics(List<String> dynamics){
-        StringBuilder sb = new StringBuilder();
         if (dynamics.size()==1) return dynamics.get(0);
         else if (dynamics.size()==0) return null;
-        else {
-            sb.append(String.format("(or (and %s) (and %s))", dynamics.remove(0), mergeDynamics(dynamics)));
-            return sb.toString();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("(or");
+        for (String s : dynamics){
+            sb.append(String.format(" (and %s)", s));
         }
+        sb.append(")");
+        return sb.toString();
+
+
+//        StringBuilder sb = new StringBuilder();
+//        if (dynamics.size()==1) return dynamics.get(0);
+//        else if (dynamics.size()==0) return null;
+//        else {
+//            sb.append(String.format("(or (and %s) (and %s))", dynamics.remove(0), mergeDynamics(dynamics)));
+//            return sb.toString();
+//        }
     }
 
     public List<List<Dynamic>> getMergeResult(){

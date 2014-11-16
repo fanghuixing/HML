@@ -44,7 +44,7 @@ public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
 
     // The max depth of the unrolling
-    final static int depth = 10;
+    final static int depth = 40;
 
     // The HML model file path
     private static String modelPath = "./source/src/subway.hml";
@@ -169,7 +169,7 @@ public class HML2SMT {
 
     public  static void writeToFile(ST st, long pathId, String prefix) throws IOException {
         File out = new File(prefix + depth + "_" + pathId + ".smt2");
-        if (out.createNewFile())  logger.debug("File successfully created");
+        if (out.createNewFile())  logger.debug("File successfully created: " + out.getPath());
         else                      logger.debug("File already exits.");
         st.write(out, new HSTErrorListener());
         smtPath = out.getPath();

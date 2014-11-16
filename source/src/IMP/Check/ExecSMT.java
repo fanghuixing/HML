@@ -1,6 +1,7 @@
 package IMP.Check;
 
 
+import DataSet.ParseJSONData;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -72,6 +73,12 @@ public class ExecSMT {
                 logger.error("Error when closing input/error stream: " + e.getMessage());
             }
         }
+    }
+
+    public static void main(String[] args) throws Exception{
+        String path = "./source/src/HML_6_0.smt2";
+        ExecSMT.exec("0.1", path + " --visualize");
+        ParseJSONData.showData(path + ".json");
     }
 
 

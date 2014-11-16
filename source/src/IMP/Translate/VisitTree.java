@@ -1,6 +1,8 @@
 package IMP.Translate;
 
 import IMP.Merge.PathsMerge;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,6 +16,7 @@ import java.util.List;
  * 每一条从根节点到叶子节点的路径可以组成一次深度展开
  */
 public class VisitTree {
+    private static Logger logger = LogManager.getLogger(VisitTree.class.getName());
     /**
      * 当前节点所处的层次，从0开始递增，直到达到最大展开深度
      */
@@ -105,8 +108,9 @@ public class VisitTree {
     }
 
     public void collectLeaves(List<VisitTree> leaves){
-        if (children==null)
+        if (children==null) {
             leaves.add(this);
+        }
         else {
             for (VisitTree e : children) e.collectLeaves(leaves);
         }
@@ -172,10 +176,11 @@ public class VisitTree {
     }
 
     public void merge(){
-
         if (children==null || children.size()==0){
+            //logger.debug("children is empty");
             if (father==null) return;
             List<VisitTree> terminals =  getTerminalChildren(father);
+            //logger.debug("terminal size: " + terminals.size());
             for (int i=0; i<terminals.size(); i++){
 
                 VisitTree Va = terminals.get(i);
@@ -184,52 +189,91 @@ public class VisitTree {
                 for (int j=i+1; j<terminals.size(); j++){
                     VisitTree Vb = terminals.get(j);
                     if (match(Va.getCurrentDynamicList(), Vb.getCurrentDynamicList())){
+                        //if the current dynamic list of va and vb have the same continuous dynamics
+                        //we can merge the last discrete dynamics
                         Dynamic lastVa = Va.getLastDynamic();
                         Dynamic lastVb = Vb.getLastDynamic();
                         set.add(lastVa.getDiscreteDynamics());
                         set.add(lastVb.getDiscreteDynamics());
+                        //logger.debug("remove child");
                         father.removeChild(Vb);
                         terminals.remove(Vb);
                         j--;
                         flag = true;
-
                     }
                 }
-                if (flag) merge(Va, set);
+                if (flag) {
+                    merge(Va, set);
+                } else {
+                    //logger.debug("No merge");
+                }
 
             }
 
             if (father.children.size()<2){
+                VisitTree only_one = father.children.get(0);
+
                 VisitTree newFather = father.father;
                 if (newFather==null) return;
                 newFather.removeChild(father);
                 father = newFather;
-                father.children.add(this);
+                only_one.father = father;
+                //logger.debug("Add child");
+
+                father.children.add(only_one);
             }
+
+
 
 
         }
         else if (children!=null && children.size()>0) {
-            for (VisitTree v : children){
+            //logger.debug("child is not empty: " + children.size());
+            List<VisitTree> visited = new ArrayList<VisitTree>();
+            while (true) {
+                VisitTree tree = null;
+                for (VisitTree v : children) {
+                    if (!visited.contains(v)){
+                        tree = v;
+                        visited.add(v);
+                        break;
+                    }
+                }
+                if (tree==null) break;
 
-                v.merge();
+                tree.merge();
+
             }
+
         }
 
     }
 
-    private void merge(VisitTree visitTree, HashSet<String> set){
+    private List<VisitTree> copyList(List<VisitTree> from) {
+        List<VisitTree> l = new ArrayList<VisitTree>();
+        for (VisitTree s : from) {
+            l.add(s);
+        }
+        return l;
+    }
 
+    private void merge(VisitTree visitTree, HashSet<String> set){
+        //logger.debug("Merge discrete dynamics");
         List<String> dynamics = new ArrayList<String>();
         dynamics.addAll(set);
-        visitTree.getLastDynamic().setDiscreteDynamics(PathsMerge.mergeDynamics(dynamics));
-
-
+        String res = PathsMerge.mergeDynamics(dynamics);
+        visitTree.getLastDynamic().setDiscreteDynamics(res);
     }
 
 
-
+    /**
+     *
+     * @param pa One Dynamic List
+     * @param pb Another Dynamic List
+     * @return if pa and pb have the same continuous dynamics, then return true, otherwise false
+     */
     private boolean match(List<Dynamic> pa, List<Dynamic> pb) {
+
         if (pa==null || pb==null) return false;
         if (pa.size() != pb.size()) return false;
         for (int i=0; i<pa.size(); i++) {
@@ -237,6 +281,7 @@ public class VisitTree {
                 return false;
             }
         }
+        //logger.debug("Dynamics Matched");
         return true;
     }
 
