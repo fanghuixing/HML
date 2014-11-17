@@ -90,7 +90,7 @@ public class DiscreteWithContinuous implements Dynamic{
             }
             else if (r instanceof  HMLParser.GuardContext) {
                 //连续行为退出条件
-                analyzeGuard( r, c.getVrl());
+                analyzeGuard( r, c.getVrl(), c.negation);
 
             }
             else if (r instanceof HMLParser.ExprContext) {
@@ -99,11 +99,11 @@ public class DiscreteWithContinuous implements Dynamic{
 
             }
             else if (r instanceof HMLParser.SuspendContext) {
-                analyzeGuard(r, c.getVrl());
+                analyzeGuard(r, c.getVrl(), c.negation);
             } else if (r instanceof HMLParser.WhenProContext) {
                 // if you need to add the when guard to the starting point
                 // we don't need this usually
-                analyzeGuard(r, c.getVrl());
+                analyzeGuard(r, c.getVrl(), c.negation);
             }
         }
         //reset clock, after the guard has been analyzed.
@@ -333,13 +333,14 @@ public class DiscreteWithContinuous implements Dynamic{
         return odeMap;
     }
 
-    private void analyzeGuard(ParserRuleContext guard, VariableLink variableLink) {
+    private void analyzeGuard(ParserRuleContext guard, VariableLink variableLink, boolean negation) {
         ConcreteExpr concreteExpr =  fromGuardToConcreteExpr(guard);
 
 
 
         if (variableLink != null) concreteExpr.resolve(variableLink);
         refreshExpression(concreteExpr);
+        if (negation)   concreteExpr = concreteExpr.negation();
         // 因为Guard是没有副作用的，所以可以放入ID2ExpMap中
         // 在导出公式的时候需要处理这个特殊的ID
         ID2ExpMap.put(guardName(""+guardIndex), concreteExpr);

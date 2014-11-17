@@ -44,7 +44,7 @@ public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
 
     // The max depth of the unrolling
-    final static int depth = 40;
+    final static int depth = 10;
 
     // The HML model file path
     private static String modelPath = "./source/src/subway.hml";
@@ -57,7 +57,7 @@ public class HML2SMT {
 
     //If deepApproach is true, the unrolling is based on SMT,
     // otherwise, we try the full-unrolling
-    private static boolean deepApproach = true;
+    private static boolean deepApproach = false;
 
     // The abstract expr map
     static ParseTreeProperty<AbstractExpr> exprPtp;
@@ -85,6 +85,8 @@ public class HML2SMT {
 
     // StringTemplate
     private static ST st = group.getInstanceOf("SMT2");
+
+    private static List<String> smt2files = new ArrayList<String>();
 
     public static void main(String[] args) throws Exception {
         InputStream inputStream = new FileInputStream(modelPath);
@@ -114,11 +116,7 @@ public class HML2SMT {
 
         if(constructComponents(trans)) {
             writeFormulas(trans);
-            if (visualize) {
-                check(smtPath + " --visualize");
-                Util.viewDataInWindow(smtPath);
-            }
-            else check(smtPath);
+            checkAndShow();
         }
         else  logger.error("Exit on Error, please check your model ...");
 
@@ -128,6 +126,29 @@ public class HML2SMT {
         //PathsMerge PM = new PathsMerge();
         //PM.mergePaths(paths);
         //PM.getMergeResult();
+    }
+
+
+    private static void checkAndShow(){
+        String arg = "";
+        if (visualize) arg = " --visualize";
+        if (!deepApproach) {
+            for(String f : smt2files)
+                checkAndView(f,arg);
+        } else {
+            checkAndView(smtPath,arg);
+        }
+    }
+
+    private static void checkAndView(String file, String arg){
+        boolean res = check(file + arg);
+        if (res && visualize) {
+            try {
+                Util.viewDataInWindow(file);
+            } catch (Exception e) {
+                logger.error(e.getMessage());
+            }
+        }
     }
 
     private static void writeFormulas(HMLProgram2SMTVisitor trans) throws IOException{
@@ -173,6 +194,7 @@ public class HML2SMT {
         else                      logger.debug("File already exits.");
         st.write(out, new HSTErrorListener());
         smtPath = out.getPath();
+        smt2files.add(smtPath);
     }
 
     private static boolean check(String path) {

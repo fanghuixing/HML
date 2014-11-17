@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Stack;
 
 /**
  * HML-IMP.Merge
@@ -88,6 +89,25 @@ public class PathsMerge {
         }
     }
 
+
+    public static boolean isFormulaSingle(String dynamics){
+        Stack<String> stack = new Stack<String>();
+        char[] dy = dynamics.trim().toCharArray();
+
+        for (int i=0; i<dy.length; i++){
+
+            if (dy[i]=='('){
+                stack.push(" ");
+            } else if (dy[i]==')'){
+                stack.pop();
+            }
+            if (stack.size()==0 && i<dy.length-1){
+                return false;
+            }
+        }
+        return true;
+    }
+
     public static String mergeDynamics(List<String> dynamics){
         if (dynamics.size()==1) return dynamics.get(0);
         else if (dynamics.size()==0) return null;
@@ -95,7 +115,10 @@ public class PathsMerge {
         StringBuilder sb = new StringBuilder();
         sb.append("(or");
         for (String s : dynamics){
-            sb.append(String.format(" (and %s)", s));
+            if (isFormulaSingle(s))
+                sb.append(String.format(" %s", s));
+            else
+                sb.append(String.format(" (and %s)", s));
         }
         sb.append(")");
         return sb.toString();

@@ -96,17 +96,33 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         for (VisitTree leaf : dynamicsLeaves) {
             //当leaf的深度达到depth+1时停止
             if (leaf.getCurrentDepth()>depth) continue;
-            Dynamic dynamic = leaf.getCurrentDynamics();
-            dynamic.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
-            dynamic.setDepth(leaf.getCurrentDepth());
-            leaf.getCurrentDynamicList().add(dynamic);
-            dynamic.toString();
-            if (leaf.getCurrentDepth() < depth+1) {
+
+            Dynamic leftDynamic = leaf.getCurrentDynamics().copy();
+            Dynamic rightDynamic = leaf.getCurrentDynamics().copy();
+            List<Dynamic> leftList = copyList(leaf.getCurrentDynamicList());
+            List<Dynamic> righList = copyList(leaf.getCurrentDynamicList());
+            VisitTree leftTree = new VisitTree(leaf,leftDynamic, leftList);
+            VisitTree rightTree = new VisitTree(leaf,rightDynamic, righList);
+            //创建分支也需要在树根节点创建， 这里需要修改
+            leaf.addChild(leftTree);
+            leaf.addChild(rightTree);
+
+            //for left tree, that the guard is invalid
+            leftDynamic.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink, true));
+            leftDynamic.addContinuous(new ContextWithVarLink(ctx, currentVariableLink));
+            leftDynamic.setDepth(leftTree.getCurrentDepth());
+            leftTree.getCurrentDynamicList().add(leftDynamic);
+            leftDynamic.toString();
+            if (leftTree.getCurrentDepth() < depth+1) {
                 Dynamic dy = new DiscreteWithContinuous();
-                dy.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink));
-                leaf.setCurrentDynamics(dy);
+                //dy.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink));
+                leftTree.setCurrentDynamics(dy);
             }
-            else  finishOnePath(leaf);
+            else  finishOnePath(leftTree);
+
+            //for right tree, that the guard is valid at the begging
+            rightDynamic.addDiscrete(new ContextWithVarLink(ctx, currentVariableLink));
+
         }
 
         root.merge();
@@ -116,14 +132,16 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         root.collectLeaves(leaves);
         VisitTree oldRoot = root;
 
+        List<HMLParser.SingleGuardedChoiceContext> gcList = ctx.guardedChoice().singleGuardedChoice();
         for (VisitTree v : leaves) {
             if (v.getCurrentDepth() < depth+1) {
-                for (HMLParser.SingleGuardedChoiceContext sgc : ctx.guardedChoice().singleGuardedChoice()) {
+                for (HMLParser.SingleGuardedChoiceContext sgc : gcList) {
                     Dynamic dynamic = v.getCurrentDynamics().copy();
                     List<Dynamic> dynamicList = copyList(v.getCurrentDynamicList());
                     VisitTree tree = new VisitTree(v, dynamic, dynamicList);
                     v.addChild(tree);
                     root = tree;
+                    logger.debug(sgc.guard().getText());
                     dynamic.addDiscrete(new ContextWithVarLink(sgc.guard(), currentVariableLink));
                     visit(sgc.blockStatement());
                     root = oldRoot;//需要指向原来的叶子节点
@@ -152,8 +170,6 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
         currentScope = scopes.get(ctx);
         visit(ctx.blockStatement());
-
-
         return null;
     }
 
@@ -235,6 +251,30 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         }
         else if (boolCondition instanceof HMLParser.ConstantFalseContext) {
             return null;
+        } else {
+            //如果可以判定这个条件当前的值，就可以极大地降低分支数目
+            List<VisitTree> leaves = new ArrayList<VisitTree>();
+            root.collectLeaves(leaves);
+            VisitTree oldRoot = root;
+            //logger.debug("visitConChoice, leaves size: " + leaves.size());
+            for (VisitTree v : leaves) {
+                Dynamic leftDynamic = v.getCurrentDynamics().copy();
+                Dynamic rightDynamic = v.getCurrentDynamics().copy();
+                List<Dynamic> leftList = copyList(v.getCurrentDynamicList());
+                List<Dynamic> righList = copyList(v.getCurrentDynamicList());
+                VisitTree leftTree = new VisitTree(v,leftDynamic, leftList);
+                VisitTree rightTree = new VisitTree(v,rightDynamic, righList);
+                //创建分支也需要在树根节点创建， 这里需要修改
+                v.addChild(leftTree);
+                v.addChild(rightTree);
+                root = leftTree;
+                leftDynamic.addDiscrete(new ContextWithVarLink(boolCondition, currentVariableLink));
+                visit(ctx.parStatement().blockStatement());
+                if (!isMaxDepth(leftTree)) visit(ctx);
+                root = rightTree;
+                rightDynamic.addDiscrete(new ContextWithVarLink(boolCondition, currentVariableLink, true));
+            }
+            root = oldRoot;//需要指向原来的叶子节点
         }
         return null;
     }
@@ -395,6 +435,21 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
         List<VisitTree> vt = new ArrayList<VisitTree>();
         visitTree.collectLeaves(vt);
+        for (VisitTree v : vt){
+            //对每一个叶子判断是否完成了深度展开，如果有一个叶子没有达到则需要继续展开
+            if (v.getCurrentDepth()<depth+1)
+                return false;
+        }
+        return true;
+
+    }
+
+
+    //判定是否已经到达最大深度
+    private boolean isMaxDepth(VisitTree tree){
+
+        List<VisitTree> vt = new ArrayList<VisitTree>();
+        tree.collectLeaves(vt);
         for (VisitTree v : vt){
             //对每一个叶子判断是否完成了深度展开，如果有一个叶子没有达到则需要继续展开
             if (v.getCurrentDepth()<depth+1)
