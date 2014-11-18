@@ -67,8 +67,10 @@ public class HML2SMTListener extends HMLBaseListener {
             value = (Variable) entry.getValue();
             if (!value.isFinal) {
                 // 常量不用声明，直接在转成的公式中替换
-                inits.append(String.format("(= %s_0_0 %s) ", key, value.init.getText()));
-                InitID2ExpMap.put(key, new AbstractExpr(value.init.getText()));
+                //inits.append(String.format("(= %s_0_0 %s) ", key, value.init.getText()));
+                //InitID2ExpMap.put(key, new AbstractExpr(value.init.getText()));
+                inits.append(String.format("(= %s_0_0 %s) ", key, exprPtp.get(value.init.expr())));
+                InitID2ExpMap.put(key, exprPtp.get(value.init.expr()));
             }
         }
         inits.append(")");

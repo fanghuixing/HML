@@ -11,7 +11,10 @@ import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Stack;
 
 /**
  * This is the visitor that does the main work for
@@ -278,6 +281,10 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
         }
         return null;
     }
+
+
+
+
 
     public Void visitSendSignal(HMLParser.SendSignalContext ctx) {
         logger.debug(String.format("Visit Send Signal %s -> %s ",  ctx.getText(), currentVariableLink.getRealVar(ctx.signal().ID().getText())));

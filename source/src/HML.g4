@@ -85,7 +85,7 @@ blockStatement
     |  '{' blockStatement ('||' blockStatement)+ '}'         #ParaCom   // parallel composition
     |  blockStatement ';'?  blockStatement                   #SeqCom    // sequential composition
     |  '(' blockStatement '<' expr '>' blockStatement ')'    #ConChoice     // conditional choice
-    |  equation 'until' guard                                #Ode       // differential equation
+    |  equation 'until' guard  ('under' '(' inv=expr ')')?   #Ode       // differential equation
     |  'when' '{' guardedChoice '}'                          #WhenPro   // when program
     |  'while' parExpression parStatement                    #LoopPro   // loop
     |  'if' parExpression parStatement
@@ -141,7 +141,7 @@ parExpression
 
 
 equation
-    : relation                                                  # EqWithNoInit
+    : relation                                                   # EqWithNoInit
     | relation 'init' expr                                      # EqWithInit
     | equation '||' equation                                    # ParaEq
     ;
@@ -149,7 +149,7 @@ equation
 
 
 relation
-    : '(' 'dot' ID '=' expr ')'
+    : '(' 'dot' ID '=' expr  ')'
     ;
 
 

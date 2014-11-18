@@ -2,7 +2,7 @@ Signal AUrStop; // urgent stop A
 Signal AUrStart; // urgent start A
 
 
-final float S1=3000, S2=7000, S3=10000, S4=14000, acc = 0.5, dec = -1.5, MaxVel = 20, AppDis = 500, DISTANCE = 800, StopTime = 50;
+final float S1=2000, S2=4000, S3=6000, S4=8000, acc = 0.5, dec = -1.5, MaxVel = 20, AppDis = 500, DISTANCE = 800, StopTime = 50;
 
 
 int AIndex=0;
@@ -12,12 +12,12 @@ float clock = 0;
 float global = 0;
 
 AIndex in [0, 4];
-APosition in [0, 14000];
+APosition in [0, 8000];
 AVelocity in [0, 20];
-AFrontStation in [0, 14000];
+AFrontStation in [0, 8000];
 ADeceleration in [-1, 0];
-AMax in [0, 14000];
-BMax in [0, 14000];
+AMax in [0, 8000];
+BMax in [0, 8000];
 time in [0, 200];
 clock in [0, 200];
 global in [0, 2000];

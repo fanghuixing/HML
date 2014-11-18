@@ -1,0 +1,31 @@
+final float pi = 3.14;
+float position = -pi/60, velocity = -pi/60, force=-0.5;
+final float m=0.1, mc=1,l=0.5, g=9.8;
+float clock = 0;
+float global = 0;
+
+position in [-1,1];
+velocity in [-1,1];
+force in [-1,1];
+time in [0, 200];
+clock in [0, 200];
+global in [0, 2000];
+
+
+Template Pendulum(float x1, float x2, float u){
+    (dot u = 0)
+    ||
+    (dot x1 = x2)
+    ||
+    (dot x2 = (g * sin(x1) - ( m * l * (x2^2) * cos(x1) * sin(x1) ) / (mc+m)) * (1 / (l * (4/3 - m * cos(x1)^2/(mc+m))))
+    + (cos(x1)/(mc+m)) * (1/(l * (4/3 - m * cos(x1)^2/(mc+m)))) * u)
+    until (x1>=0.5 <or> x1<=-0.5)
+}
+
+
+Main{
+
+    while(true){
+        Pendulum(position, velocity, force)
+    }
+}

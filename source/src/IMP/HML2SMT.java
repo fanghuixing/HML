@@ -44,10 +44,12 @@ public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
 
     // The max depth of the unrolling
-    final static int depth = 10;
+    final static int depth = 0;
+
+    final static String  precision = "0.1";
 
     // The HML model file path
-    private static String modelPath = "./source/src/subway.hml";
+    private static String modelPath = "./source/src/Pend.hml";
 
     // The SMT2 formula path
     private static String smtPath ;
@@ -57,7 +59,7 @@ public class HML2SMT {
 
     //If deepApproach is true, the unrolling is based on SMT,
     // otherwise, we try the full-unrolling
-    private static boolean deepApproach = false;
+    private static boolean deepApproach = true;
 
     // The abstract expr map
     static ParseTreeProperty<AbstractExpr> exprPtp;
@@ -149,6 +151,12 @@ public class HML2SMT {
                 logger.error(e.getMessage());
             }
         }
+        if (res==false && smt2files.size()>1) {
+            File fsmt = new File(file);
+            File fsmtJson = new File(file+".json");
+            if (fsmt.exists()) fsmt.delete();
+            if (fsmtJson.exists()) fsmtJson.delete();
+        }
     }
 
     private static void writeFormulas(HMLProgram2SMTVisitor trans) throws IOException{
@@ -198,7 +206,7 @@ public class HML2SMT {
     }
 
     private static boolean check(String path) {
-        return ExecSMT.exec("0.1", path);
+        return ExecSMT.exec(precision, path);
     }
 
 

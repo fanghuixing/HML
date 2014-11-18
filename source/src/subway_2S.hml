@@ -2,7 +2,7 @@ Signal AUrStop; // urgent stop A
 Signal AUrStart; // urgent start A
 
 
-final float S1=3000, S2=7000, S3=10000, S4=14000, acc = 0.5, dec = -1.5, MaxVel = 20, AppDis = 500, DISTANCE = 800, StopTime = 50;
+final float S1=1500, S2=3500, S3=5000, S4=7000, acc = 1, dec = -3, MaxVel = 20, AppDis = 250, DISTANCE = 400, StopTime = 25;
 
 
 int AIndex=0;
@@ -12,15 +12,15 @@ float clock = 0;
 float global = 0;
 
 AIndex in [0, 4];
-APosition in [0, 14000];
+APosition in [0, 7000];
 AVelocity in [0, 20];
-AFrontStation in [0, 14000];
-ADeceleration in [-1, 0];
-AMax in [0, 14000];
-BMax in [0, 14000];
-time in [0, 200];
-clock in [0, 200];
-global in [0, 2000];
+AFrontStation in [0, 7000];
+ADeceleration in [-2, 0];
+AMax in [0, 7000];
+BMax in [0, 7000];
+time in [0, 100];
+clock in [0, 100];
+global in [0, 1000];
 
 
 
@@ -55,7 +55,7 @@ Template UrgentAcceleration(float p, float v, float S, Signal urStop, Signal urS
 
 Template Train(float p, float v, float S, Signal urStop, Signal urStart, int index, float decelerate, float max){
    while(true) {
-      ( (index=0;p=0;v=0)  <index==4> skip);
+      ( (index=0;p=0;v=0)   <index==4> skip);
       suspend(StopTime);
       (S=S1 <index==0> (S=S2 <index==1>  (S=S3 <index==2> (S=S4 <index==3> skip))));
       Acceleration(p,v);
