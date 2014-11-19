@@ -383,6 +383,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
 
                 key.append(getType(s.getType()));
             }
+        }
             Template template = tmpMap.get(key.toString());
 
             if (template == null) {
@@ -405,7 +406,7 @@ public class HMLProgram2SMTVisitor extends HMLBaseVisitor<Void> {
             visit(template.getTemplateContext());
             currentVariableLink = variableStack.pop();
             currentScope = oldScope;
-        }
+        
 
         return null;
     }

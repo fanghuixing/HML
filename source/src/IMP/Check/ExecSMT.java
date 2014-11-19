@@ -22,7 +22,8 @@ public class ExecSMT {
         if (modelFilePath!=null && modelFilePath.length()>0)
             sb.append(" ").append(modelFilePath);
 
-        sb.append(" --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=1024");
+        sb.append(" --ode_parallel");
+        //sb.append(" --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=1024");
         //--ode_parallel --ode_cache  --delta_heuristic --short_sat
         //--precision=0.1 --visualize --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=1024
 
@@ -76,7 +77,7 @@ public class ExecSMT {
     }
 
     public static void main(String[] args) throws Exception{
-        String path = "./source/src/HML_6_6.smt2";
+        String path = "./source/src/HML_0_0.smt2";
         ExecSMT.exec("0.1", path + " --visualize ");
         ParseJSONData.showData(path + ".json");
     }

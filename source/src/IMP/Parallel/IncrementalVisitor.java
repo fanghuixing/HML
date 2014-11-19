@@ -312,6 +312,7 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
 
                 key.append(getType(s.getType()));
             }
+        }
             Template template = tmpMap.get(key.toString());
             if (template == null) {
                 String msg = "No template defined for " + ctx.getText();
@@ -334,7 +335,7 @@ public class IncrementalVisitor extends HMLProgram2SMTVisitor implements Runnabl
             visit(template.getTemplateContext());
             currentVariableLink = variableStack.pop();
             currentScope = oldScope;
-        }
+
         return null;
     }
 

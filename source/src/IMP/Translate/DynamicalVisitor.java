@@ -48,14 +48,14 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
     }
 
     public Void visitHybridModel(HMLParser.HybridModelContext ctx) {
-
+        logger.debug("visit model");
         currentScope = globals;
         visit(ctx.program());
         return null;
     }
 
     public Void visitProgram(HMLParser.ProgramContext ctx) {
-
+        logger.debug("visit program");
         currentScope = scopes.get(ctx);
         visit(ctx.blockStatement());
 
@@ -212,6 +212,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
      * @return null
      */
     public Void visitLoopPro(HMLParser.LoopProContext ctx) {
+        logger.debug("visit loop");
         HMLParser.ExprContext boolCondition = ctx.parExpression().expr();
         if (boolCondition instanceof HMLParser.ConstantTrueContext) {
             while (!isMaxDepth()) {
@@ -235,6 +236,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
 
 
     public Void visitOde(HMLParser.OdeContext ctx) {
+        logger.debug("visit ode");
         visit(ctx.equation());
         //As we cannot control the divergence, maybe we don't have to check the guard initially
         if (CHECKINGGUARD) {
@@ -337,7 +339,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
 
 
     public Void visitCallTem(HMLParser.CallTemContext ctx) {
-
+        logger.debug("call " + ctx.ID());
         StringBuilder key = new StringBuilder();
         List<String> cvars = new ArrayList<String>(); // concrete vars
         key.append(ctx.ID().getText());
@@ -349,6 +351,9 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
                 cvars.add(e.getText());
                 key.append(getType(s.getType()));
             }
+        }
+
+
             Template template = tmpMap.get(key.toString());
             if (template == null) {
                 String msg = "No template defined for " + ctx.getText();
@@ -372,7 +377,7 @@ public class DynamicalVisitor extends HMLProgram2SMTVisitor {
             currentVariableLink = variableStack.pop();
             currentScope = oldScope;
 
-        }
+
 
         return null;
     }
