@@ -27,7 +27,7 @@ Template Control(float force, float theta, float omega){
     while(true) {
         suspend(0.02);
         force = kp*theta + ki*itheta + kd*omega;
-        itheta = 0;
+        itheta = 0
     }
 
 }
