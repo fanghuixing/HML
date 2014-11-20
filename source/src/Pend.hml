@@ -1,6 +1,6 @@
 final float pi = 3.14;
 float position = 0.5, velocity = 0, force=50, cartPosition=0, cartVelocity=0;
-float sinref=0;
+
 final float mp=0.1, mc=1,l=0.5, g=9.8;
 float clock = 0;
 float global = 0;
@@ -17,7 +17,6 @@ cartVelocity in [-10, 10];
 time in [0, 200];
 clock in [0, 200];
 global in [0, 2000];
-sinref in [-1, 1];
 itheta in [-1000,1000];
 
 
@@ -57,7 +56,7 @@ Main{
         {
         Pendulum(position, velocity, force, cartPosition, cartVelocity)
         ||
-        Control(force, cartPosition, cartVelocity)
+        Control(force, position, velocity)
         }
 
     }
