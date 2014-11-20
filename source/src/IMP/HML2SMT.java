@@ -44,9 +44,9 @@ public class HML2SMT {
     private static Logger  logger = LogManager.getLogger(HML2SMT.class.getName());
 
     // The max depth of the unrolling
-    final static int depth = 0;
+    final static int depth = 10;
 
-    final static String  precision = "0.1";
+    final static String  precision = "0.001";
 
     // The HML model file path
     private static String modelPath = "./source/src/Pend.hml";

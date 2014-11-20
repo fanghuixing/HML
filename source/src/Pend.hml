@@ -1,29 +1,41 @@
 final float pi = 3.14;
-float position = 0.05, velocity = 0, force=20, cartPosition=0, cartVelocity=0;
+float position = 0.5, velocity = 0, force=50, cartPosition=0, cartVelocity=0;
 float sinref=0;
 final float mp=0.1, mc=1,l=0.5, g=9.8;
 float clock = 0;
 float global = 0;
 
+final float kp=70, ki=0, kd=0;
+float itheta=0;
+
 
 position in [-0.52, 0.52];
-velocity in [-1.74, 1.74];
+velocity in [-10, 10];
 force in [-100, 100];
 cartPosition in [-3, 3];
-cartVelocity in [-1, 1];
+cartVelocity in [-10, 10];
 time in [0, 200];
 clock in [0, 200];
 global in [0, 2000];
 sinref in [-1, 1];
+itheta in [-1000,1000];
 
 
 
-Template Sinusoidal(){
-    (dot sinref = 0.5*cos(global)) until (global>30)
+
+Template Control(float force, float theta, float omega){
+    while(true) {
+        suspend(0.02);
+        force = kp*theta + ki*itheta + kd*omega;
+        itheta = 0;
+    }
+
 }
 
 Template Pendulum(float theta, float omega, float f, float x, float v){
     (dot f = 0)
+    ||
+    (dot itheta = theta)
     ||
     (dot theta = omega)
     ||
@@ -34,7 +46,7 @@ Template Pendulum(float theta, float omega, float f, float x, float v){
     ||
     (dot v = ( (4/3)*(f+mp*l*omega^2*sin(theta)) - mp*g*sin(theta)*cos(theta) ) /
                  ( (4/3)*(mc+mp) - mp*cos(theta)^2) )
-    until (theta>=30 <or> theta<=-30 <or> omega>=100 <or> omega<=-100)
+    until (false)
 }
 
 
@@ -42,7 +54,11 @@ Template Pendulum(float theta, float omega, float f, float x, float v){
 Main{
 
     while(true){
-        Pendulum(position, velocity, force, cartPosition, cartVelocity);
-        force=-1*force
+        {
+        Pendulum(position, velocity, force, cartPosition, cartVelocity)
+        ||
+        Control(force, cartPosition, cartVelocity)
+        }
+
     }
 }
