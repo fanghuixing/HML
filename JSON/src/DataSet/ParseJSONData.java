@@ -41,18 +41,12 @@ import java.util.List;
  */
 public class ParseJSONData extends ApplicationFrame {
     private static Logger  logger = LogManager.getLogger(ParseJSONData.class);
-
     private static ParseTree tree;
     /** Exit action command. */
     public static final String EXIT_COMMAND = "EXIT";
-
     private  ChartPanel chartPanel;
     private ActionListener listener;
     private float[][] pattern = {{10.0f},{4.0f,1.0f},{7.0f,2.0f,3.0f,7.0f},{1.0f,2.0f}};
-    // The HML model file path
-    private static String modelPath = "./JSON/src/data.json";
-
-    List<Double> globalTime = new ArrayList<Double>();
     static int maxDepth;
     private NumberFormat numFormater = NumberFormat.getNumberInstance();
 
@@ -63,8 +57,6 @@ public class ParseJSONData extends ApplicationFrame {
 
     public ParseJSONData(String title, String des, XYDataset data) {
         super(title);
-        //XYDataset dataSet = createDataSet(variables, dataHashMap);
-
         CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis("Global Time"));
 
         plot.setGap(5.0);
@@ -243,7 +235,6 @@ public class ParseJSONData extends ApplicationFrame {
 
 
         DataCreator dataCreator = new DataCreator();
-
         XYDataset dataSet = dataCreator.createDataSet(variables, dataHashMap);
         List<YIntervalSeriesCollection> seriesCollectionList = dataCreator.seriesCollectionList;
         maxDepth = dataCreator.maxDepth;
@@ -256,12 +247,6 @@ public class ParseJSONData extends ApplicationFrame {
         }
 
 //        ParseJSONData demo = new ParseJSONData("Line Chart HML", "ALL", dataSet);
-//        demo.pack();
-//        RefineryUtilities.centerFrameOnScreen(demo);
-//        demo.setVisible(true);
-
-
-//        ParseJSONData demo = new ParseJSONData("Line Chart HML", variables, dataHashMap);
 //        demo.pack();
 //        RefineryUtilities.centerFrameOnScreen(demo);
 //        demo.setVisible(true);
