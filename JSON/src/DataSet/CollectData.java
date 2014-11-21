@@ -2,6 +2,8 @@ package DataSet;
 
 import AntlrGen.JSONBaseVisitor;
 import AntlrGen.JSONParser;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jfree.data.general.SeriesException;
 import org.jfree.data.xy.YIntervalSeries;
 
@@ -16,9 +18,9 @@ import java.util.List;
  */
 public class CollectData extends JSONBaseVisitor{
 
-
-    HashSet<String> variables = new HashSet<String>();
-    List<JSONParser.FlowContext> flows;
+    private static Logger logger = LogManager.getLogger(CollectData.class);
+    static HashSet<String> variables = new HashSet<String>();
+    static List<JSONParser.FlowContext> flows;
 
     HashMap<String, VariableWithData> dataHashMap = new HashMap<String, VariableWithData>();
 
@@ -44,6 +46,7 @@ public class CollectData extends JSONBaseVisitor{
     }
 
     public Void visitData(JSONParser.DataContext ctx) {
+        //logger.debug("visit data");
         String[] key = ctx.key().ID().getText().split("_");
         String name = key[0];
         variables.add(name);
@@ -55,13 +58,16 @@ public class CollectData extends JSONBaseVisitor{
 
 
         for (JSONParser.MappingContext mapping : mappings) {
+
             List<JSONParser.NumberContext> time = mapping.time().interval().number();
             List<JSONParser.NumberContext> value = mapping.value().interval().number();
+
             if (name.equals("global") || name.equals("clock")) {
-                Double v = Double.parseDouble(value.get(0).getText());
-                values.add(v, v, v, v);
-                v = Double.parseDouble(value.get(1).getText());
-                values.add(v, v, v, v);
+                Double t0 = Double.parseDouble(value.get(0).getText());
+                Double t1 = Double.parseDouble(value.get(1).getText());
+                values.add(t0, t0, t0, t0);
+                if (Math.abs(t0-t1)>0.001)
+                    values.add(t1, t1, t1, t1);
             } else {
                 double t0 = Double.parseDouble(time.get(0).getText());
                 double t1 = Double.parseDouble(time.get(1).getText());
@@ -75,16 +81,15 @@ public class CollectData extends JSONBaseVisitor{
                 }
 
                 //If the data is clean
-                    try {
-
-                        if (v0 <= v1) {
-                            values.add((t0 + t1) / 2, (v0 + v1) / 2, v0, v1);
-                        } else {
-                            values.add((t0 + t1) / 2, (v0 + v1) / 2, v1, v0);
-                        }
-                    } catch (SeriesException e) {
-
+                try {
+                    if (v0 <= v1) {
+                        values.add((t0 + t1) / 2, (v0 + v1) / 2, v0, v1);
+                    } else {
+                        values.add((t0 + t1) / 2, (v0 + v1) / 2, v1, v0);
                     }
+                } catch (SeriesException e) {
+                    logger.error(e.getMessage());
+                }
             }
         }
         dataHashMap.put(ctx.key().ID().getText(), new VariableWithData(name, mode, depth, values));

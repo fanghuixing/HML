@@ -19,7 +19,6 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.DeviationRenderer;
 import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.YIntervalSeries;
 import org.jfree.data.xy.YIntervalSeriesCollection;
 import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RectangleInsets;
@@ -28,8 +27,10 @@ import org.jfree.ui.RefineryUtilities;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,28 +53,28 @@ public class ParseJSONData extends ApplicationFrame {
     private static String modelPath = "./JSON/src/data.json";
 
     List<Double> globalTime = new ArrayList<Double>();
-    int maxDepth;
+    static int maxDepth;
     private NumberFormat numFormater = NumberFormat.getNumberInstance();
 
 
 
-    List<YIntervalSeriesCollection> seriesCollectionList = new ArrayList<YIntervalSeriesCollection>();
 
 
-    public ParseJSONData(String title, List<String> variables, HashMap<String, VariableWithData> dataHashMap) {
+
+    public ParseJSONData(String title, String des, XYDataset data) {
         super(title);
-        XYDataset dataSet = createDataSet(variables, dataHashMap);
+        //XYDataset dataSet = createDataSet(variables, dataHashMap);
 
         CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis("Global Time"));
 
         plot.setGap(5.0);
 
-        for (YIntervalSeriesCollection data : seriesCollectionList) {
-            String des = data.getSeries(0).getKey().toString();
-            subplot(des, data, plot);
-        }
-        subplot("ALL", dataSet, plot);
-
+//        for (YIntervalSeriesCollection data : seriesCollectionList) {
+//            String des = data.getSeries(0).getKey().toString();
+//            subplot(des, data, plot);
+//        }
+        //subplot("ALL", dataSet, plot);
+        subplot(des, data, plot);
         plot.setOrientation(PlotOrientation.VERTICAL);
         List<Color> colors = new ArrayList<Color>();
         colors.add(Color.black);
@@ -89,8 +90,6 @@ public class ParseJSONData extends ApplicationFrame {
             sp.getRenderer().setBaseToolTipGenerator(new StandardXYToolTipGenerator());
             //new StandardXYToolTipGenerator("{0} : [ {1},  {2}]", numFormater, numFormater);
             for (int i = 0; i<sp.getSeriesCount(); i++) {
-
-
                 if (i % (maxDepth+1) == 0) index = 0;
                 Paint color = colors.get(index);
                 // From one mode to another, we will change the color
@@ -108,7 +107,6 @@ public class ParseJSONData extends ApplicationFrame {
 
         JFreeChart chart = new JFreeChart("HML Data Chart",JFreeChart.DEFAULT_TITLE_FONT, plot, false);
         //chart.removeLegend();
-
 
         chartPanel = new ChartPanel(chart, true,true,true,true, true);
         int width = Toolkit.getDefaultToolkit().getScreenSize().width;
@@ -128,12 +126,7 @@ public class ParseJSONData extends ApplicationFrame {
         crosshairOverlay.addDomainCrosshair(xCrosshair);
         crosshairOverlay.addRangeCrosshair(yCrosshair);
 
-
         chartPanel.addOverlay(crosshairOverlay);
-
-
-
-
 
         //Set menu of exporting image to PDF, in the file menu
         listener = new UnifiedActionListener(this, chartPanel);
@@ -145,37 +138,22 @@ public class ParseJSONData extends ApplicationFrame {
         exportToPDF.setActionCommand("EXPORT_TO_PDF");
         exportToPDF.addActionListener(listener);
 
-
         //Add the export menu (EPS) into right-click pop-menu
         JMenuItem exportToEPS = new JMenuItem("EPS...");
         exportToEPS.setActionCommand("EXPORT_TO_EPS");
         exportToEPS.addActionListener(listener);
-
-
 
         //Add the export menu (SVG) into right-click pop-menu
         JMenuItem exportToSVG = new JMenuItem("SVG...");
         exportToSVG.setActionCommand("EXPORT_TO_SVG");
         exportToSVG.addActionListener(listener);
 
-
-
         JPopupMenu popupMenu = chartPanel.getPopupMenu();
         JMenu subcom = (JMenu) popupMenu.getComponent(3);
         subcom.add(exportToPDF);
         subcom.add(exportToEPS);
         subcom.add(exportToSVG);
-
-
-
-
-
-
-
         setContentPane(chartPanel);
-
-
-
     }
 
 
@@ -228,6 +206,7 @@ public class ParseJSONData extends ApplicationFrame {
         for (int i=0; i<data.getSeriesCount(); i++) {
             deviationrenderer.setSeriesFillPaint(i, new Color(100, 100, 255));
         }
+
         NumberAxis rangeAxis = new NumberAxis(des);
         XYPlot subplot = new XYPlot(data, null, rangeAxis, deviationrenderer);
 
@@ -238,152 +217,57 @@ public class ParseJSONData extends ApplicationFrame {
         plot.add(subplot, 1);
     }
 
-    public XYDataset createDataSet(List<String> variables, HashMap<String, VariableWithData> dataHashMap) {
-        //XYSeriesCollection dataSet = new XYSeriesCollection();
-        YIntervalSeriesCollection dataSet = new YIntervalSeriesCollection();
-        golobalTimeVar(dataSet, dataHashMap);
-        variables.remove("global");
-        for (String name : variables)
-            createDataSetForOneVariable(name, dataSet, dataHashMap);
-        return dataSet;
-    }
-
-    private void createDataSetForOneVariable(String name, YIntervalSeriesCollection dataSet, HashMap<String, VariableWithData> dataHashMap){
-        int depth = 0;
-        //XYSeries series = null;
-        YIntervalSeriesCollection seriesCollection = new YIntervalSeriesCollection();
-        seriesCollectionList.add(seriesCollection);
-        YIntervalSeries series = null;
-        double old_value = 0;
-        while (true) {
-            String key = name + "_" + depth + "_0";
-
-            VariableWithData variableWithData = dataHashMap.get(key);
-
-            if (variableWithData == null) {
-                if (depth>maxDepth) break;
-                else {
-                    //logger.debug("Get Old Data for Variable " + name);
-                    VariableWithData clock = dataHashMap.get("clock"+ "_" + depth + "_0");
-                    int itemCount = clock.values.getItemCount();
-                    if (depth==0)
-                        series = new YIntervalSeries(name, false, true);
-                    else
-                        series = new YIntervalSeries(name+depth, false, true);
-                    dataSet.addSeries(series);
-                    seriesCollection.addSeries(series);
-                    if (depth==0) {
-                        for (int i = 1; i <= depth; i++) {
-                            String k = name + "_" + i + "_0";
-                            VariableWithData data = dataHashMap.get(k);
-                            if (variableWithData != null) {
-                                old_value = data.values.getYValue(0);
-                                break;
-                            }
-                        }
-                        for (int i = 0; i < itemCount; i++)
-                            series.add(clock.values.getX(i).doubleValue(), old_value, old_value, old_value);
-
-                    } else {
-                        for (int i = 0; i < itemCount; i++)
-                            series.add(clock.values.getX(i).doubleValue() + globalTime.get(depth - 1), old_value, old_value, old_value);
-
-                    }
-                }
-            }
-            else {
-                if (depth == 0) {
-                    series = variableWithData.values;
-                    series.setKey(name);
-                    dataSet.addSeries(series);
-
-                    seriesCollection.addSeries(series);
-                } else {
-                    series = new YIntervalSeries(name+depth, false, true);
-                    dataSet.addSeries(series);
-                    seriesCollection.addSeries(series);
-
-                    int itemCount = variableWithData.values.getItemCount();
-                    for (int i=0; i<itemCount; i++) {
-                        addSeries(series, variableWithData, i, globalTime.get(depth - 1));
-                    }
-
-                }
-            }
-            int size = series.getItemCount();
-            old_value = series.getYValue(size-1);
-            depth++;
-
-        }
-    }
-
-    private void addSeries(YIntervalSeries series, VariableWithData variableWithData, int i, double base){
-
-        series.add(variableWithData.values.getX(i).doubleValue() + base,
-                variableWithData.values.getYValue(i),
-                variableWithData.values.getYLowValue(i),
-                variableWithData.values.getYHighValue(i));
-    }
-
-    private void golobalTimeVar(YIntervalSeriesCollection dataSet, HashMap<String, VariableWithData> dataHashMap){
-        int depth = 0;
-        //XYSeries series = null;
-        YIntervalSeriesCollection seriesCollection = new YIntervalSeriesCollection();
-        seriesCollectionList.add(seriesCollection);
-        YIntervalSeries series = null;
-        while (true) {
-            String key = "global" + "_" + depth + "_0";
-            VariableWithData variableWithData = dataHashMap.get(key);
-
-            if (variableWithData == null) {
-                maxDepth = depth-1;
-                break;
-            }
-            if (depth == 0) {
-                series = variableWithData.values;
-                series.setKey("global");
-                dataSet.addSeries(series);
-
-                seriesCollection.addSeries(series);
-            } else {
-                int itemCount = variableWithData.values.getItemCount();
-                series = new YIntervalSeries("global"+depth, false, true);
-                dataSet.addSeries(series);
-                seriesCollection.addSeries(series);
-                for (int i=0; i<itemCount; i++) {
-                    addSeries(series, variableWithData, i, 0);
-                }
-
-            }
-
-            globalTime.add(series.getYHighValue(series.getItemCount()-1));
-            depth++;
-        }
-    }
-
-
-
 
     public static void showData(String dataPath) throws Exception {
-        InputStream inputStream = new FileInputStream(dataPath);
-        ANTLRInputStream input = new ANTLRInputStream(inputStream);
-        JSONLexer lexer = new JSONLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        JSONParser parser = new JSONParser(tokens);
-        parser.setBuildParseTree(true);
-        tree = parser.jsonData();
-
+        FileInputStream file = new FileInputStream(dataPath);
+        BufferedInputStream bis = new BufferedInputStream(file);
+        BufferedReader inputStream = new BufferedReader(new InputStreamReader(bis, "utf-8"), 4 * 1024 * 1024);//10M
+        double fileSize =  file.available() / 1048576;
         CollectData collectData = new CollectData();
-        collectData.visit(tree);
-
+        if (fileSize>=50){
+            HmlJsonProcess.init(collectData, inputStream);
+        } else {
+            ANTLRInputStream input = new ANTLRInputStream(inputStream);
+            JSONLexer lexer = new JSONLexer(input);
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            JSONParser parser = new JSONParser(tokens);
+            parser.setBuildParseTree(true);
+            logger.debug("Build Tree");
+            tree = parser.jsonData();
+            logger.debug("Tree Built");
+            collectData.visit(tree);
+        }
         List<String> variables = collectData.getVariables();
         HashMap<String, VariableWithData> dataHashMap = collectData.getDataHashMap();
 
-        ParseJSONData demo = new ParseJSONData("Line Chart HML", variables, dataHashMap);
 
-        demo.pack();
-        RefineryUtilities.centerFrameOnScreen(demo);
-        demo.setVisible(true);
+
+        DataCreator dataCreator = new DataCreator();
+
+        XYDataset dataSet = dataCreator.createDataSet(variables, dataHashMap);
+        List<YIntervalSeriesCollection> seriesCollectionList = dataCreator.seriesCollectionList;
+        maxDepth = dataCreator.maxDepth;
+        for (YIntervalSeriesCollection data : seriesCollectionList) {
+            String des = data.getSeries(0).getKey().toString();
+            ParseJSONData demo = new ParseJSONData("Line Chart HML", des, data);
+            demo.pack();
+            RefineryUtilities.centerFrameOnScreen(demo);
+            demo.setVisible(true);
+
+        }
+
+//        ParseJSONData demo = new ParseJSONData("Line Chart HML", "ALL", dataSet);
+//        demo.pack();
+//        RefineryUtilities.centerFrameOnScreen(demo);
+//        demo.setVisible(true);
+
+
+
+
+//        ParseJSONData demo = new ParseJSONData("Line Chart HML", variables, dataHashMap);
+//        demo.pack();
+//        RefineryUtilities.centerFrameOnScreen(demo);
+//        demo.setVisible(true);
 
     }
 
