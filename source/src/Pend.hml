@@ -1,5 +1,5 @@
 final float pi = 3.14;
-float position = 0.5, velocity = 0, force=50, cartPosition=0, cartVelocity=0;
+float position = 0.5, velocity = 0, force=40, cartPosition=0, cartVelocity=0;
 
 final float mp=0.1, mc=1,l=0.5, g=9.8;
 float clock = 0;
@@ -23,6 +23,7 @@ itheta in [-1, 1];
 
 
 Template Control(float f, float theta, float omega){
+    f = kp*theta + ki*itheta + kd*omega;
     while(true) {
         suspend(0.02);
         f = kp*theta + ki*itheta + kd*omega;
