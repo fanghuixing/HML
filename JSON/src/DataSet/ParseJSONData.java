@@ -48,39 +48,24 @@ public class ParseJSONData extends ApplicationFrame {
     private ActionListener listener;
     private float[][] pattern = {{10.0f},{4.0f,1.0f},{7.0f,2.0f,3.0f,7.0f},{1.0f,2.0f}};
     static int maxDepth;
-    private NumberFormat numFormater = NumberFormat.getNumberInstance();
-
-
-
-
-
 
     public ParseJSONData(String title, String des, XYDataset data) {
         super(title);
         CombinedDomainXYPlot plot = new CombinedDomainXYPlot(new NumberAxis("Global Time"));
-
         plot.setGap(5.0);
-
-//        for (YIntervalSeriesCollection data : seriesCollectionList) {
-//            String des = data.getSeries(0).getKey().toString();
-//            subplot(des, data, plot);
-//        }
-        //subplot("ALL", dataSet, plot);
         subplot(des, data, plot);
         plot.setOrientation(PlotOrientation.VERTICAL);
         List<Color> colors = new ArrayList<Color>();
         colors.add(Color.black);
         colors.add(Color.blue);
         //colors.add(Color.green);
-
-
         List<XYPlot> subplots = (List<XYPlot>) plot.getSubplots();
-
         int index = 0;
-        numFormater.setMinimumFractionDigits(10);
+        NumberFormat numberFormat = NumberFormat.getNumberInstance();
+        numberFormat.setMinimumFractionDigits(10);
         for (XYPlot sp : subplots) {
             sp.getRenderer().setBaseToolTipGenerator(new StandardXYToolTipGenerator());
-            //new StandardXYToolTipGenerator("{0} : [ {1},  {2}]", numFormater, numFormater);
+            //new StandardXYToolTipGenerator("{0} : [ {1},  {2}]", numberFormat, numberFormat);
             for (int i = 0; i<sp.getSeriesCount(); i++) {
                 if (i % (maxDepth+1) == 0) index = 0;
                 Paint color = colors.get(index);
