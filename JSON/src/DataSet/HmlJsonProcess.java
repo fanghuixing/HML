@@ -17,10 +17,6 @@ import java.util.Stack;
  */
 public class HmlJsonProcess {
     private static Logger logger = LogManager.getLogger(HmlJsonProcess.class);
-
-
-
-
     public static void init(CollectData collectData, BufferedReader inputStream){
 
         try {
