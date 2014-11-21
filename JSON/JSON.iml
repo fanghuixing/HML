@@ -12,7 +12,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../jars/antlr-4.4-complete.jar!/" />
+          <root url="jar://$USER_HOME$/jars/antlr-4.4-complete.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -72,7 +72,6 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="org.freehep:freehep-graphicsio-ps:2.4" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -98,7 +97,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../jars/log4j-api-2.0.2.jar!/" />
+          <root url="jar://$USER_HOME$/jars/log4j-api-2.0.2.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -107,7 +106,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../../jars/log4j-core-2.0.2.jar!/" />
+          <root url="jar://$USER_HOME$/jars/log4j-core-2.0.2.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -128,6 +127,22 @@
           <root url="jar://$USER_HOME$/LIB/javax.json-1.0.4.jar!/" />
         </CLASSES>
         <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/LIB/freehep-graphics2d-2.4.jar!/" />
+          <root url="jar://$USER_HOME$/LIB/freehep-graphicsbase-2.4.jar!/" />
+          <root url="jar://$USER_HOME$/LIB/freehep-graphicsio-2.4.jar!/" />
+          <root url="jar://$USER_HOME$/LIB/freehep-graphicsio-ps-2.4.jar!/" />
+          <root url="jar://$USER_HOME$/LIB/freehep-graphicsio-tests-2.4.jar!/" />
+          <root url="jar://$USER_HOME$/LIB/freehep-io-2.2.2.jar!/" />
+        </CLASSES>
+        <JAVADOC>
+          <root url="jar://$USER_HOME$/LIB/freehep-graphicsio-ps-2.4-javadoc.jar!/" />
+        </JAVADOC>
         <SOURCES />
       </library>
     </orderEntry>
