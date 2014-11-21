@@ -131,6 +131,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="xml-apis:xml-apis:2.0.2" level="project" />
   </component>
 </module>
 
