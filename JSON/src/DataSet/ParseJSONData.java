@@ -253,7 +253,6 @@ public class ParseJSONData extends ApplicationFrame {
             demo.pack();
             RefineryUtilities.centerFrameOnScreen(demo);
             demo.setVisible(true);
-
         }
 
 //        ParseJSONData demo = new ParseJSONData("Line Chart HML", "ALL", dataSet);
