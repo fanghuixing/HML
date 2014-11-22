@@ -16,6 +16,7 @@ public class DataCreator {
     List<YIntervalSeriesCollection> seriesCollectionList = new ArrayList<YIntervalSeriesCollection>();
     int maxDepth;
     List<Double> globalTime = new ArrayList<Double>();
+    List<Double> initGlobalTime = new ArrayList<Double>();
 
     public XYDataset createDataSet(List<String> variables, HashMap<String, VariableWithData> dataHashMap) {
         //XYSeriesCollection dataSet = new XYSeriesCollection();
@@ -65,7 +66,8 @@ public class DataCreator {
 
                     } else {
                         for (int i = 0; i < itemCount; i++)
-                            series.add(clock.values.getX(i).doubleValue() + globalTime.get(depth - 1), old_value, old_value, old_value);
+                            series.add(clock.values.getX(i).doubleValue() + initGlobalTime.get(depth), old_value, old_value, old_value);
+                            //series.add(clock.values.getX(i).doubleValue() + globalTime.get(depth - 1), old_value, old_value, old_value);
 
                     }
                 }
@@ -84,7 +86,8 @@ public class DataCreator {
 
                     int itemCount = variableWithData.values.getItemCount();
                     for (int i=0; i<itemCount; i++) {
-                        addSeries(series, variableWithData, i, globalTime.get(depth - 1));
+                        addSeries(series, variableWithData, i, initGlobalTime.get(depth));
+                        //addSeries(series, variableWithData, i, globalTime.get(depth - 1));
                     }
 
                 }
@@ -135,6 +138,7 @@ public class DataCreator {
             }
 
             globalTime.add(series.getYHighValue(series.getItemCount()-1));
+            initGlobalTime.add(series.getYHighValue(0));
             depth++;
         }
     }
