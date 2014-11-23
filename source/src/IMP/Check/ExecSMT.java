@@ -17,7 +17,7 @@ public class ExecSMT {
 
 
     public static boolean exec(String precision, String modelFilePath, int depth){
-        int scale = depth/10 + 1;
+        int scale = (int) Math.rint(depth/10.0) + 1;
         ode_grid = 1024*scale;
         return exec(precision, modelFilePath);
     }
