@@ -245,7 +245,7 @@ public class ParseJSONData extends ApplicationFrame {
 
     public static void main(String[] args) throws Exception{
 
-        ParseJSONData.showData("./JSON/src/HML_10_0.smt2.json");
+        ParseJSONData.showData("./JSON/src/data.json");
     }
 
     private Stroke getStroke(float width, String type){

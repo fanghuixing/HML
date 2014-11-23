@@ -22,12 +22,20 @@ public class CollectData extends JSONBaseVisitor{
     static HashSet<String> variables = new HashSet<String>();
     static List<JSONParser.FlowContext> flows;
 
-    HashMap<String, VariableWithData> dataHashMap = new HashMap<String, VariableWithData>();
+    static HashMap<String, VariableWithData> dataHashMap = new HashMap<String, VariableWithData>();
 
     public CollectData() {
 
     }
 
+
+    public static void setVariables(HashSet<String> variables) {
+        CollectData.variables = variables;
+    }
+
+    public static void setDataHashMap(HashMap<String, VariableWithData> dataHashMap) {
+        CollectData.dataHashMap = dataHashMap;
+    }
 
     public Void visitJsonData(JSONParser.JsonDataContext ctx) {
         flows = ctx.flow();
