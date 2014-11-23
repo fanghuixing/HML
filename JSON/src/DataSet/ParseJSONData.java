@@ -201,7 +201,7 @@ public class ParseJSONData extends ApplicationFrame {
         BufferedReader inputStream = new BufferedReader(new InputStreamReader(bis, "utf-8"), 4 * 1024 * 1024);//10M
         double fileSize =  file.available() / 1048576;
         CollectData collectData = new CollectData();
-        if (fileSize>=50){
+        if (fileSize>=30){
             HmlJsonProcess.init(collectData, inputStream);
         } else {
             ANTLRInputStream input = new ANTLRInputStream(inputStream);
