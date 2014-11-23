@@ -33,7 +33,7 @@ public class ExecSMT {
 
         //sb.append(" --ode_parallel");
 
-        sb.append(" --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid" + ode_grid);
+        sb.append(" --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=" + ode_grid);
         //--ode_parallel --ode_cache  --delta_heuristic --short_sat
         //--precision=0.1 --visualize --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=1024
 
