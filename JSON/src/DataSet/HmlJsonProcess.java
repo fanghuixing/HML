@@ -67,6 +67,7 @@ public class HmlJsonProcess {
         for (FlowOfVariable flow : flowOfVariables) {
             visitData(flow);
         }
+        logger.debug("End One Flow");
     }
 
     public static void visitData(FlowOfVariable flow) {
