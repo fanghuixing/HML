@@ -1,23 +1,23 @@
 final float pi = 3.14;
-float position = 0.5, velocity = 0, force=40, cartPosition=0, cartVelocity=0;
+float position = 30, velocity = 0, force=40, cartPosition=0, cartVelocity=0;
 
 final float mp=0.1, mc=1,l=0.5, g=9.8;
 float clock = 0;
 float global = 0;
 
-final float kp=50, ki=0, kd=8;
+final float kp=1.7, ki=0, kd=1;
 float itheta=0;
 
 
-position in [-0.52, 0.52];
-velocity in [-3, 3];
-force in [-100, 100];
-cartPosition in [-30, 30];
-cartVelocity in [-10, 10];
+position in [-100, 100];
+velocity in [-100, 100];
+force in [-150, 150];
+cartPosition in [-100, 100];
+cartVelocity in [-100, 100];
 time in [0, 0.25];
 clock in [0, 0.25];
-global in [0, 5];
-itheta in [-1, 1];
+global in [0, 10];
+itheta in [-6, 6];
 
 
 
@@ -25,7 +25,7 @@ itheta in [-1, 1];
 Template Control(float f, float theta, float omega){
     f = kp*theta + ki*itheta + kd*omega;
     while(true) {
-        suspend(0.02);
+        suspend(0.06);
         f = kp*theta + ki*itheta + kd*omega;
         itheta = 0
     }
@@ -39,13 +39,13 @@ Template Pendulum(float theta, float omega, float f, float x, float v){
     ||
     (dot theta = omega)
     ||
-    (dot omega =  ( (mc+mp)*g*sin(theta) - (f + mp*l*omega^2*sin(theta))*cos(theta) ) /
-               ( ((4/3)*(mc+mp) - mp*cos(theta)^2)*l )  )
+    (dot omega =  ( (mc+mp)*g*sin(theta*pi/180) - (f + mp*l*omega^2*sin(theta*pi/180))*cos(theta*pi/180) ) /
+               ( ((4/3)*(mc+mp) - mp*cos(theta*pi/180)^2)*l )  )
     ||
     (dot x = v)
     ||
-    (dot v = ( (4/3)*(f+mp*l*omega^2*sin(theta)) - mp*g*sin(theta)*cos(theta) ) /
-                 ( (4/3)*(mc+mp) - mp*cos(theta)^2) )
+    (dot v = ( (4/3)*(f+mp*l*omega^2*sin(theta*pi/180)) - mp*g*sin(theta*pi/180)*cos(theta*pi/180) ) /
+                 ( (4/3)*(mc+mp) - mp*cos(theta*pi/180)^2) )
     until (false)
 }
 

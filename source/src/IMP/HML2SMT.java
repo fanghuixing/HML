@@ -143,7 +143,7 @@ public class HML2SMT {
     }
 
     private static void checkAndView(String file, String arg){
-        boolean res = check(file + arg);
+        boolean res = check(file + arg, depth);
         if (res && visualize) {
             try {
                 Util.viewDataInWindow(file);
@@ -177,7 +177,7 @@ public class HML2SMT {
         boolean res = false;
         try {
             writeToFile(st, System.currentTimeMillis(), "./source/src/dynamicChecking/HML_");
-            res = check(smtPath);
+            res = check(smtPath, depth);
         } catch (IOException e) {
             logger.error(e.getMessage());
         }
@@ -205,8 +205,8 @@ public class HML2SMT {
         smt2files.add(smtPath);
     }
 
-    private static boolean check(String path) {
-        return ExecSMT.exec(precision, path);
+    private static boolean check(String path, int depth) {
+        return ExecSMT.exec(precision, path, depth);
     }
 
 

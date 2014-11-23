@@ -13,6 +13,15 @@ import java.io.InputStreamReader;
 public class ExecSMT {
     private static String dReal = "/home/fofo/dReal21408/bin/dReal";
     private static Logger logger = LogManager.getLogger(ExecSMT.class.getName());
+    private static long ode_grid = 1024;
+
+
+    public static boolean exec(String precision, String modelFilePath, int depth){
+        int scale = depth/10 + 1;
+        ode_grid = 1024*scale;
+        return exec(precision, modelFilePath);
+    }
+
     public static boolean exec(String precision, String modelFilePath){
         StringBuffer sb = new StringBuffer();
         sb.append(dReal);
@@ -24,7 +33,7 @@ public class ExecSMT {
 
         //sb.append(" --ode_parallel");
 
-        sb.append(" --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=20480");
+        sb.append(" --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid" + ode_grid);
         //--ode_parallel --ode_cache  --delta_heuristic --short_sat
         //--precision=0.1 --visualize --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=1024
 
