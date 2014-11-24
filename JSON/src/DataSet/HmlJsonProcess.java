@@ -82,12 +82,15 @@ public class HmlJsonProcess {
         for (TimeValuePair mapping : mappings) {
             List<Double> time = mapping.time;
             List<Double> value = mapping.enclosure;
+
             if (name.equals("global") || name.equals("clock")) {
                 Double t0 = value.get(0);
                 Double t1 = value.get(1);
+
                 values.add(t0, t0, t0, t0);
-                if (Math.abs(t0-t1)>0.001)
+                if (Math.abs(t1 - t0) > 0.001)
                     values.add(t1, t1, t1, t1);
+
             } else {
                 double t0 = time.get(0);
                 double t1 = time.get(1);
