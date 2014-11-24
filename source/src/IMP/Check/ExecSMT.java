@@ -14,11 +14,16 @@ public class ExecSMT {
     private static String dReal = "/home/fofo/dReal21408/bin/dReal";
     private static Logger logger = LogManager.getLogger(ExecSMT.class.getName());
     private static long ode_grid = 1024;
+    private static boolean gridInDynamic = true;
 
 
     public static boolean exec(String precision, String modelFilePath, int depth){
-        int scale = (int) Math.rint(depth/10.0) + 1;
-        ode_grid = 1024*scale;
+        if (gridInDynamic) {
+            int scale = (int) (Math.pow(depth/10.0, 2));
+            if (scale==0) scale = 1;
+            logger.debug("scale: " + scale + " depth: " + depth);
+            ode_grid = 1024 * scale;
+        }
         return exec(precision, modelFilePath);
     }
 
@@ -33,7 +38,7 @@ public class ExecSMT {
 
         //sb.append(" --ode_parallel");
 
-        sb.append(" --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=" + ode_grid);
+        sb.append(" --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=").append(ode_grid);
         //--ode_parallel --ode_cache  --delta_heuristic --short_sat
         //--precision=0.1 --visualize --ode_parallel --ode_cache  --delta_heuristic --short_sat --ode_grid=1024
 
@@ -44,10 +49,7 @@ public class ExecSMT {
         InputStream err = null;
         try {
             proc = runtime.exec(sb.toString());
-
-
             in = proc.getInputStream();
-
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             String result = br.readLine();
 
@@ -87,7 +89,8 @@ public class ExecSMT {
     }
 
     public static void main(String[] args) throws Exception{
-        String path = "./source/src/HML_0_0.smt2";
+        ode_grid=8192;
+        String path = "./source/src/dynamicChecking/HML_30_1416817011754.smt2";
         ExecSMT.exec("0.1", path + " --visualize ");
         ParseJSONData.showData(path + ".json");
     }

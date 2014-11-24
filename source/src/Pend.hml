@@ -1,7 +1,7 @@
 final float pi = 3.14;
-float position = 30, velocity = 0, force=40, cartPosition=0, cartVelocity=0;
+float position = 15, velocity = 0, force=40, cartPosition=0, cartVelocity=0;
 
-final float mp=0.1, mc=1,l=0.5, g=9.8;
+final float mp=0.1, mc=1,l=0.4, g=9.8;
 float clock = 0;
 float global = 0;
 
@@ -9,15 +9,15 @@ final float kp=1.7, ki=0, kd=1;
 float itheta=0;
 
 
-position in [-100, 100];
-velocity in [-100, 100];
-force in [-150, 150];
-cartPosition in [-100, 100];
-cartVelocity in [-100, 100];
+position in [-20, 20];
+velocity in [-20, 20];
+force in [-50, 50];
+cartPosition in [-20, 20];
+cartVelocity in [-10, 10];
 time in [0, 0.25];
 clock in [0, 0.25];
 global in [0, 10];
-itheta in [-6, 6];
+itheta in [-3, 3];
 
 
 
@@ -25,7 +25,8 @@ itheta in [-6, 6];
 Template Control(float f, float theta, float omega){
     f = kp*theta + ki*itheta + kd*omega;
     while(true) {
-        suspend(0.06);
+        //(while(true) { suspend(0.12); f = kp*theta + ki*itheta + kd*omega; itheta = 0 } < global>=0.6 > suspend(0.06));
+        suspend(0.06)
         f = kp*theta + ki*itheta + kd*omega;
         itheta = 0
     }
