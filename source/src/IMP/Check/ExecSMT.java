@@ -54,11 +54,11 @@ public class ExecSMT {
             String result = br.readLine();
 
             if (result!=null && result.equals("sat")) {
-                logger.info("The result is : " + result);
+                logger.info("The result is : " + result + " for " + sb);
                 return true;
             }
             else if (result!=null && result.equals("unsat")) {
-                logger.info("The result is : " + result);
+                logger.info("The result is : " + result + " for " + sb);
             }
             else {
                 logger.error("Error in dReal Running");
@@ -89,8 +89,8 @@ public class ExecSMT {
     }
 
     public static void main(String[] args) throws Exception{
-        ode_grid=8192;
-        String path = "./source/src/dynamicChecking/HML_30_1416817011754.smt2";
+        ode_grid=15360;
+        String path = "./source/src/dynamicChecking/HML_60_1416851475406.smt2";
         ExecSMT.exec("0.1", path + " --visualize ");
         ParseJSONData.showData(path + ".json");
     }
