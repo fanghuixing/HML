@@ -25,6 +25,7 @@ public class HmlJsonProcess {
         try {
             StringBuilder sb=new StringBuilder();
             Stack<String> stack = new Stack<String>();
+            Double old_time = -1.0;
             while (true) {
                 String line = inputStream.readLine();
                 if (line==null) break;
@@ -34,15 +35,28 @@ public class HmlJsonProcess {
                     } else if (line.equals("]")) {
                         stack.pop();
                     }
-
                     if (stack.size()>=2){
-                        sb.append(line);
+                        if (line.contains("time") && line.contains("enclosure")) {
+                            if (line.trim().endsWith(",")) {
+                                String tmp = line.trim().substring(0, line.trim().length() - 1);
+                                TimeValuePair tvp = JSON.parseObject(tmp, TimeValuePair.class);
+                                if (Math.abs(old_time-0.5*(tvp.getTime().get(0)+tvp.getTime().get(1)))>=0.001){
+                                    sb.append(line);
+                                    old_time = 0.5*(tvp.getTime().get(0)+tvp.getTime().get(1));
+                                }
+                            } else sb.append(line);
+                        } else {
+                            sb.append(line);
+                        }
                     } else if (stack.size()==1 && sb.length()>1){
+                        old_time = -1.0;
                         sb.append(']');
                         logger.debug(sb.length());
                         List<FlowOfVariable> flowOfVariables = JSON.parseArray(sb.toString(), FlowOfVariable.class);
                         processFlow(flowOfVariables);
-                        sb = new StringBuilder();
+                        flowOfVariables.clear();
+                        sb.delete(0,sb.length());
+                        System.gc();
                     }
                 }
 
@@ -64,8 +78,11 @@ public class HmlJsonProcess {
     }
 
     public static void processFlow(List<FlowOfVariable> flowOfVariables){
+        logger.debug("Process Flow");
         for (FlowOfVariable flow : flowOfVariables) {
+            logger.debug("Process data");
             visitData(flow);
+            logger.debug("End Process data");
         }
         logger.debug("End One Flow");
     }
@@ -102,6 +119,7 @@ public class HmlJsonProcess {
                 if (Math.abs(t0-t1)>2) {
                     continue;
                 }
+
                 //If the data is clean
                 try {
                     if (v0 <= v1) {
