@@ -198,7 +198,7 @@ public class ParseJSONData extends ApplicationFrame {
     public static void showData(String dataPath) throws Exception {
         FileInputStream file = new FileInputStream(dataPath);
         BufferedInputStream bis = new BufferedInputStream(file);
-        BufferedReader inputStream = new BufferedReader(new InputStreamReader(bis, "utf-8"), 4 * 1024 * 1024);//10M
+        BufferedReader inputStream = new BufferedReader(new InputStreamReader(bis, "utf-8"), 20 * 1024 * 1024);//10M
         double fileSize =  file.available() / 1048576;
         CollectData collectData = new CollectData();
         if (fileSize>=30){
@@ -244,7 +244,7 @@ public class ParseJSONData extends ApplicationFrame {
     }
 
     public static void main(String[] args) throws Exception{
-
+        //ParseJSONData.showData("/home/fofo/Pictures/pendSample16/HML_20_1417233217191.smt2.json");
         ParseJSONData.showData("./JSON/src/data.json");
     }
 

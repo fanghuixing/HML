@@ -26,8 +26,11 @@ public class HmlJsonProcess {
             StringBuilder sb=new StringBuilder();
             Stack<String> stack = new Stack<String>();
             Double old_time = -1.0;
+            int from, sep, to;
+            Double dt;
             while (true) {
                 String line = inputStream.readLine();
+
                 if (line==null) break;
                 else {
                     if (line.equals("[") ){
@@ -38,11 +41,18 @@ public class HmlJsonProcess {
                     if (stack.size()>=2){
                         if (line.contains("time") && line.contains("enclosure")) {
                             if (line.trim().endsWith(",")) {
-                                String tmp = line.trim().substring(0, line.trim().length() - 1);
-                                TimeValuePair tvp = JSON.parseObject(tmp, TimeValuePair.class);
-                                if (Math.abs(old_time-0.5*(tvp.getTime().get(0)+tvp.getTime().get(1)))>=0.001){
+                                String linetrim = line.trim();
+                                String tmp = linetrim.substring(0, linetrim.length() - 1);
+                                from = tmp.indexOf("[")+1; sep = tmp.indexOf(","); to = tmp.indexOf("]");
+                                dt =    0.5 *
+                                        (Double.parseDouble(tmp.substring(from, sep)) +
+                                        Double.parseDouble(tmp.substring(sep+1, to)));
+
+                                //TimeValuePair tvp = JSON.parseObject(tmp, TimeValuePair.class);
+                                //Double dt=0.5*(tvp.getTime().get(0)+tvp.getTime().get(1));
+                                if (Math.abs(old_time-dt)>=0.001){
                                     sb.append(line);
-                                    old_time = 0.5*(tvp.getTime().get(0)+tvp.getTime().get(1));
+                                    old_time = dt;
                                 }
                             } else sb.append(line);
                         } else {
